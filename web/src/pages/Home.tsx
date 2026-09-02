@@ -54,7 +54,7 @@ export function Home() {
           </Link>
         </div>
         <p className={styles.heroNote}>
-          No account needed for collection tracking and paste matching — saved in your browser.
+          No account needed — collection, paste matching, and postal tracking save in your browser.
         </p>
       </section>
 

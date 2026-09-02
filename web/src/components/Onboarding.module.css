@@ -1,0 +1,36 @@
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--yellow-dark);
+  background: var(--yellow-wash);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  margin-bottom: var(--space-sm);
+  color: var(--ink);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.steps li {
+  margin-bottom: var(--space-xs);
+}
+
+.steps a {
+  color: inherit;
+  font-weight: 600;
+}

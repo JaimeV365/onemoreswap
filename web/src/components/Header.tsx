@@ -4,7 +4,8 @@ import styles from './Header.module.css'
 
 const nav = [
   { to: '/paste', label: 'Paste tool' },
-  { to: '/collection', label: 'My collection' },
+  { to: '/collection', label: 'Collection' },
+  { to: '/postal', label: 'Postal' },
   { to: '/settings', label: 'Settings' },
 ]
 

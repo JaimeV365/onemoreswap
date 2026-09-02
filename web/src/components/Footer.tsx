@@ -9,6 +9,7 @@ export function Footer() {
         <nav className={styles.links} aria-label="Footer">
           <Link to="/paste">Paste tool</Link>
           <Link to="/collection">Collection</Link>
+          <Link to="/postal">Postal</Link>
           <Link to="/settings">Settings</Link>
           <Link to="/about">About</Link>
           <Link to="/privacy">Privacy</Link>

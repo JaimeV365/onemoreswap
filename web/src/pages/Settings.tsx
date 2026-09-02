@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTheme } from '../lib/ThemeContext'
 import type { ThemePref } from '../lib/theme'
 import styles from './Page.module.css'
@@ -43,6 +44,22 @@ export function Settings() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
+        <h2 className={styles.panelTitle}>Data</h2>
+        <p className={settingsStyles.hint}>
+          Collection and postal swaps stay on this device until sign-in arrives. Import World Cup
+          tracker backups from Collection → Advanced.
+        </p>
+        <ul className={settingsStyles.links}>
+          <li>
+            <Link to="/collection">My collection</Link> — export / import
+          </li>
+          <li>
+            <Link to="/postal">Postal swaps</Link> — track posts and incoming stickers
+          </li>
+        </ul>
       </section>
     </main>
   )

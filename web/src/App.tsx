@@ -5,6 +5,7 @@ import { About } from './pages/About'
 import { Collection } from './pages/Collection'
 import { Home } from './pages/Home'
 import { PasteTool } from './pages/PasteTool'
+import { Postal } from './pages/Postal'
 import { Privacy } from './pages/Privacy'
 import { Settings } from './pages/Settings'
 import { Terms } from './pages/Terms'
@@ -19,6 +20,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="paste" element={<PasteTool />} />
             <Route path="collection" element={<Collection />} />
+            <Route path="postal" element={<Postal />} />
             <Route path="settings" element={<Settings />} />
             <Route path="about" element={<About />} />
             <Route path="privacy" element={<Privacy />} />

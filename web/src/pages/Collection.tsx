@@ -4,11 +4,14 @@ import { AlbumBrowse } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
 import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
+import { importAnyBackup } from '../lib/importBackup'
 import { parseStickerInput } from '../lib/parseStickers'
+import { upsertPostalSwaps } from '../lib/postal'
 import {
   addParsedCounts,
   albumProgress,
@@ -16,7 +19,7 @@ import {
   emptyAlbumState,
   exportCollectionJson,
   getAlbumState,
-  importCollectionJson,
+  isAlbumStarted,
   loadCollection,
   saveCollection,
   setAlbumState,
@@ -110,6 +113,8 @@ export function Collection() {
         <Link to="/paste">match against someone else&apos;s list</Link>.
       </p>
 
+      <OnboardingBanner show={!isAlbumStarted(state)} />
+
       <AlbumPicker value={albumId} onChange={setAlbumId} />
 
       <ProgressBar
@@ -185,7 +190,8 @@ export function Collection() {
       >
         <summary>Advanced — backup &amp; reset</summary>
         <p className={collectionStyles.advancedHint}>
-          Optional until sign-in arrives. Export if you want a file copy on your device.
+          Export for a file copy on this device. Import accepts One More Swap backups or a World Cup
+          2026 sticker tracker JSON export (collection + postal swaps).
         </p>
         <div className={styles.actions}>
           <Button
@@ -207,9 +213,20 @@ export function Collection() {
                 const file = input.files?.[0]
                 if (!file) return
                 try {
-                  saveCollection(importCollectionJson(await file.text()))
-                  setState(getAlbumState(loadCollection(), albumId))
-                  setMessage('Backup restored.')
+                  const result = importAnyBackup(await file.text())
+                  saveCollection(result.store)
+                  if (result.postal?.length) {
+                    upsertPostalSwaps(result.postal, true)
+                  }
+                  const nextAlbum =
+                    result.kind === 'wc-tracker' ? 'wc2026' : albumId
+                  if (nextAlbum !== albumId) setAlbumId(nextAlbum)
+                  setState(getAlbumState(loadCollection(), nextAlbum))
+                  setMessage(
+                    result.postal?.length
+                      ? `${result.message} Open Postal swaps to review them.`
+                      : result.message,
+                  )
                 } catch {
                   setMessage('Invalid backup file.')
                 }
