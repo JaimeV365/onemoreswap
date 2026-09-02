@@ -1,4 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#FFD700"/>
-  <text x="16" y="22" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#1A1520">1</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="One More Swap">
+  <!-- Brand sticker chip: yellow face, crimson edge -->
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="#FFD700" stroke="#B42338" stroke-width="2"/>
+  <!-- Simple album corner fold -->
+  <path d="M22 1.5 L30.5 1.5 L30.5 10 Z" fill="#B42338"/>
+  <path d="M22 1.5 L30.5 10 L22 10 Z" fill="#C9A800"/>
+  <!-- OMS mark (not a digit — brand is words) -->
+  <text
+    x="16"
+    y="21.5"
+    text-anchor="middle"
+    font-family="Arial Black, Helvetica Neue, Arial, sans-serif"
+    font-size="11"
+    font-weight="800"
+    letter-spacing="-0.5"
+    fill="#1A1520"
+  >OMS</text>
 </svg>

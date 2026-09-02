@@ -15,9 +15,7 @@ export function Footer() {
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
         </nav>
-        <p className={styles.meta}>
-          Introduction service for sticker collectors · UK-first · Free to start
-        </p>
+        <p className={styles.meta}>Introduction service for sticker collectors</p>
         <p className={styles.copy}>© {new Date().getFullYear()} One More Swap</p>
       </div>
     </footer>
