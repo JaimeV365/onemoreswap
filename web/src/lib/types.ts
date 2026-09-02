@@ -24,6 +24,13 @@ export type AlbumIndexes = {
   codeToSeq: Map<string, number>
   seqToInfo: Map<number, StickerEntry>
   teamCodes: Set<string>
+  sections: AlbumSection[]
+}
+
+export type AlbumSection = {
+  code: string
+  name: string
+  stickers: StickerEntry[]
 }
 
 export type ParsedCounts = {
@@ -32,12 +39,13 @@ export type ParsedCounts = {
 }
 
 export type CollectionAlbumState = {
-  needs: number[]
-  spares: Record<number, number>
+  missing: number[]
+  /** Total copies when ≥ 2. If not missing and absent here → 1 in album. */
+  counts: Record<number, number>
 }
 
 export type CollectionStore = {
-  version: 1
+  version: 2
   albums: Record<string, CollectionAlbumState>
 }
 
@@ -46,11 +54,4 @@ export type OverlapResult = {
   theyCanSend: Array<{ seq: number; qty: number }>
 }
 
-export type StickerLabel = {
-  seq: number
-  code: string
-  cardNum: number
-  name: string
-  section: string
-  display: string
-}
+export type ShareTab = 'missing' | 'spares' | 'both'

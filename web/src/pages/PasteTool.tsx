@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
@@ -6,15 +7,13 @@ import { StickerList, stickerListAsText } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { countsToSet, computeOverlap } from '../lib/overlap'
-import { countsToText, parseStickerInput } from '../lib/parseStickers'
+import { parseStickerInput } from '../lib/parseStickers'
+import { stateToPasteText } from '../lib/stateText'
 import {
-  downloadJson,
-  exportCollectionJson,
   getAlbumState,
-  importCollectionJson,
+  isAlbumStarted,
   loadCollection,
-  saveCollection,
-  setAlbumState,
+  needsToSet,
   sparesToMap,
 } from '../lib/storage'
 import styles from './Page.module.css'
@@ -22,12 +21,16 @@ import pasteStyles from './PasteTool.module.css'
 
 const DEFAULT_ALBUM = 'wc2026'
 
+type Mode = 'simple' | 'full'
+
 export function PasteTool() {
   const [albumId, setAlbumId] = useState(DEFAULT_ALBUM)
+  const [mode, setMode] = useState<Mode>('simple')
   const [yourNeeds, setYourNeeds] = useState('')
   const [yourSpares, setYourSpares] = useState('')
   const [theirNeeds, setTheirNeeds] = useState('')
   const [theirSpares, setTheirSpares] = useState('')
+  const [useCollection, setUseCollection] = useState(true)
   const [message, setMessage] = useState<{ type: 'ok' | 'warn' | 'error'; text: string } | null>(
     null,
   )
@@ -36,75 +39,48 @@ export function PasteTool() {
   const album = getAlbum(albumId)
 
   const loadFromCollection = useCallback(() => {
-    const store = loadCollection()
-    const state = getAlbumState(store, albumId)
     if (!indexes) return
-    const needsMap = new Map<number, number>()
-    state.needs.forEach((seq) => needsMap.set(seq, 1))
-    setYourNeeds(countsToText(needsMap, indexes))
-    setYourSpares(countsToText(sparesToMap(state.spares), indexes))
-    setMessage({ type: 'ok', text: 'Loaded your saved collection for this album.' })
+    const state = getAlbumState(loadCollection(), albumId)
+    const text = stateToPasteText(state, indexes)
+    setYourNeeds(text.needs)
+    setYourSpares(text.spares)
   }, [albumId, indexes])
 
   useEffect(() => {
-    loadFromCollection()
-  }, [albumId]) // reload when album changes
+    if (useCollection) loadFromCollection()
+  }, [albumId, useCollection, loadFromCollection])
 
-  const parsed = useMemo(() => {
+  const yourSide = useMemo(() => {
     if (!indexes) return null
-    const yn = parseStickerInput(yourNeeds, indexes)
-    const ys = parseStickerInput(yourSpares, indexes)
-    const tn = parseStickerInput(theirNeeds, indexes)
-    const ts = parseStickerInput(theirSpares, indexes)
-    const overlap = computeOverlap(
-      countsToSet(yn.counts),
-      ys.counts,
-      countsToSet(tn.counts),
-      ts.counts,
-    )
-    const unknown = [...yn.unknown, ...ys.unknown, ...tn.unknown, ...ts.unknown]
-    return { ...overlap, unknown }
-  }, [indexes, yourNeeds, yourSpares, theirNeeds, theirSpares])
-
-  const saveYourSide = () => {
-    if (!indexes) return
-    const store = loadCollection()
-    const current = getAlbumState(store, albumId)
-    const needsCounts = parseStickerInput(yourNeeds, indexes).counts
-    const sparesCounts = parseStickerInput(yourSpares, indexes).counts
-    const needs = [...new Set([...current.needs, ...needsCounts.keys()])].sort((a, b) => a - b)
-    const spares = { ...current.spares }
-    for (const [seq, qty] of sparesCounts) {
-      spares[seq] = (spares[seq] ?? 0) + qty
-    }
-    saveCollection(setAlbumState(store, albumId, { needs, spares }))
-    setMessage({ type: 'ok', text: 'Your needs and spares saved to this browser.' })
-  }
-
-  const handleExport = () => {
-    downloadJson('onemoreswap-collection.json', exportCollectionJson(loadCollection()))
-    setMessage({ type: 'ok', text: 'Collection backup downloaded.' })
-  }
-
-  const handleImport = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'application/json'
-    input.onchange = async () => {
-      const file = input.files?.[0]
-      if (!file) return
-      try {
-        const text = await file.text()
-        const store = importCollectionJson(text)
-        saveCollection(store)
-        loadFromCollection()
-        setMessage({ type: 'ok', text: 'Collection restored from backup.' })
-      } catch {
-        setMessage({ type: 'error', text: 'Could not read that file — is it a One More Swap backup?' })
+    if (useCollection) {
+      const state = getAlbumState(loadCollection(), albumId)
+      return {
+        needs: needsToSet(state),
+        spares: sparesToMap(state),
       }
     }
-    input.click()
-  }
+    const yn = parseStickerInput(yourNeeds, indexes)
+    const ys = parseStickerInput(yourSpares, indexes)
+    return { needs: countsToSet(yn.counts), spares: ys.counts }
+  }, [indexes, useCollection, albumId, yourNeeds, yourSpares])
+
+  const parsed = useMemo(() => {
+    if (!indexes || !yourSide) return null
+    const tn = parseStickerInput(theirNeeds, indexes)
+    const ts = parseStickerInput(theirSpares, indexes)
+    const overlap = computeOverlap(yourSide.needs, yourSide.spares, countsToSet(tn.counts), ts.counts)
+
+    const unknown = useCollection
+      ? [...tn.unknown, ...ts.unknown]
+      : [
+          ...parseStickerInput(yourNeeds, indexes).unknown,
+          ...parseStickerInput(yourSpares, indexes).unknown,
+          ...tn.unknown,
+          ...ts.unknown,
+        ]
+
+    return { ...overlap, unknown }
+  }, [indexes, yourSide, theirNeeds, theirSpares, useCollection, yourNeeds, yourSpares])
 
   const copyOverlap = (side: 'you' | 'they') => {
     if (!parsed) return
@@ -118,71 +94,132 @@ export function PasteTool() {
     setMessage({ type: 'ok', text: 'Copied to clipboard.' })
   }
 
-  const mutualCount =
-    parsed
-      ? new Set(parsed.youCanSend.map((i) => i.seq)).size > 0 &&
-        new Set(parsed.theyCanSend.map((i) => i.seq)).size > 0
-      : false
+  const tryExample = () => {
+    setTheirNeeds('ENG 5 7 12')
+    setTheirSpares('MEX 1 2')
+    setMessage({ type: 'ok', text: 'Example list loaded — add your collection or paste your side.' })
+  }
+
+  const collectionEmpty =
+    useCollection &&
+    !isAlbumStarted(getAlbumState(loadCollection(), albumId))
 
   return (
     <main className={styles.page}>
       <Badge>Always free · No account</Badge>
       <h1 className={styles.title}>Paste &amp; match</h1>
       <p className={styles.lead}>
-        Paste spares and needs in any common format — team codes, numbers, commas, or spaces.
-        See overlaps instantly. Works for WhatsApp lists and forum posts.
+        Paste a list from WhatsApp or a forum and see what you can swap. Your saved collection loads
+        automatically — or{' '}
+        <Link to="/collection">set it up first</Link>.
       </p>
 
       <AlbumPicker value={albumId} onChange={setAlbumId} />
 
-      <div className={pasteStyles.columns}>
-        <section className={styles.panel}>
-          <h2 className={styles.panelTitle}>Your list</h2>
-          <div className={styles.grid}>
-            <Textarea
-              label="Your needs (missing)"
-              hint="e.g. ENG 5 7 12 or 570 571 572"
-              value={yourNeeds}
-              onChange={(e) => setYourNeeds(e.target.value)}
-              placeholder="Stickers you still need…"
-            />
-            <Textarea
-              label="Your spares (duplicates)"
-              hint="Use X2 after a code for multiples — ENG5 X2"
-              value={yourSpares}
-              onChange={(e) => setYourSpares(e.target.value)}
-              placeholder="Stickers you can swap away…"
-            />
-          </div>
-          <div className={styles.actions}>
-            <Button variant="secondary" onClick={loadFromCollection}>Load saved collection</Button>
-            <Button variant="secondary" onClick={saveYourSide}>Save to collection</Button>
-          </div>
-        </section>
+      <div className={pasteStyles.modeTabs}>
+        <button
+          type="button"
+          className={[pasteStyles.modeTab, mode === 'simple' ? pasteStyles.modeActive : ''].join(' ')}
+          onClick={() => setMode('simple')}
+        >
+          Match their list
+        </button>
+        <button
+          type="button"
+          className={[pasteStyles.modeTab, mode === 'full' ? pasteStyles.modeActive : ''].join(' ')}
+          onClick={() => setMode('full')}
+        >
+          Compare two full lists
+        </button>
+      </div>
 
+      {collectionEmpty && useCollection && (
+        <p className={[styles.notice, styles.noticeWarn].join(' ')}>
+          Your collection is empty for this album.{' '}
+          <Link to="/collection">Add stickers</Link> or switch to manual entry below.
+        </p>
+      )}
+
+      {mode === 'simple' ? (
         <section className={styles.panel}>
           <h2 className={styles.panelTitle}>Their list</h2>
           <div className={styles.grid}>
             <Textarea
-              label="Their needs"
+              label="Their needs (missing)"
+              hint="What they still want"
               value={theirNeeds}
               onChange={(e) => setTheirNeeds(e.target.value)}
-              placeholder="Paste from message or post…"
+              placeholder="e.g. ENG 5 7 12"
             />
             <Textarea
-              label="Their spares"
+              label="Their spares (duplicates)"
+              hint="What they can swap away"
               value={theirSpares}
               onChange={(e) => setTheirSpares(e.target.value)}
-              placeholder="Paste from message or post…"
+              placeholder="e.g. MEX 1 2 3"
             />
           </div>
+          <div className={styles.actions}>
+            <Button variant="secondary" onClick={tryExample}>Try example</Button>
+            <Button variant="ghost" onClick={loadFromCollection}>Refresh my collection</Button>
+          </div>
         </section>
-      </div>
+      ) : (
+        <div className={pasteStyles.columns}>
+          <section className={styles.panel}>
+            <h2 className={styles.panelTitle}>Your list</h2>
+            <label className={pasteStyles.checkRow}>
+              <input
+                type="checkbox"
+                checked={useCollection}
+                onChange={(e) => setUseCollection(e.target.checked)}
+              />
+              Use saved collection
+            </label>
+            {!useCollection && (
+              <div className={styles.grid}>
+                <Textarea
+                  label="Your needs"
+                  value={yourNeeds}
+                  onChange={(e) => setYourNeeds(e.target.value)}
+                />
+                <Textarea
+                  label="Your spares"
+                  value={yourSpares}
+                  onChange={(e) => setYourSpares(e.target.value)}
+                />
+              </div>
+            )}
+            {useCollection && indexes && (
+              <div className={pasteStyles.summaryBox}>
+                <p><strong>Needs:</strong> {yourSide?.needs.size ?? 0} stickers</p>
+                <p><strong>Spares:</strong> {yourSide?.spares.size ?? 0} types</p>
+                <Button variant="ghost" onClick={loadFromCollection}>Refresh</Button>
+              </div>
+            )}
+          </section>
+          <section className={styles.panel}>
+            <h2 className={styles.panelTitle}>Their list</h2>
+            <div className={styles.grid}>
+              <Textarea label="Their needs" value={theirNeeds} onChange={(e) => setTheirNeeds(e.target.value)} />
+              <Textarea label="Their spares" value={theirSpares} onChange={(e) => setTheirSpares(e.target.value)} />
+            </div>
+          </section>
+        </div>
+      )}
+
+      {mode === 'simple' && useCollection && indexes && (
+        <p className={pasteStyles.yourSummary}>
+          Matching against your collection: <strong>{yourSide?.needs.size ?? 0}</strong> needs,{' '}
+          <strong>{yourSide?.spares.size ?? 0}</strong> spare types.{' '}
+          <Link to="/collection">Edit collection</Link>
+        </p>
+      )}
 
       {parsed && parsed.unknown.length > 0 && (
         <p className={[styles.notice, styles.noticeWarn].join(' ')}>
-          Could not parse: {parsed.unknown.slice(0, 12).join(', ')}
-          {parsed.unknown.length > 12 ? ` (+${parsed.unknown.length - 12} more)` : ''}
+          Could not parse: {parsed.unknown.slice(0, 10).join(', ')}
+          {parsed.unknown.length > 10 ? ` (+${parsed.unknown.length - 10} more)` : ''}
         </p>
       )}
 
@@ -203,14 +240,12 @@ export function PasteTool() {
 
       <div className={pasteStyles.results}>
         <section className={styles.panel}>
-          <h2 className={styles.panelTitle}>
-            You can send them ({parsed?.youCanSend.length ?? 0})
-          </h2>
+          <h2 className={styles.panelTitle}>You can send them ({parsed?.youCanSend.length ?? 0})</h2>
           <p className={pasteStyles.resultHint}>Your spares they still need</p>
           <StickerList
             albumId={albumId}
             items={parsed?.youCanSend ?? []}
-            emptyMessage="No overlap yet — paste both sides or load your collection."
+            emptyMessage="No overlap — they don't need any of your spares (or paste their needs)."
             accent={album?.accent}
           />
           <div className={styles.actions}>
@@ -219,14 +254,12 @@ export function PasteTool() {
         </section>
 
         <section className={styles.panel}>
-          <h2 className={styles.panelTitle}>
-            They can send you ({parsed?.theyCanSend.length ?? 0})
-          </h2>
+          <h2 className={styles.panelTitle}>They can send you ({parsed?.theyCanSend.length ?? 0})</h2>
           <p className={pasteStyles.resultHint}>Their spares you still need</p>
           <StickerList
             albumId={albumId}
             items={parsed?.theyCanSend ?? []}
-            emptyMessage="No overlap yet — paste both sides or load your collection."
+            emptyMessage="No overlap — you don't need any of their spares (or add your needs)."
             accent={album?.accent}
           />
           <div className={styles.actions}>
@@ -235,16 +268,11 @@ export function PasteTool() {
         </section>
       </div>
 
-      {mutualCount && (
+      {parsed && parsed.youCanSend.length > 0 && parsed.theyCanSend.length > 0 && (
         <p className={[styles.notice, styles.noticeOk].join(' ')}>
-          Mutual swap potential — you both have stickers the other needs. Time to message them.
+          Mutual swap potential — you both have stickers the other needs.
         </p>
       )}
-
-      <div className={styles.actions} style={{ marginTop: 'var(--space-xl)' }}>
-        <Button variant="ghost" onClick={handleExport}>Export backup</Button>
-        <Button variant="ghost" onClick={handleImport}>Import backup</Button>
-      </div>
     </main>
   )
 }
