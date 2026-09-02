@@ -6,16 +6,12 @@ name = "onemoreswap"
 pages_build_output_dir = "dist"
 compatibility_date = "2025-03-01"
 
-# D1 is bound in the Cloudflare dashboard (not here) so deploys don't fail
-# before you create the database. See DEPLOY.md Step 1–2.
+# Do NOT put TURNSTILE_SITE_KEY here (even empty) — it overrides the
+# dashboard Environment variable and blanks the live key.
 #
-# After you create it, you MAY also add (optional, for CLI local dev):
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "onemoreswap"
-# database_id = "your-real-uuid-here"
-
-[vars]
-# Set the real site key in Pages → Settings → Environment variables
-# (Production). Leave empty here; dashboard overrides for deploy.
-TURNSTILE_SITE_KEY = ""
+# Set in Pages → Settings → Variables:
+#   TURNSTILE_SITE_KEY  (plaintext)
+#   TURNSTILE_SECRET_KEY (secret)
+#
+# D1: bind in the dashboard as DB → database onemoreswap
+# (do not add a fake database_id here)
