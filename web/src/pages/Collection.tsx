@@ -11,7 +11,7 @@ import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { importAnyBackup } from '../lib/importBackup'
 import { parseStickerInput } from '../lib/parseStickers'
-import { upsertPostalSwaps } from '../lib/postal'
+import { upsertPostalSwaps, pendingIncomingMap } from '../lib/postal'
 import {
   addParsedCounts,
   albumProgress,
@@ -37,7 +37,7 @@ export function Collection() {
   )
   const [addInput, setAddInput] = useState('')
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'needs' | 'spares'>('all')
+  const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
   const [message, setMessage] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -155,14 +155,20 @@ export function Collection() {
         <div className={collectionStyles.browseToolbar}>
           <h2 className={styles.panelTitle}>Browse album</h2>
           <div className={collectionStyles.filters}>
-            {(['all', 'needs', 'spares'] as const).map((f) => (
+            {(['all', 'needs', 'spares', 'incoming'] as const).map((f) => (
               <button
                 key={f}
                 type="button"
                 className={[collectionStyles.filterBtn, filter === f ? collectionStyles.filterActive : ''].join(' ')}
                 onClick={() => setFilter(f)}
               >
-                {f === 'all' ? 'All' : f === 'needs' ? 'Needs' : 'Spares'}
+                {f === 'all'
+                  ? 'All'
+                  : f === 'needs'
+                    ? 'Needs'
+                    : f === 'spares'
+                      ? 'Spares'
+                      : 'Incoming'}
               </button>
             ))}
           </div>
@@ -180,6 +186,7 @@ export function Collection() {
           onChange={persist}
           filter={filter}
           search={search}
+          incoming={pendingIncomingMap(albumId)}
         />
       </section>
 

@@ -79,8 +79,46 @@
   color: #8a7000;
 }
 
+.incoming {
+  border-color: #2b6cb0;
+  background: #e8f2fc;
+}
+
+.incoming .code,
+.incoming .tag {
+  color: #1a4f8b;
+}
+
+.hasIncoming {
+  box-shadow: inset 0 0 0 1px #2b6cb0;
+}
+
+:root[data-theme='dark'] .spare .tag {
+  color: var(--yellow);
+}
+
+:root[data-theme='dark'] .incoming {
+  background: #152536;
+  border-color: #4a90d9;
+}
+
+:root[data-theme='dark'] .incoming .code,
+:root[data-theme='dark'] .incoming .tag {
+  color: #7eb6f0;
+}
+
 @media (prefers-color-scheme: dark) {
-  .spare .tag {
+  :root:not([data-theme='light']) .spare .tag {
     color: var(--yellow);
+  }
+
+  :root:not([data-theme='light']) .incoming {
+    background: #152536;
+    border-color: #4a90d9;
+  }
+
+  :root:not([data-theme='light']) .incoming .code,
+  :root:not([data-theme='light']) .incoming .tag {
+    color: #7eb6f0;
   }
 }

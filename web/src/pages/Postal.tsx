@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { SourcePicker } from '../components/SourcePicker'
 import { StickerList } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes, stickerDisplayLabel } from '../lib/catalogue'
@@ -12,11 +13,19 @@ import {
   loadPostal,
   newSwapId,
   saveSwap,
+  sentDelta,
   setExpectedStatus,
-  SWAP_SOURCES,
   swapProgress,
 } from '../lib/postal'
 import type { PostalSwap } from '../lib/postalTypes'
+import {
+  applySentDeltas,
+  bumpCopies,
+  getAlbumState,
+  loadCollection,
+  saveCollection,
+  setAlbumState,
+} from '../lib/storage'
 import styles from './Page.module.css'
 import postalStyles from './Postal.module.css'
 
@@ -50,6 +59,7 @@ export function Postal() {
 
   const indexes = getAlbumIndexes(albumId)
   const album = getAlbum(albumId)
+  const allSeqs = indexes?.catalogue.stickers.map((s) => s.seq) ?? []
 
   const visible = useMemo(() => {
     return swaps
@@ -75,7 +85,9 @@ export function Postal() {
         ? swap.sent
             .map((l) => {
               const info = indexes.seqToInfo.get(l.seq)
-              return info ? `${info.code}${info.cardNum}${l.qty > 1 ? ` X${l.qty}` : ''}` : String(l.seq)
+              return info
+                ? `${info.code}${info.cardNum}${l.qty > 1 ? ` X${l.qty}` : ''}`
+                : String(l.seq)
             })
             .join(' ')
         : '',
@@ -85,7 +97,9 @@ export function Postal() {
         ? swap.expected
             .map((l) => {
               const info = indexes.seqToInfo.get(l.seq)
-              return info ? `${info.code}${info.cardNum}${l.qty > 1 ? ` X${l.qty}` : ''}` : String(l.seq)
+              return info
+                ? `${info.code}${info.cardNum}${l.qty > 1 ? ` X${l.qty}` : ''}`
+                : String(l.seq)
             })
             .join(' ')
         : '',
@@ -104,6 +118,7 @@ export function Postal() {
     const expParsed = parseStickerInput(expectedText, indexes)
     const existingStatus = new Map(draft.expected.map((l) => [l.seq, l.status]))
 
+    const previous = loadPostal().swaps.find((s) => s.id === draft.id)
     const next: PostalSwap = {
       ...draft,
       albumId,
@@ -116,6 +131,16 @@ export function Postal() {
       })),
     }
 
+    // Update collection: sent stickers leave your spares
+    const deltas = sentDelta(previous?.sent || [], next.sent)
+    if (deltas.size) {
+      const store = loadCollection()
+      const current = getAlbumState(store, albumId)
+      saveCollection(
+        setAlbumState(store, albumId, applySentDeltas(current, deltas, allSeqs)),
+      )
+    }
+
     const unknown = [...sentParsed.unknown, ...expParsed.unknown]
     saveSwap(next)
     refresh()
@@ -123,15 +148,26 @@ export function Postal() {
     setMessage(
       unknown.length
         ? `Saved. Could not parse: ${unknown.slice(0, 6).join(', ')}`
-        : 'Postal swap saved on this device.',
+        : deltas.size
+          ? 'Saved. Sent stickers removed from your spares; expected stickers show as Incoming in Collection.'
+          : 'Postal swap saved. Expected stickers show as Incoming in Collection.',
     )
   }
 
   const markReceived = (swap: PostalSwap, seq: number) => {
+    const line = swap.expected.find((l) => l.seq === seq)
     const next = setExpectedStatus(swap, seq, 'received')
     saveSwap(next)
+    if (line) {
+      const store = loadCollection()
+      const current = getAlbumState(store, albumId)
+      saveCollection(
+        setAlbumState(store, albumId, bumpCopies(current, seq, line.qty, allSeqs)),
+      )
+    }
     refresh()
     if (draft?.id === swap.id) setDraft(next)
+    setMessage('Marked received and added to your collection.')
   }
 
   const markWrittenOff = (swap: PostalSwap, seq: number) => {
@@ -149,8 +185,8 @@ export function Postal() {
         </Button>
         <h1 className={styles.title}>{draft.person || 'New postal swap'}</h1>
         <p className={styles.lead}>
-          Track what you posted and what you&apos;re waiting for. Local only for now — no account
-          required.
+          Track what you posted and what you&apos;re waiting for. Saving removes sent stickers from
+          your spares; expected stickers appear as Incoming until received.
         </p>
 
         <AlbumPicker
@@ -171,19 +207,10 @@ export function Postal() {
                 placeholder="e.g. Alex from WhatsApp"
               />
             </label>
-            <label className={postalStyles.field}>
-              <span>Source</span>
-              <select
-                value={draft.source}
-                onChange={(e) => setDraft({ ...draft, source: e.target.value })}
-              >
-                {SWAP_SOURCES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SourcePicker
+              value={draft.source}
+              onChange={(source) => setDraft({ ...draft, source })}
+            />
             <label className={postalStyles.field}>
               <span>Posted date</span>
               <input
@@ -204,13 +231,13 @@ export function Postal() {
           <div className={styles.twoCol} style={{ marginTop: 'var(--space-lg)' }}>
             <Textarea
               label="You sent"
-              hint="Stickers you posted to them"
+              hint="Stickers you posted — deducted from your spares on save"
               value={sentText}
               onChange={(e) => setSentText(e.target.value)}
             />
             <Textarea
               label="You expect"
-              hint="Stickers they should send you"
+              hint="Stickers coming to you — show as Incoming until marked received"
               value={expectedText}
               onChange={(e) => setExpectedText(e.target.value)}
             />

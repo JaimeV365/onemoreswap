@@ -7,26 +7,50 @@ type StickerChipProps = {
   state: CollectionAlbumState
   onBump: (seq: number, delta: number) => void
   compact?: boolean
+  /** Pending inbound from an open postal swap */
+  incoming?: boolean
 }
 
-export function StickerChip({ sticker, state, onBump, compact }: StickerChipProps) {
+export function StickerChip({ sticker, state, onBump, compact, incoming }: StickerChipProps) {
   const copies = copiesOf(state, sticker.seq)
   const spares = sparesOf(state, sticker.seq)
-  const status =
-    copies <= 0 ? 'need' : copies === 1 ? 'album' : 'spare'
+
+  let status: 'need' | 'album' | 'spare' | 'incoming'
+  if (incoming && copies <= 0) status = 'incoming'
+  else if (incoming && copies > 0) status = copies === 1 ? 'album' : 'spare'
+  else if (copies <= 0) status = 'need'
+  else if (copies === 1) status = 'album'
+  else status = 'spare'
+
+  const tag =
+    status === 'need'
+      ? 'need'
+      : status === 'incoming'
+        ? 'coming'
+        : status === 'album'
+          ? '✓'
+          : `+${spares}`
 
   return (
     <button
       type="button"
-      className={[styles.chip, styles[status], compact ? styles.compact : ''].filter(Boolean).join(' ')}
-      title={`${sticker.code}${sticker.cardNum} ${sticker.name} — click +1, shift-click −1`}
+      className={[
+        styles.chip,
+        styles[status],
+        incoming && status !== 'incoming' ? styles.hasIncoming : '',
+        compact ? styles.compact : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      title={`${sticker.code}${sticker.cardNum} ${sticker.name}${incoming ? ' · incoming' : ''} — click +1, shift-click −1`}
       onClick={(e) => onBump(sticker.seq, e.shiftKey ? -1 : 1)}
     >
-      <span className={styles.code}>{sticker.code}{sticker.cardNum}</span>
-      {!compact && <span className={styles.name}>{sticker.name}</span>}
-      <span className={styles.tag}>
-        {status === 'need' ? 'need' : status === 'album' ? '✓' : `+${spares}`}
+      <span className={styles.code}>
+        {sticker.code}
+        {sticker.cardNum}
       </span>
+      {!compact && <span className={styles.name}>{sticker.name}</span>}
+      <span className={styles.tag}>{tag}</span>
     </button>
   )
 }

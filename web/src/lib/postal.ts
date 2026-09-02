@@ -87,4 +87,39 @@ export function setExpectedStatus(
   return maybeCompleteSwap({ ...swap, expected })
 }
 
-export const SWAP_SOURCES = ['WhatsApp', 'Facebook', 'Friend', 'Reddit', 'Other'] as const
+/** Pending incoming stickers from open postal swaps for an album. */
+export function pendingIncomingMap(albumId: string): Map<number, number> {
+  const m = new Map<number, number>()
+  for (const swap of loadPostal().swaps) {
+    if (swap.albumId !== albumId || swap.status !== 'open') continue
+    for (const line of swap.expected) {
+      if (line.status !== 'pending') continue
+      m.set(line.seq, (m.get(line.seq) || 0) + line.qty)
+    }
+  }
+  return m
+}
+
+export function linesToMap(lines: Array<{ seq: number; qty: number }>): Map<number, number> {
+  const m = new Map<number, number>()
+  for (const l of lines) {
+    m.set(l.seq, (m.get(l.seq) || 0) + l.qty)
+  }
+  return m
+}
+
+/** Net change in sent quantities between two swaps (new − old). */
+export function sentDelta(
+  previous: Array<{ seq: number; qty: number }>,
+  next: Array<{ seq: number; qty: number }>,
+): Map<number, number> {
+  const oldMap = linesToMap(previous)
+  const newMap = linesToMap(next)
+  const seqs = new Set([...oldMap.keys(), ...newMap.keys()])
+  const delta = new Map<number, number>()
+  for (const seq of seqs) {
+    const d = (newMap.get(seq) || 0) - (oldMap.get(seq) || 0)
+    if (d !== 0) delta.set(seq, d)
+  }
+  return delta
+}

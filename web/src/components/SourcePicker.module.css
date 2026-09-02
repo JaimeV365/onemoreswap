@@ -1,0 +1,59 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.select,
+.input {
+  font: inherit;
+  font-weight: 400;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  min-width: 160px;
+  flex: 1;
+}
+
+.select:focus,
+.input:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--yellow-dark);
+}
+
+.btn,
+.btnGhost {
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.btn {
+  border: 1px solid var(--yellow-dark);
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.btnGhost {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink-soft);
+}

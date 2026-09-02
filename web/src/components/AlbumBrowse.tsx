@@ -5,15 +5,26 @@ import type { CollectionAlbumState } from '../lib/types'
 import { StickerChip } from './StickerChip'
 import styles from './AlbumBrowse.module.css'
 
+export type BrowseFilter = 'all' | 'needs' | 'spares' | 'incoming'
+
 type AlbumBrowseProps = {
   albumId: string
   state: CollectionAlbumState
   onChange: (state: CollectionAlbumState) => void
-  filter?: 'all' | 'needs' | 'spares'
+  filter?: BrowseFilter
   search?: string
+  /** seq → qty pending from postal swaps */
+  incoming?: Map<number, number>
 }
 
-export function AlbumBrowse({ albumId, state, onChange, filter = 'all', search = '' }: AlbumBrowseProps) {
+export function AlbumBrowse({
+  albumId,
+  state,
+  onChange,
+  filter = 'all',
+  search = '',
+  incoming = new Map(),
+}: AlbumBrowseProps) {
   const indexes = getAlbumIndexes(albumId)
   const [openSections, setOpenSections] = useState<Set<string>>(new Set())
 
@@ -24,8 +35,10 @@ export function AlbumBrowse({ albumId, state, onChange, filter = 'all', search =
     return indexes.sections
       .map((sec) => {
         const stickers = sec.stickers.filter((s) => {
+          const isIncoming = incoming.has(Number(s.seq))
           if (filter === 'needs' && !state.missing.map(Number).includes(Number(s.seq))) return false
           if (filter === 'spares' && sparesOf(state, s.seq) < 1) return false
+          if (filter === 'incoming' && !isIncoming) return false
           if (!q) return true
           const hay = `${s.code}${s.cardNum} ${s.name} ${s.section}`.toLowerCase()
           return hay.includes(q)
@@ -33,7 +46,7 @@ export function AlbumBrowse({ albumId, state, onChange, filter = 'all', search =
         return { ...sec, stickers }
       })
       .filter((sec) => sec.stickers.length > 0)
-  }, [indexes, state, filter, q])
+  }, [indexes, state, filter, q, incoming])
 
   if (!indexes) return null
 
@@ -52,19 +65,27 @@ export function AlbumBrowse({ albumId, state, onChange, filter = 'all', search =
   }
 
   if (!visibleSections.length) {
-    return <p className={styles.empty}>No stickers match your filter.</p>
+    return (
+      <p className={styles.empty}>
+        {filter === 'incoming'
+          ? 'No stickers currently expected in the post. Add expected stickers on a postal swap.'
+          : 'No stickers match your filter.'}
+      </p>
+    )
   }
 
   return (
     <div className={styles.wrap}>
       {visibleSections.map((sec) => {
         const key = `${sec.code}::${sec.name}`
-        const isOpen = openSections.has(key) || !!q
+        const isOpen = openSections.has(key) || !!q || filter === 'incoming'
         return (
           <section key={key} className={styles.section}>
             <button type="button" className={styles.sectionHead} onClick={() => toggleSection(key)}>
               <span className={styles.sectionTitle}>{sec.name}</span>
-              <span className={styles.sectionMeta}>{sec.stickers.length} shown · {sec.code}</span>
+              <span className={styles.sectionMeta}>
+                {sec.stickers.length} shown · {sec.code}
+              </span>
               <span className={styles.chevron}>{isOpen ? '−' : '+'}</span>
             </button>
             {isOpen && (
@@ -76,6 +97,7 @@ export function AlbumBrowse({ albumId, state, onChange, filter = 'all', search =
                     state={state}
                     onBump={handleBump}
                     compact
+                    incoming={incoming.has(Number(s.seq))}
                   />
                 ))}
               </div>

@@ -167,6 +167,25 @@ export function bumpCopies(
   return setCopies(started, seq, cur + delta)
 }
 
+/** Apply net sent deltas: positive = posted away (reduce copies), negative = restored. */
+export function applySentDeltas(
+  state: CollectionAlbumState,
+  deltas: Map<number, number>,
+  allSeqs: number[] = [],
+): CollectionAlbumState {
+  let next = state
+  for (const [seq, delta] of deltas) {
+    if (delta > 0) {
+      // Posted away — remove that many copies (typically from spares)
+      next = bumpCopies(next, seq, -delta, allSeqs)
+    } else if (delta < 0) {
+      // Removed from sent list — put copies back
+      next = bumpCopies(next, seq, -delta, allSeqs)
+    }
+  }
+  return next
+}
+
 export function addParsedCounts(
   state: CollectionAlbumState,
   counts: Map<number, number>,
