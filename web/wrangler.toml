@@ -1,17 +1,20 @@
 # One More Swap — Cloudflare Pages
 # Root directory in dashboard = web
 # Functions: web/functions → /api/*
+#
+# With wrangler.toml present, Bindings + plaintext vars are managed here
+# (dashboard Add buttons stay greyed out). Secrets still go in the dashboard:
+#   TURNSTILE_SECRET_KEY
 
 name = "onemoreswap"
 pages_build_output_dir = "dist"
 compatibility_date = "2025-03-01"
 
-# Do NOT put TURNSTILE_SITE_KEY here (even empty) — it overrides the
-# dashboard Environment variable and blanks the live key.
-#
-# Set in Pages → Settings → Variables:
-#   TURNSTILE_SITE_KEY  (plaintext)
-#   TURNSTILE_SECRET_KEY (secret)
-#
-# D1: bind in the dashboard as DB → database onemoreswap
-# (do not add a fake database_id here)
+[[d1_databases]]
+binding = "DB"
+database_name = "onemoreswap"
+database_id = "ad1c4fc5-4ca4-46d5-bee2-5d8b7aaeeae3"
+
+[vars]
+# Public Turnstile site key (widget). Secret stays in dashboard only.
+TURNSTILE_SITE_KEY = "0x4AAAAAAEk_-dz81cJr7r2D"
