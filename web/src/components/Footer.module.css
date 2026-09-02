@@ -17,6 +17,24 @@
   margin-bottom: var(--space-sm);
 }
 
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  font-size: 0.875rem;
+}
+
+.links a {
+  text-decoration: none;
+  color: var(--ink-soft);
+}
+
+.links a:hover {
+  color: var(--ink);
+}
+
 .meta {
   font-size: 0.875rem;
   color: var(--ink-soft);

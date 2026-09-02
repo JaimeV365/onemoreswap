@@ -1,0 +1,48 @@
+import styles from './Page.module.css'
+
+export function Terms() {
+  return (
+    <main className={styles.page}>
+      <h1 className={styles.title}>Terms of use</h1>
+      <p className={styles.lead}>
+        Summary for early access. Full terms will be legally reviewed before launch. Last updated:
+        September 2026.
+      </p>
+      <div className={styles.prose}>
+        <h2>The service</h2>
+        <p>
+          One More Swap is an introduction service for sticker collectors. We help you find people
+          with complementary needs and spares. We are not a retailer, marketplace, courier, or
+          escrow provider.
+        </p>
+        <h2>Your responsibility</h2>
+        <p>
+          Postal delivery, sticker condition, and payment between users are your responsibility. Tier
+          3 platform matching is post only — meet in person only with people you already know (Tier
+          1 contacts).
+        </p>
+        <h2>Fees</h2>
+        <p>
+          Tier 1 (contacts) and Tier 2 (paste tool) are always free. Tier 3 platform matching is free
+          at launch. If fees are introduced later, they cover the introduction — not guaranteed
+          delivery.
+        </p>
+        <h2>Reputation</h2>
+        <p>
+          Automated reputation affects matching. Strikes apply for confirmed no-shows or false
+          reports. We do not manually investigate individual disputes.
+        </p>
+        <h2>Eligibility</h2>
+        <p>
+          You must be 18+ or use the service with a parent or guardian who accepts these terms on
+          your behalf. UK-first; trades are at your own risk under applicable law.
+        </p>
+        <h2>Accounts</h2>
+        <p>
+          Sign-in uses Google OAuth; we do not store passwords. Keep your account secure and use the
+          service honestly.
+        </p>
+      </div>
+    </main>
+  )
+}

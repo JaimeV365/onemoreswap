@@ -1,0 +1,91 @@
+import type { AlbumIndexes, ParsedCounts } from './types'
+
+function tokenizeStickerInput(raw: string): string[] {
+  return raw
+    .replace(/[,;|/\\]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((t) => t.toUpperCase())
+}
+
+function peekMultiplier(tokens: string[], i: number) {
+  const next = tokens[i + 1]
+  if (!next) return { mult: 1, skip: 0 }
+  const m = next.match(/^X(\d{1,2})$/)
+  if (!m) return { mult: 1, skip: 0 }
+  const n = parseInt(m[1], 10)
+  if (n < 1) return { mult: 1, skip: 0 }
+  return { mult: Math.min(n, 99), skip: 1 }
+}
+
+export function parseStickerInput(raw: string, indexes: AlbumIndexes): ParsedCounts {
+  const counts = new Map<number, number>()
+  const unknown: string[] = []
+  const tokens = tokenizeStickerInput(raw)
+  if (!tokens.length) return { counts, unknown }
+
+  let lastCode: string | null = null
+
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i]
+    if (/^X\d+$/.test(tok)) {
+      unknown.push(tok)
+      continue
+    }
+
+    if (/^\d+$/.test(tok)) {
+      const n = parseInt(tok, 10)
+      const { mult, skip } = peekMultiplier(tokens, i)
+
+      if (lastCode && n >= 1 && n <= 99) {
+        const seq = indexes.codeToSeq.get(`${lastCode}${n}`)
+        if (seq !== undefined) {
+          counts.set(seq, (counts.get(seq) ?? 0) + mult)
+        } else {
+          unknown.push(tok)
+        }
+        i += skip
+      } else if (indexes.seqToInfo.has(n)) {
+        counts.set(n, (counts.get(n) ?? 0) + mult)
+        lastCode = null
+        i += skip
+      } else {
+        unknown.push(tok)
+      }
+    } else if (/^[A-Z]{2,4}\d{1,2}$/.test(tok)) {
+      const cm = tok.match(/^([A-Z]{2,4})(\d{1,2})$/)!
+      const code = cm[1]
+      const cardNum = parseInt(cm[2], 10)
+      const seq = indexes.codeToSeq.get(`${code}${cardNum}`)
+      const { mult, skip } = peekMultiplier(tokens, i)
+      if (seq !== undefined) {
+        counts.set(seq, (counts.get(seq) ?? 0) + mult)
+        lastCode = code
+        i += skip
+      } else {
+        unknown.push(tok)
+      }
+    } else if (/^[A-Z]{2,4}$/.test(tok) && indexes.teamCodes.has(tok)) {
+      lastCode = tok
+    } else {
+      unknown.push(tok)
+    }
+  }
+
+  return { counts, unknown }
+}
+
+export function countsToText(counts: Map<number, number>, indexes: AlbumIndexes): string {
+  const byCode: Record<string, number[]> = {}
+  for (const [seq, qty] of counts) {
+    const info = indexes.seqToInfo.get(seq)
+    if (!info) continue
+    if (!byCode[info.code]) byCode[info.code] = []
+    for (let i = 0; i < qty; i++) byCode[info.code].push(info.cardNum)
+  }
+  return Object.entries(byCode)
+    .map(([code, nums]) => `${code}: ${nums.sort((a, b) => a - b).join(', ')}`)
+    .join('\n')
+}

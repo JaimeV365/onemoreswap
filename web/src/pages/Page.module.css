@@ -1,0 +1,122 @@
+.page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg) var(--space-2xl);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  margin-bottom: var(--space-sm);
+}
+
+.lead {
+  color: var(--ink-soft);
+  line-height: 1.6;
+  max-width: 42rem;
+  margin-bottom: var(--space-xl);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 720px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.panelTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.notice {
+  font-size: 0.875rem;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+}
+
+.noticeWarn {
+  background: var(--yellow-wash);
+  border: 1px solid var(--yellow-dark);
+  color: var(--ink);
+}
+
+.noticeOk {
+  background: var(--green-wash);
+  border: 1px solid var(--green);
+  color: var(--ink);
+}
+
+.noticeError {
+  background: transparent;
+  border: 1px solid var(--red);
+  color: var(--red-dark);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.stat {
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.875rem;
+}
+
+.stat strong {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  display: block;
+}
+
+.prose {
+  max-width: 42rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.prose h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--ink);
+  margin: var(--space-xl) 0 var(--space-md);
+}
+
+.prose p,
+.prose li {
+  margin-bottom: var(--space-md);
+}
+
+.prose ul {
+  padding-left: 1.25rem;
+}

@@ -77,6 +77,22 @@
   line-height: 1.6;
 }
 
+.cardLink {
+  display: inline-block;
+  margin-top: var(--space-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.heroActions a {
+  text-decoration: none;
+}
+
+.ctaBox a {
+  text-decoration: none;
+}
+
 .badge {
   display: inline-block;
   font-size: 0.75rem;

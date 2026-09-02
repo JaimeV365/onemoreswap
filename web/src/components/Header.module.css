@@ -30,8 +30,13 @@
   color: var(--ink-soft);
 }
 
-.nav a:hover {
+.nav a:hover,
+.nav a.active {
   color: var(--ink);
+}
+
+.nav a.active {
+  font-weight: 700;
 }
 
 @media (max-width: 480px) {

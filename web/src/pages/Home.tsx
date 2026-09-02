@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Wordmark } from '../components/Wordmark'
 import styles from './Home.module.css'
@@ -12,6 +13,7 @@ const tiers = [
     title: 'Paste & match',
     badge: 'Always free',
     body: 'Paste a list of spares or needs. See overlaps instantly. No account required.',
+    link: '/paste',
   },
   {
     title: 'Platform matching',
@@ -44,14 +46,16 @@ export function Home() {
           Track your album, find fair swaps, finish the book.
         </p>
         <div className={styles.heroActions}>
-          <Button disabled title="Coming soon">
-            Sign in with Google
-          </Button>
-          <Button variant="secondary" disabled title="Coming soon">
-            Try paste tool
-          </Button>
+          <Link to="/collection">
+            <Button>Track my collection</Button>
+          </Link>
+          <Link to="/paste">
+            <Button variant="secondary">Try paste tool</Button>
+          </Link>
         </div>
-        <p className={styles.heroNote}>Launching soon — accounts and matching on the way.</p>
+        <p className={styles.heroNote}>
+          No account needed for collection tracking and paste matching — saved in your browser.
+        </p>
       </section>
 
       <section id="how-it-works" className={styles.section}>
@@ -62,6 +66,9 @@ export function Home() {
               <span className={styles.badge}>{tier.badge}</span>
               <h3>{tier.title}</h3>
               <p>{tier.body}</p>
+              {tier.link && (
+                <Link to={tier.link} className={styles.cardLink}>Open paste tool →</Link>
+              )}
             </article>
           ))}
         </div>
@@ -89,9 +96,11 @@ export function Home() {
         <div className={styles.ctaBox}>
           <h2 className={styles.ctaTitle}>Your spares. Their needs. One more swap.</h2>
           <p className={styles.ctaLead}>
-            We introduce collectors — you post the stickers. Reputation keeps everyone honest.
+            Paste a list from WhatsApp, see what matches, save your collection for next time.
           </p>
-          <Button disabled>Get notified at launch</Button>
+          <Link to="/paste">
+            <Button>Start matching</Button>
+          </Link>
         </div>
       </section>
     </main>

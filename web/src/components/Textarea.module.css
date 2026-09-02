@@ -1,0 +1,36 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
+
+.input {
+  width: 100%;
+  min-height: 7rem;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.input:focus {
+  border-color: var(--yellow-dark);
+  box-shadow: var(--focus-ring);
+  outline: none;
+}

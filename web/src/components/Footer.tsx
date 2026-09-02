@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import styles from './Footer.module.css'
 
 export function Footer() {
@@ -5,6 +6,13 @@ export function Footer() {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <p className={styles.tagline}>One more swap. Finish the album.</p>
+        <nav className={styles.links} aria-label="Footer">
+          <Link to="/paste">Paste tool</Link>
+          <Link to="/collection">Collection</Link>
+          <Link to="/about">About</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+        </nav>
         <p className={styles.meta}>
           Introduction service for sticker collectors · UK-first · Free to start
         </p>

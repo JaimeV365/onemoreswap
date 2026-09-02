@@ -1,16 +1,30 @@
+import { Link, NavLink } from 'react-router-dom'
 import { Wordmark } from './Wordmark'
 import styles from './Header.module.css'
+
+const nav = [
+  { to: '/paste', label: 'Paste tool' },
+  { to: '/collection', label: 'My collection' },
+  { to: '/about', label: 'About' },
+]
 
 export function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        <a href="/" className={styles.brand}>
+        <Link to="/" className={styles.brand}>
           <Wordmark size="sm" />
-        </a>
+        </Link>
         <nav className={styles.nav} aria-label="Main">
-          <a href="#how-it-works">How it works</a>
-          <a href="#albums">Albums</a>
+          {nav.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => (isActive ? styles.active : undefined)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
       </div>
     </header>
