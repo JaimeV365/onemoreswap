@@ -107,19 +107,3 @@ export function linesToMap(lines: Array<{ seq: number; qty: number }>): Map<numb
   }
   return m
 }
-
-/** Net change in sent quantities between two swaps (new − old). */
-export function sentDelta(
-  previous: Array<{ seq: number; qty: number }>,
-  next: Array<{ seq: number; qty: number }>,
-): Map<number, number> {
-  const oldMap = linesToMap(previous)
-  const newMap = linesToMap(next)
-  const seqs = new Set([...oldMap.keys(), ...newMap.keys()])
-  const delta = new Map<number, number>()
-  for (const seq of seqs) {
-    const d = (newMap.get(seq) || 0) - (oldMap.get(seq) || 0)
-    if (d !== 0) delta.set(seq, d)
-  }
-  return delta
-}

@@ -7,11 +7,11 @@ export function Footer() {
       <div className={styles.inner}>
         <p className={styles.tagline}>One more swap. Finish the album.</p>
         <nav className={styles.links} aria-label="Footer">
+          <Link to="/">Collection</Link>
           <Link to="/paste">Paste tool</Link>
-          <Link to="/collection">Collection</Link>
           <Link to="/postal">Postal</Link>
           <Link to="/settings">Settings</Link>
-          <Link to="/about">About</Link>
+          <Link to="/welcome">About the product</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
         </nav>

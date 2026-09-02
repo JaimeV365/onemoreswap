@@ -3,8 +3,8 @@ import { Wordmark } from './Wordmark'
 import styles from './Header.module.css'
 
 const nav = [
+  { to: '/', label: 'Collection', end: true },
   { to: '/paste', label: 'Paste tool' },
-  { to: '/collection', label: 'Collection' },
   { to: '/postal', label: 'Postal' },
   { to: '/settings', label: 'Settings' },
 ]
@@ -21,6 +21,7 @@ export function Header() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.end}
               className={({ isActive }) => (isActive ? styles.active : undefined)}
             >
               {item.label}

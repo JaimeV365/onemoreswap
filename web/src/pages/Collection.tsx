@@ -110,7 +110,8 @@ export function Collection() {
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to
         remove. Then{' '}
-        <Link to="/paste">match against someone else&apos;s list</Link>.
+        <Link to="/paste">match against someone else&apos;s list</Link> or track a{' '}
+        <Link to="/postal">postal swap</Link>.
       </p>
 
       <OnboardingBanner show={!isAlbumStarted(state)} />

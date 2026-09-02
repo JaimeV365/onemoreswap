@@ -37,7 +37,7 @@ export function About() {
         </p>
         <p>
           <Link to="/paste">Try the paste tool</Link> or{' '}
-          <Link to="/collection">track your collection</Link> — both work without an account today.
+          <Link to="/">track your collection</Link> — both work without an account today.
         </p>
       </div>
     </main>

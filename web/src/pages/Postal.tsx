@@ -13,13 +13,18 @@ import {
   loadPostal,
   newSwapId,
   saveSwap,
-  sentDelta,
   setExpectedStatus,
   swapProgress,
 } from '../lib/postal'
 import type { PostalSwap } from '../lib/postalTypes'
 import {
+  analyzeSentShortfalls,
   applySentDeltas,
+  pendingMapFromSwap,
+  sentDelta,
+  syncPendingExpected,
+} from '../lib/postalCollection'
+import {
   bumpCopies,
   getAlbumState,
   loadCollection,
@@ -131,15 +136,30 @@ export function Postal() {
       })),
     }
 
-    // Update collection: sent stickers leave your spares
     const deltas = sentDelta(previous?.sent || [], next.sent)
-    if (deltas.size) {
-      const store = loadCollection()
-      const current = getAlbumState(store, albumId)
-      saveCollection(
-        setAlbumState(store, albumId, applySentDeltas(current, deltas, allSeqs)),
-      )
+    const store = loadCollection()
+    let albumState = getAlbumState(store, albumId)
+
+    // WC26: only post spare copies — block if not enough
+    const shortfalls = analyzeSentShortfalls(albumState, deltas, albumId)
+    if (shortfalls.length) {
+      setMessage(`Can't send — not enough spares:\n${shortfalls.join('\n')}`)
+      return
     }
+
+    // Deduct only newly added sent qty: +2 → +1 → ✓ (never below album copy without warning)
+    if ([...deltas.values()].some((d) => d > 0)) {
+      albumState = applySentDeltas(albumState, deltas, allSeqs)
+    }
+
+    // Expected pending: leave "needs", show as Incoming (same idea as WC26 missingSet toggle)
+    albumState = syncPendingExpected(
+      albumState,
+      previous ? pendingMapFromSwap(previous) : new Map(),
+      pendingMapFromSwap(next),
+    )
+
+    saveCollection(setAlbumState(store, albumId, albumState))
 
     const unknown = [...sentParsed.unknown, ...expParsed.unknown]
     saveSwap(next)
@@ -148,9 +168,7 @@ export function Postal() {
     setMessage(
       unknown.length
         ? `Saved. Could not parse: ${unknown.slice(0, 6).join(', ')}`
-        : deltas.size
-          ? 'Saved. Sent stickers removed from your spares; expected stickers show as Incoming in Collection.'
-          : 'Postal swap saved. Expected stickers show as Incoming in Collection.',
+        : 'Saved. Spares drop one copy at a time (+2→+1→✓). Expected stickers show under Incoming.',
     )
   }
 
@@ -185,8 +203,8 @@ export function Postal() {
         </Button>
         <h1 className={styles.title}>{draft.person || 'New postal swap'}</h1>
         <p className={styles.lead}>
-          Track what you posted and what you&apos;re waiting for. Saving removes sent stickers from
-          your spares; expected stickers appear as Incoming until received.
+          Track what you posted and what you&apos;re waiting for. You can only send spare copies — each
+          sent sticker drops one (+2 → +1 → ✓), same as the World Cup tracker.
         </p>
 
         <AlbumPicker
@@ -231,13 +249,13 @@ export function Postal() {
           <div className={styles.twoCol} style={{ marginTop: 'var(--space-lg)' }}>
             <Textarea
               label="You sent"
-              hint="Stickers you posted — deducted from your spares on save"
+              hint="Spares only — one copy each: +2 becomes +1, +1 becomes ✓"
               value={sentText}
               onChange={(e) => setSentText(e.target.value)}
             />
             <Textarea
               label="You expect"
-              hint="Stickers coming to you — show as Incoming until marked received"
+              hint="Shows as Incoming until marked received"
               value={expectedText}
               onChange={(e) => setExpectedText(e.target.value)}
             />
@@ -259,7 +277,17 @@ export function Postal() {
           </div>
         </section>
 
-        {message && <p className={[styles.notice, styles.noticeOk].join(' ')}>{message}</p>}
+        {message && (
+          <p
+            className={[
+              styles.notice,
+              message.startsWith("Can't send") ? styles.noticeError : styles.noticeOk,
+            ].join(' ')}
+            style={{ whiteSpace: 'pre-wrap' }}
+          >
+            {message}
+          </p>
+        )}
 
         {draft.expected.length > 0 && (
           <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
@@ -359,7 +387,7 @@ export function Postal() {
               World Cup sticker tracker
             </a>
             , export a backup there and import it under{' '}
-            <Link to="/collection">My collection → Advanced</Link>.
+            <Link to="/">My collection → Advanced</Link>.
           </p>
           <Button onClick={openNew}>Create first swap</Button>
         </div>

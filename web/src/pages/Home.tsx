@@ -46,8 +46,8 @@ export function Home() {
           Track your album, find fair swaps, finish the book.
         </p>
         <div className={styles.heroActions}>
-          <Link to="/collection">
-            <Button>Track my collection</Button>
+          <Link to="/">
+            <Button>Open my collection</Button>
           </Link>
           <Link to="/paste">
             <Button variant="secondary">Try paste tool</Button>
@@ -98,7 +98,7 @@ export function Home() {
           <p className={styles.ctaLead}>
             Paste a list from WhatsApp, see what matches, save your collection for next time.
           </p>
-          <Link to="/paste">
+          <Link to="/">
             <Button>Start matching</Button>
           </Link>
         </div>

@@ -54,10 +54,13 @@ export function Settings() {
         </p>
         <ul className={settingsStyles.links}>
           <li>
-            <Link to="/collection">My collection</Link> — export / import
+            <Link to="/">My collection</Link> — export / import
           </li>
           <li>
             <Link to="/postal">Postal swaps</Link> — track posts and incoming stickers
+          </li>
+          <li>
+            <Link to="/welcome">Product overview</Link> — how the three tiers work
           </li>
         </ul>
       </section>

@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Navigate, BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { ThemeProvider } from './lib/ThemeContext'
 import { About } from './pages/About'
@@ -17,11 +17,12 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route index element={<Home />} />
+            <Route index element={<Collection />} />
+            <Route path="collection" element={<Navigate to="/" replace />} />
             <Route path="paste" element={<PasteTool />} />
-            <Route path="collection" element={<Collection />} />
             <Route path="postal" element={<Postal />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="welcome" element={<Home />} />
             <Route path="about" element={<About />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="terms" element={<Terms />} />
