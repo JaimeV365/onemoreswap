@@ -36,11 +36,15 @@ export function AlbumBrowse({
       .map((sec) => {
         const stickers = sec.stickers.filter((s) => {
           const isIncoming = incoming.has(Number(s.seq))
-          if (filter === 'needs' && !state.missing.map(Number).includes(Number(s.seq))) return false
+          // WC26: pending inbound are Incoming, not Needs
+          if (filter === 'needs') {
+            if (!state.missing.map(Number).includes(Number(s.seq)) || isIncoming) return false
+          }
           if (filter === 'spares' && sparesOf(state, s.seq) < 1) return false
           if (filter === 'incoming' && !isIncoming) return false
           if (!q) return true
-          const hay = `${s.code}${s.cardNum} ${s.name} ${s.section}`.toLowerCase()
+          const hay =
+            `${s.code}${s.cardNum} ${s.code} ${s.cardNum} ${s.seq} ${s.name} ${s.section}`.toLowerCase()
           return hay.includes(q)
         })
         return { ...sec, stickers }
@@ -69,7 +73,9 @@ export function AlbumBrowse({
       <p className={styles.empty}>
         {filter === 'incoming'
           ? 'No stickers currently expected in the post. Add expected stickers on a postal swap.'
-          : 'No stickers match your filter.'}
+          : filter === 'needs'
+            ? 'No needs right now — or they’re all marked Incoming.'
+            : 'No stickers match your filter.'}
       </p>
     )
   }
@@ -78,7 +84,8 @@ export function AlbumBrowse({
     <div className={styles.wrap}>
       {visibleSections.map((sec) => {
         const key = `${sec.code}::${sec.name}`
-        const isOpen = openSections.has(key) || !!q || filter === 'incoming'
+        const isOpen =
+          openSections.has(key) || !!q || filter === 'incoming' || filter === 'needs' || filter === 'spares'
         return (
           <section key={key} className={styles.section}>
             <button type="button" className={styles.sectionHead} onClick={() => toggleSection(key)}>

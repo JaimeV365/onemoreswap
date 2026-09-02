@@ -20,9 +20,12 @@ import type { PostalSwap } from '../lib/postalTypes'
 import {
   analyzeSentShortfalls,
   applySentDeltas,
+  describePostalRevert,
   pendingMapFromSwap,
+  revertPostalSwapEffects,
   sentDelta,
   syncPendingExpected,
+  writeOffExpected,
 } from '../lib/postalCollection'
 import {
   bumpCopies,
@@ -191,8 +194,33 @@ export function Postal() {
   const markWrittenOff = (swap: PostalSwap, seq: number) => {
     const next = setExpectedStatus(swap, seq, 'written_off')
     saveSwap(next)
+    const store = loadCollection()
+    const current = getAlbumState(store, albumId)
+    saveCollection(setAlbumState(store, albumId, writeOffExpected(current, seq)))
     refresh()
     if (draft?.id === swap.id) setDraft(next)
+    setMessage('Written off — sticker back on your need list.')
+  }
+
+  const deleteDraft = () => {
+    if (!draft) return
+    const parts = describePostalRevert(draft)
+    const msg =
+      `Delete swap with "${draft.person || 'this person'}"?\n\n` +
+      (parts.length
+        ? `This reverts collection changes from this swap:\n• ${parts.join('\n• ')}`
+        : 'No collection changes to revert.') +
+      '\n\nThis cannot be undone.'
+    if (!confirm(msg)) return
+    const store = loadCollection()
+    const current = getAlbumState(store, draft.albumId)
+    saveCollection(
+      setAlbumState(store, draft.albumId, revertPostalSwapEffects(current, draft, allSeqs)),
+    )
+    deleteSwap(draft.id)
+    refresh()
+    setView('list')
+    setMessage(parts.length ? 'Swap deleted — collection changes reverted.' : 'Swap deleted.')
   }
 
   if (view === 'edit' && draft) {
@@ -262,16 +290,7 @@ export function Postal() {
           </div>
           <div className={styles.actions}>
             <Button onClick={saveDraft}>Save swap</Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                if (confirm('Delete this postal swap?')) {
-                  deleteSwap(draft.id)
-                  refresh()
-                  setView('list')
-                }
-              }}
-            >
+            <Button variant="ghost" onClick={deleteDraft}>
               Delete
             </Button>
           </div>

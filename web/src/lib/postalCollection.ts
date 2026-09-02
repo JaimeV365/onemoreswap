@@ -113,4 +113,73 @@ export function otherPendingMap(albumId: string, excludeSwapId?: string): Map<nu
   return m
 }
 
+export function describePostalRevert(swap: PostalSwap): string[] {
+  const parts: string[] = []
+  const sentN = swap.sent.reduce((a, l) => a + l.qty, 0)
+  if (sentN) {
+    parts.push(
+      `Restore ${sentN} sent spare${sentN === 1 ? '' : 's'} to your collection`,
+    )
+  }
+  const pendingN = swap.expected.filter((l) => l.status === 'pending').length
+  if (pendingN) {
+    parts.push(
+      `Put ${pendingN} pending expected sticker${pendingN === 1 ? '' : 's'} back on your need list`,
+    )
+  }
+  const recvN = swap.expected
+    .filter((l) => l.status === 'received')
+    .reduce((a, l) => a + l.qty, 0)
+  if (recvN) {
+    parts.push(
+      `Remove ${recvN} received cop${recvN === 1 ? 'y' : 'ies'} that this swap added`,
+    )
+  }
+  return parts
+}
+
+/** Undo collection effects of a swap (WC26 delete behaviour). */
+export function revertPostalSwapEffects(
+  state: CollectionAlbumState,
+  swap: PostalSwap,
+  allSeqs: number[] = [],
+): CollectionAlbumState {
+  let next = state
+
+  for (const line of swap.sent) {
+    next = bumpCopies(next, line.seq, line.qty, allSeqs)
+  }
+
+  for (const line of swap.expected) {
+    if (line.status === 'pending') {
+      const stillPendingElsewhere = otherPendingMap(swap.albumId, swap.id).has(line.seq)
+      if (copiesOf(next, line.seq) < 1 && !stillPendingElsewhere) {
+        const missing = next.missing.map(Number)
+        if (!missing.includes(line.seq)) {
+          missing.push(line.seq)
+          missing.sort((a, b) => a - b)
+          next = { ...next, missing }
+        }
+      }
+    } else if (line.status === 'received') {
+      next = bumpCopies(next, line.seq, -line.qty, allSeqs)
+    }
+  }
+
+  return next
+}
+
+/** Write off: put sticker back on the need list (WC26). */
+export function writeOffExpected(
+  state: CollectionAlbumState,
+  seq: number,
+): CollectionAlbumState {
+  const missing = state.missing.map(Number)
+  if (!missing.includes(seq)) {
+    missing.push(seq)
+    missing.sort((a, b) => a - b)
+  }
+  return { ...state, missing }
+}
+
 export { pendingIncomingMap }

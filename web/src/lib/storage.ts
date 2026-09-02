@@ -181,13 +181,32 @@ export function addParsedCounts(
   return next
 }
 
-export function albumProgress(state: CollectionAlbumState, total: number, allSeqs: number[]) {
-  const missing = state.missing.length
+export function albumProgress(
+  state: CollectionAlbumState,
+  total: number,
+  allSeqs: number[],
+  incoming: Set<number> = new Set(),
+) {
+  // WC26: pending inbound don't count as "missing" for progress
+  const missing = allSeqs.filter(
+    (seq) => copiesOf(state, seq) === 0 && !incoming.has(seq),
+  ).length
+  const pending = allSeqs.filter((seq) => incoming.has(seq) && copiesOf(state, seq) === 0).length
   const inAlbum = allSeqs.filter((seq) => copiesOf(state, seq) > 0).length
   const spareTypes = allSeqs.filter((seq) => sparesOf(state, seq) > 0).length
   const spareCopies = allSeqs.reduce((sum, seq) => sum + sparesOf(state, seq), 0)
-  const pct = total > 0 && isAlbumStarted(state) ? Math.round((inAlbum / total) * 100) : 0
-  return { missing, inAlbum, spareTypes, spareCopies, pct, total, started: isAlbumStarted(state) }
+  const pct =
+    total > 0 && isAlbumStarted(state) ? Math.round((inAlbum / total) * 100) : 0
+  return {
+    missing,
+    pending,
+    inAlbum,
+    spareTypes,
+    spareCopies,
+    pct,
+    total,
+    started: isAlbumStarted(state),
+  }
 }
 
 export function exportCollectionJson(store: CollectionStore): string {

@@ -8,12 +8,12 @@ import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { countsToSet, computeOverlap } from '../lib/overlap'
 import { parseStickerInput } from '../lib/parseStickers'
-import { stateToPasteText } from '../lib/stateText'
+import { pendingIncomingMap } from '../lib/postal'
+import { needsForMatching, stateToPasteText } from '../lib/stateText'
 import {
   getAlbumState,
   isAlbumStarted,
   loadCollection,
-  needsToSet,
   sparesToMap,
 } from '../lib/storage'
 import styles from './Page.module.css'
@@ -41,7 +41,8 @@ export function PasteTool() {
   const loadFromCollection = useCallback(() => {
     if (!indexes) return
     const state = getAlbumState(loadCollection(), albumId)
-    const text = stateToPasteText(state, indexes)
+    const exclude = new Set(pendingIncomingMap(albumId).keys())
+    const text = stateToPasteText(state, indexes, exclude)
     setYourNeeds(text.needs)
     setYourSpares(text.spares)
   }, [albumId, indexes])
@@ -54,8 +55,9 @@ export function PasteTool() {
     if (!indexes) return null
     if (useCollection) {
       const state = getAlbumState(loadCollection(), albumId)
+      const incoming = new Set(pendingIncomingMap(albumId).keys())
       return {
-        needs: needsToSet(state),
+        needs: needsForMatching(state, incoming),
         spares: sparesToMap(state),
       }
     }

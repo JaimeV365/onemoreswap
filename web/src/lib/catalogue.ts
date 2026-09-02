@@ -2,6 +2,7 @@ import type { AlbumCatalogue, AlbumIndexes, AlbumSection, CollectionAlbumState, 
 import wcRaw from '../data/wc2026-catalogue.json'
 import plRaw from '../data/pl2526-catalogue.json'
 import { copiesOf, sparesOf } from './storage'
+import { pendingIncomingMap } from './postal'
 
 const catalogues = [wcRaw, plRaw] as AlbumCatalogue[]
 
@@ -79,6 +80,7 @@ export function buildShareText(
   if (!indexes) return '(none)'
 
   const missing = new Set(state.missing.map(Number))
+  const incoming = pendingIncomingMap(albumId)
   const lines: string[] = []
 
   for (const sec of indexes.sections) {
@@ -86,7 +88,10 @@ export function buildShareText(
     const dupeCards: number[] = []
 
     for (const s of sec.stickers) {
-      if (missing.has(Number(s.seq))) missCards.push(s.cardNum)
+      // WC26: pending inbound stickers are not listed as needs
+      if (missing.has(Number(s.seq)) && !incoming.has(Number(s.seq))) {
+        missCards.push(s.cardNum)
+      }
       if (sparesOf(state, Number(s.seq)) >= 1) dupeCards.push(s.cardNum)
     }
 

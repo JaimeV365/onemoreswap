@@ -59,10 +59,12 @@ export function Collection() {
     setMessage(null)
   }, [albumId])
 
+  const incoming = pendingIncomingMap(albumId)
   const progress = albumProgress(
     state,
     album?.total ?? 0,
     indexes?.catalogue.stickers.map((s) => s.seq) ?? [],
+    new Set(incoming.keys()),
   )
 
   const handleQuickAdd = () => {
@@ -122,7 +124,9 @@ export function Collection() {
         pct={progress.pct}
         label={
           progress.started
-            ? `${progress.inAlbum} of ${progress.total} in album · ${progress.missing} missing · ${progress.spareCopies} spare copies`
+            ? `${progress.inAlbum} of ${progress.total} in album · ${progress.missing} missing${
+                progress.pending ? ` · ${progress.pending} incoming` : ''
+              } · ${progress.spareCopies} spare copies`
             : `Not started — use Quick add or "Start fresh" to begin tracking`
         }
       />
@@ -177,7 +181,7 @@ export function Collection() {
         <input
           type="search"
           className={collectionStyles.search}
-          placeholder="Search team, code, or player…"
+          placeholder="Find sticker — ENG7, Messi, or 570…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -187,7 +191,7 @@ export function Collection() {
           onChange={persist}
           filter={filter}
           search={search}
-          incoming={pendingIncomingMap(albumId)}
+          incoming={incoming}
         />
       </section>
 
