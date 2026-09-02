@@ -2,7 +2,8 @@
 
 Sticker swap platform — find spares, finish your album.
 
-- **Live site:** Cloudflare Pages (see repo deployments)
+- **GitHub:** [github.com/JaimeV365/onemoreswap](https://github.com/JaimeV365/onemoreswap)
+- **Live site:** [onemoreswap.pages.dev](https://onemoreswap.pages.dev) (after Cloudflare Pages setup — see [DEPLOY.md](DEPLOY.md))
 - **Product domain (future):** [onemoreswap.com](https://onemoreswap.com)
 - **App:** [`web/`](web/) — React + Vite, deployed to Cloudflare Pages
 
