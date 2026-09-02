@@ -21,8 +21,10 @@ export function Privacy() {
             (localStorage). We do not receive it.
           </li>
           <li>
-            <strong>With an account (coming soon):</strong> Google sign-in email, collection data,
-            match and trade history, and addresses only when a trade is confirmed.
+            <strong>With an account:</strong> email address and a hashed password (we never store
+            your password in plain text), plus collection/sync data when cloud sync is enabled.
+            Addresses only when a trade is confirmed. Cloudflare Turnstile may process a bot-check
+            token on sign-up and sign-in.
           </li>
         </ul>
         <h2>Why we use data</h2>

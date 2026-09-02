@@ -1,2 +1,3 @@
-name = "onemoreswap"
-pages_build_output_dir = "web/dist"
+name = "onemoreswap"
+pages_build_output_dir = "web/dist"
+compatibility_date = "2025-03-01"

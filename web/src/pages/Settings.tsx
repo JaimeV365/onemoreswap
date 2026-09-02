@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../lib/AuthContext'
 import { useTheme } from '../lib/ThemeContext'
 import type { ThemePref } from '../lib/theme'
 import styles from './Page.module.css'
@@ -12,15 +13,31 @@ const options: { id: ThemePref; label: string; hint: string }[] = [
 
 export function Settings() {
   const { pref, setPref, resolved } = useTheme()
+  const { user, loading } = useAuth()
 
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>Settings</h1>
-      <p className={styles.lead}>
-        Preferences stay on this device. Sign-in and cloud sync come later.
-      </p>
+      <p className={styles.lead}>Preferences stay on this device. Account is optional.</p>
 
       <section className={styles.panel}>
+        <h2 className={styles.panelTitle}>Account</h2>
+        {loading ? (
+          <p className={settingsStyles.hint}>Checking sign-in…</p>
+        ) : user ? (
+          <p className={settingsStyles.hint}>
+            Signed in as <strong>{user.email}</strong>.{' '}
+            <Link to="/account">Manage account</Link>
+          </p>
+        ) : (
+          <p className={settingsStyles.hint}>
+            <Link to="/account">Sign in or create an account</Link> — email and password, no Google.
+            Cloud sync for your collection comes next.
+          </p>
+        )}
+      </section>
+
+      <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
         <h2 className={styles.panelTitle}>Appearance</h2>
         <p className={settingsStyles.hint}>
           Currently showing <strong>{resolved}</strong> mode
@@ -49,7 +66,7 @@ export function Settings() {
       <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
         <h2 className={styles.panelTitle}>Data</h2>
         <p className={settingsStyles.hint}>
-          Collection and postal swaps stay on this device until sign-in arrives. Import World Cup
+          Collection and postal swaps stay on this device until cloud sync is ready. Import World Cup
           tracker backups from Collection → Advanced.
         </p>
         <ul className={settingsStyles.links}>

@@ -1,0 +1,91 @@
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: var(--space-lg) 0 var(--space-md);
+}
+
+.tab {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.tabActive {
+  border-color: var(--red);
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.field input {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+  padding: 0.7rem 0.85rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.field input:focus {
+  outline: 2px solid var(--yellow-dark);
+  outline-offset: 1px;
+  border-color: var(--yellow-dark);
+}
+
+.fieldError {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--red);
+}
+
+.rules {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.ruleMet {
+  color: var(--green, #00a85a);
+}
+
+.ruleMiss {
+  color: var(--ink-soft);
+}
+
+.turnstile {
+  min-height: 65px;
+}
+
+.hint {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  margin: 0 0 var(--space-md);
+  line-height: 1.5;
+}

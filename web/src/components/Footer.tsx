@@ -10,6 +10,7 @@ export function Footer() {
           <Link to="/">Collection</Link>
           <Link to="/paste">Paste tool</Link>
           <Link to="/postal">Postal</Link>
+          <Link to="/account">Account</Link>
           <Link to="/settings">Settings</Link>
           <Link to="/welcome">About the product</Link>
           <Link to="/privacy">Privacy</Link>

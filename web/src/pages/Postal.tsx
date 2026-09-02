@@ -171,7 +171,7 @@ export function Postal() {
     setMessage(
       unknown.length
         ? `Saved. Could not parse: ${unknown.slice(0, 6).join(', ')}`
-        : 'Saved. Spares drop one copy at a time (+2→+1→✓). Expected stickers show under Incoming.',
+        : 'Saved',
     )
   }
 

@@ -1,0 +1,24 @@
+# One More Swap — Cloudflare Pages
+# Build: cd web && npm run build  (output: web/dist)
+# Functions live in web/functions (Pages root directory = web)
+
+name = "onemoreswap"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-03-01"
+
+# Create DB once: npx wrangler d1 create onemoreswap
+# Then paste the database_id below and bind in the Pages dashboard too.
+[[d1_databases]]
+binding = "DB"
+database_name = "onemoreswap"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+# Public Turnstile site key (also set as Pages env var). Test key always passes:
+# TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
+TURNSTILE_SITE_KEY = ""
+
+# Secrets (set in dashboard or CLI — do not commit real values):
+#   npx wrangler pages secret put TURNSTILE_SECRET_KEY --project-name=onemoreswap
+# Test secret: 1x0000000000000000000000000000000AA
+# For local without Turnstile: AUTH_DEV_BYPASS_TURNSTILE=1

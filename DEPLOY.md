@@ -1,53 +1,63 @@
 # Deploy to Cloudflare Pages
 
 **Repo:** [github.com/JaimeV365/onemoreswap](https://github.com/JaimeV365/onemoreswap)  
-**Live URL (after setup):** `https://onemoreswap.pages.dev`
-
-GitHub is ready. Connect Cloudflare once (~5 minutes) and every push to `main` auto-deploys.
+**Live URL:** `https://onemoreswap.pages.dev`
 
 ---
 
-## Connect GitHub → Cloudflare Pages
+## Pages build settings
 
-1. Sign in at [dash.cloudflare.com](https://dash.cloudflare.com) (free account is fine).
+| Setting | Value |
+|---------|--------|
+| Project name | `onemoreswap` |
+| Production branch | `main` |
+| Root directory | `web` |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Node.js version | `20` |
 
-2. Open **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-
-3. Authorize GitHub and select repo: **`JaimeV365/onemoreswap`**.
-
-4. Use these build settings:
-
-   | Setting | Value |
-   |---------|--------|
-   | Project name | `onemoreswap` |
-   | Production branch | `main` |
-   | Framework preset | **None** (or Vite) |
-   | Root directory | `web` |
-   | Build command | `npm run build` |
-   | Build output directory | `dist` |
-   | Node.js version | `20` |
-
-5. Click **Save and Deploy**. First build takes ~1–2 minutes.
-
-6. Your site is live at **`https://onemoreswap.pages.dev`**.
+Functions live in `web/functions` (API under `/api/auth/*`).
 
 ---
 
-## Alternative: deploy from your machine
+## Accounts (email + password + Turnstile)
 
-If you prefer the CLI instead of Git integration:
+### 1. Create D1 database
 
 ```powershell
 cd web
-npm run build
-npx wrangler login
-npx wrangler pages deploy dist --project-name=onemoreswap
+npx wrangler d1 create onemoreswap
 ```
 
-(`wrangler login` opens a browser — approve access when prompted.)
+Paste the `database_id` into `web/wrangler.toml`. In the Pages dashboard: **Settings → Bindings → D1** → binding name `DB` → select that database.
+
+### 2. Apply schema
+
+```powershell
+cd web
+npx wrangler d1 execute onemoreswap --remote --file=./schema.sql
+```
+
+### 3. Cloudflare Turnstile (bot check)
+
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Turnstile** → Add widget for `onemoreswap.pages.dev` (and later `onemoreswap.com`).
+2. Pages → **Settings → Environment variables**:
+   - `TURNSTILE_SITE_KEY` = site key (also set under **Vars** / wrangler `[vars]`)
+   - Secret `TURNSTILE_SECRET_KEY` = secret key  
+     (`npx wrangler pages secret put TURNSTILE_SECRET_KEY --project-name=onemoreswap`)
+
+**Test keys** (always pass): site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`.
+
+### 4. Password rules (enforced client + server)
+
+- 12–128 characters  
+- At least one lowercase, uppercase, number, and symbol  
+- Printable ASCII only — **no spaces, no emoji/Unicode lookalikes**  
+- Stored as PBKDF2-SHA-256 hash (not plain text)  
+- Forms use `autocomplete` so browsers can **save** passwords  
 
 ---
 
-## Custom domain later
+## Custom domain
 
-When you register **onemoreswap.com**, add it in Cloudflare Pages → **Custom domains** on the `onemoreswap` project.
+When you register **onemoreswap.com**, add it under Pages → Custom domains.

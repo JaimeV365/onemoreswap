@@ -74,7 +74,7 @@ UI: platform chrome is album-agnostic; each album gets scoped accent colours (se
 
 ### Key decisions
 
-- **No passwords stored.** Google OAuth only.
+- **Email + password** (own D1 accounts, PBKDF2 hashes). Cloudflare Turnstile on signup/login. No Google OAuth.
 - **No self-hosted server.** Cloudflare for compute and storage.
 - **Addresses auto-purged** 30 days after trade complete / auto-confirm.
 - **Video proofs auto-purged** 30 days after upload.
