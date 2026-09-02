@@ -1,0 +1,42 @@
+.header {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.brand {
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nav a {
+  text-decoration: none;
+  color: var(--ink-soft);
+}
+
+.nav a:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 480px) {
+  .nav {
+    gap: var(--space-md);
+    font-size: 0.8125rem;
+  }
+}

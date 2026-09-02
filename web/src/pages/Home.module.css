@@ -1,0 +1,156 @@
+.hero {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg) var(--space-xl);
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.heroLead {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: 42rem;
+  margin-bottom: var(--space-xl);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.heroNote {
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+}
+
+.section {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  margin-bottom: var(--space-lg);
+}
+
+.sectionLead {
+  color: var(--ink-soft);
+  max-width: 40rem;
+  margin-top: calc(var(--space-md) * -1);
+  margin-bottom: var(--space-lg);
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-lg);
+}
+
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.card h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.card p {
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--yellow-wash);
+  color: #8a7000;
+  margin-bottom: var(--space-md);
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge {
+    color: var(--yellow);
+  }
+}
+
+.albumGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-lg);
+}
+
+.albumCard {
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  color: #fff;
+}
+
+.albumCard h3 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin-bottom: var(--space-sm);
+}
+
+.albumCard p {
+  font-size: 0.9375rem;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+.wc {
+  background: var(--album-wc);
+}
+
+.wc h3 {
+  color: var(--album-wc-gold);
+}
+
+.pl {
+  background: var(--album-pl);
+}
+
+.pl h3 {
+  color: var(--yellow);
+}
+
+.ctaBox {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.ctaTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 3.5vw, 1.75rem);
+  margin-bottom: var(--space-md);
+}
+
+.ctaLead {
+  color: var(--ink-soft);
+  max-width: 36rem;
+  margin: 0 auto var(--space-lg);
+  line-height: 1.6;
+}

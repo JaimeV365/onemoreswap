@@ -1,0 +1,29 @@
+.footer {
+  border-top: 1px solid var(--border);
+  margin-top: var(--space-2xl);
+  background: var(--bg-elevated);
+}
+
+.inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+}
+
+.tagline {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  margin-bottom: var(--space-sm);
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-bottom: var(--space-md);
+}
+
+.copy {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}

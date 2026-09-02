@@ -1,0 +1,15 @@
+.wordmark {
+  font-family: var(--font-display);
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lg {
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+}
+
+.sm {
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
+}
