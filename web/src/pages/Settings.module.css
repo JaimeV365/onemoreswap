@@ -1,0 +1,45 @@
+.hint {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-bottom: var(--space-md);
+}
+
+.options {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+}
+
+.option:hover {
+  border-color: var(--border-strong);
+}
+
+.active {
+  border-color: var(--yellow-dark);
+  box-shadow: var(--focus-ring);
+  background: var(--yellow-wash);
+}
+
+.optionLabel {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.optionHint {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}

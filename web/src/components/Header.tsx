@@ -5,7 +5,7 @@ import styles from './Header.module.css'
 const nav = [
   { to: '/paste', label: 'Paste tool' },
   { to: '/collection', label: 'My collection' },
-  { to: '/about', label: 'About' },
+  { to: '/settings', label: 'Settings' },
 ]
 
 export function Header() {

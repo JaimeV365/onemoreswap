@@ -69,12 +69,16 @@ export function Collection() {
       setMessage(`Could not parse: ${unknown.slice(0, 6).join(', ')}`)
       return
     }
-    persist(addParsedCounts(state, counts))
+    const allSeqs = indexes.catalogue.stickers.map((s) => s.seq)
+    const wasEmpty = state.missing.length === 0 && Object.keys(state.counts).length === 0
+    persist(addParsedCounts(state, counts, allSeqs))
     setAddInput('')
     setMessage(
       unknown.length
         ? `Added ${counts.size} sticker type(s). Unrecognised: ${unknown.slice(0, 6).join(', ')}`
-        : `Added ${counts.size} sticker type(s). First copy → in album; duplicates → spares.`,
+        : wasEmpty
+          ? `Album started — added stickers are in album; everything else is marked as a need. Share list is ready.`
+          : `Added ${counts.size} sticker type(s). First copy → in album; duplicates → spares.`,
     )
   }
 

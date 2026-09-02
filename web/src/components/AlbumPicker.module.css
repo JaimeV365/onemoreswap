@@ -39,11 +39,12 @@
   font-family: var(--font-display);
   font-size: 1rem;
   margin-bottom: 2px;
+  color: var(--ink);
 }
 
 .meta {
   font-size: 0.8125rem;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
 }
 
 .wc.active {

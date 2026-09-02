@@ -86,8 +86,10 @@ export function isAlbumStarted(state: CollectionAlbumState): boolean {
 }
 
 export function copiesOf(state: CollectionAlbumState, seq: number): number {
-  if (state.missing.includes(seq)) return 0
-  if (state.counts[seq] !== undefined) return state.counts[seq]
+  const missing = new Set(state.missing.map(Number))
+  if (missing.has(Number(seq))) return 0
+  const counted = state.counts[seq] ?? state.counts[Number(seq) as keyof typeof state.counts]
+  if (counted !== undefined) return Number(counted)
   return isAlbumStarted(state) ? 1 : 0
 }
 
@@ -122,14 +124,26 @@ export function allSparesMap(state: CollectionAlbumState, allSeqs: number[]): Ma
   return m
 }
 
+/** Ensure album is started: everything missing, then owned stickers can be marked in. */
+export function startAlbumIfNeeded(
+  state: CollectionAlbumState,
+  allSeqs: number[],
+): CollectionAlbumState {
+  if (isAlbumStarted(state) || allSeqs.length === 0) return state
+  return {
+    missing: [...allSeqs].sort((a, b) => a - b),
+    counts: {},
+  }
+}
+
 export function setCopies(state: CollectionAlbumState, seq: number, total: number): CollectionAlbumState {
   const n = Math.max(0, Math.floor(total))
-  const missing = state.missing.filter((s) => s !== seq)
+  const missing = state.missing.filter((s) => Number(s) !== Number(seq))
   const counts = { ...state.counts }
 
   if (n <= 0) {
     delete counts[seq]
-    if (!missing.includes(seq)) missing.push(seq)
+    if (!missing.some((s) => Number(s) === Number(seq))) missing.push(seq)
     missing.sort((a, b) => a - b)
     return { missing, counts }
   }
@@ -142,19 +156,26 @@ export function setCopies(state: CollectionAlbumState, seq: number, total: numbe
   return { missing, counts }
 }
 
-export function bumpCopies(state: CollectionAlbumState, seq: number, delta: number): CollectionAlbumState {
-  const cur = copiesOf(state, seq)
-  return setCopies(state, seq, cur + delta)
+export function bumpCopies(
+  state: CollectionAlbumState,
+  seq: number,
+  delta: number,
+  allSeqs: number[] = [],
+): CollectionAlbumState {
+  const started = startAlbumIfNeeded(state, allSeqs)
+  const cur = copiesOf(started, seq)
+  return setCopies(started, seq, cur + delta)
 }
 
 export function addParsedCounts(
   state: CollectionAlbumState,
   counts: Map<number, number>,
+  allSeqs: number[] = [],
 ): CollectionAlbumState {
-  let next = state
+  let next = startAlbumIfNeeded(state, allSeqs)
   for (const [seq, qty] of counts) {
     for (let i = 0; i < qty; i++) {
-      next = bumpCopies(next, seq, 1)
+      next = bumpCopies(next, seq, 1, allSeqs)
     }
   }
   return next

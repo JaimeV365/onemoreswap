@@ -9,6 +9,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
     <title>One More Swap — finish your album</title>
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem('onemoreswap-theme-pref') || 'system';
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = pref === 'system' ? (dark ? 'dark' : 'light') : pref;
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

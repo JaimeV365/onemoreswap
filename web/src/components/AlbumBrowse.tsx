@@ -24,7 +24,7 @@ export function AlbumBrowse({ albumId, state, onChange, filter = 'all', search =
     return indexes.sections
       .map((sec) => {
         const stickers = sec.stickers.filter((s) => {
-          if (filter === 'needs' && !state.missing.includes(s.seq)) return false
+          if (filter === 'needs' && !state.missing.map(Number).includes(Number(s.seq))) return false
           if (filter === 'spares' && sparesOf(state, s.seq) < 1) return false
           if (!q) return true
           const hay = `${s.code}${s.cardNum} ${s.name} ${s.section}`.toLowerCase()
@@ -47,7 +47,8 @@ export function AlbumBrowse({ albumId, state, onChange, filter = 'all', search =
   }
 
   const handleBump = (seq: number, delta: number) => {
-    onChange(bumpCopies(state, seq, delta))
+    const allSeqs = indexes?.catalogue.stickers.map((s) => s.seq) ?? []
+    onChange(bumpCopies(state, seq, delta, allSeqs))
   }
 
   if (!visibleSections.length) {

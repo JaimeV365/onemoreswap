@@ -76,8 +76,9 @@ export function buildShareText(
   tab: ShareTab,
 ): string {
   const indexes = getAlbumIndexes(albumId)
-  if (!indexes) return ''
+  if (!indexes) return '(none)'
 
+  const missing = new Set(state.missing.map(Number))
   const lines: string[] = []
 
   for (const sec of indexes.sections) {
@@ -85,8 +86,8 @@ export function buildShareText(
     const dupeCards: number[] = []
 
     for (const s of sec.stickers) {
-      if (state.missing.includes(s.seq)) missCards.push(s.cardNum)
-      if (sparesOf(state, s.seq) >= 1) dupeCards.push(s.cardNum)
+      if (missing.has(Number(s.seq))) missCards.push(s.cardNum)
+      if (sparesOf(state, Number(s.seq)) >= 1) dupeCards.push(s.cardNum)
     }
 
     const shareCode = sec.code === 'HIS' ? 'FWC' : sec.code
@@ -100,7 +101,14 @@ export function buildShareText(
     }
   }
 
-  if (!lines.length) return '(none)'
+  if (!lines.length) {
+    if (!state.missing.length && Object.keys(state.counts).length === 0) {
+      return '(none)\n\nTip: use Quick add or Start fresh so needs/spares are tracked.'
+    }
+    if (tab === 'missing') return '(none)\n\nNo needs marked — everything you have is in the album.'
+    if (tab === 'spares') return '(none)\n\nNo spare copies yet — add a sticker twice to create a spare.'
+    return '(none)'
+  }
   return `${lines.join('\n')}\n\n— via ${SITE_URL}`
 }
 
