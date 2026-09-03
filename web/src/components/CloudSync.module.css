@@ -1,0 +1,16 @@
+.hint {
+  margin: 0 0 var(--space-md);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.hint a {
+  color: var(--red);
+}
+
+.meta {
+  margin: 0 0 var(--space-md);
+  font-size: 0.85rem;
+  color: var(--ink-faint, var(--ink-soft));
+}

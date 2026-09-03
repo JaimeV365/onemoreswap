@@ -56,7 +56,29 @@ SELECT name FROM sqlite_master WHERE type='table';
 
 You want `users`, `sessions`, and `profiles`.
 
-### Or via CLI on your PC
+### Cloud sync table (v3)
+
+If you already have users/profiles, paste this in D1 Console:
+
+```sql
+CREATE TABLE IF NOT EXISTS profile_sync (
+  profile_id TEXT PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  collection_json TEXT NOT NULL DEFAULT '{}',
+  postal_json TEXT NOT NULL DEFAULT '{}',
+  sources_json TEXT NOT NULL DEFAULT '[]',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  revision INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_profile_sync_user ON profile_sync (user_id);
+```
+
+Or CLI: `npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v3-sync.sql`
+
+Confirm `profile_sync` appears in `sqlite_master`.
+
+### Or via CLI (full schema)
 
 ```powershell
 cd "C:\Users\jaime\OneDrive\Documents\JAND Games\Panini World Cup 2026\One More Swap\web"
@@ -68,6 +90,7 @@ If an older schema already created bare `users`/`sessions` columns, also run:
 
 ```powershell
 npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v2.sql
+npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v3-sync.sql
 ```
 
 If signup says tables are missing, this step was skipped.

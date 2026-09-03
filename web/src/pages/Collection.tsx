@@ -4,6 +4,7 @@ import { AlbumBrowse } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { CloudSyncPanel } from '../components/CloudSyncPanel'
 import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
@@ -53,11 +54,15 @@ export function Collection() {
     [albumId],
   )
 
-  useEffect(() => {
+  const reloadFromStorage = useCallback(() => {
     setState(getAlbumState(loadCollection(), albumId))
+  }, [albumId])
+
+  useEffect(() => {
+    reloadFromStorage()
     setAddInput('')
     setMessage(null)
-  }, [albumId])
+  }, [albumId, reloadFromStorage])
 
   const incoming = pendingIncomingMap(albumId)
   const progress = albumProgress(
@@ -155,6 +160,13 @@ export function Collection() {
       {message && <p className={[styles.notice, styles.noticeOk].join(' ')}>{message}</p>}
 
       <SharePanel albumId={albumId} state={state} />
+
+      <CloudSyncPanel
+        onApplied={() => {
+          reloadFromStorage()
+          setMessage('Collection loaded from cloud.')
+        }}
+      />
 
       <section className={collectionStyles.browseSection}>
         <div className={collectionStyles.browseToolbar}>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
@@ -63,18 +63,31 @@ export function Postal() {
   const [sentText, setSentText] = useState('')
   const [expectedText, setExpectedText] = useState('')
   const [message, setMessage] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'open' | 'all'>('open')
+  const [filter, setFilter] = useState<'open' | 'completed' | 'all'>('open')
 
   const indexes = getAlbumIndexes(albumId)
   const album = getAlbum(albumId)
   const allSeqs = indexes?.catalogue.stickers.map((s) => s.seq) ?? []
 
+  const albumSwaps = useMemo(
+    () => swaps.filter((s) => s.albumId === albumId),
+    [swaps, albumId],
+  )
+  const hasCompleted = albumSwaps.some((s) => s.status === 'completed')
+
   const visible = useMemo(() => {
-    return swaps
-      .filter((s) => s.albumId === albumId)
-      .filter((s) => (filter === 'open' ? s.status === 'open' : true))
+    return albumSwaps
+      .filter((s) => {
+        if (filter === 'open') return s.status === 'open'
+        if (filter === 'completed') return s.status === 'completed'
+        return true
+      })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  }, [swaps, albumId, filter])
+  }, [albumSwaps, filter])
+
+  useEffect(() => {
+    if (filter === 'completed' && !hasCompleted) setFilter('open')
+  }, [filter, hasCompleted])
 
   const refresh = () => setSwaps(loadPostal().swaps)
 
@@ -384,6 +397,18 @@ export function Postal() {
           >
             Open
           </button>
+          {hasCompleted && (
+            <button
+              type="button"
+              className={[
+                postalStyles.filterBtn,
+                filter === 'completed' ? postalStyles.filterActive : '',
+              ].join(' ')}
+              onClick={() => setFilter('completed')}
+            >
+              Completed
+            </button>
+          )}
           <button
             type="button"
             className={[postalStyles.filterBtn, filter === 'all' ? postalStyles.filterActive : ''].join(
@@ -399,16 +424,24 @@ export function Postal() {
 
       {!visible.length && (
         <div className={postalStyles.empty}>
-          <p>No postal swaps for this album yet.</p>
-          <p>
-            Tip: if you used the{' '}
-            <a href="https://wc2026-sticker-tracker.pages.dev" target="_blank" rel="noreferrer">
-              World Cup sticker tracker
-            </a>
-            , export a backup there and import it under{' '}
-            <Link to="/">My collection → Advanced</Link>.
-          </p>
-          <Button onClick={openNew}>Create first swap</Button>
+          {filter === 'completed' ? (
+            <p>No completed swaps for this album.</p>
+          ) : filter === 'open' && albumSwaps.length > 0 ? (
+            <p>No open swaps — try All or Completed.</p>
+          ) : (
+            <>
+              <p>No postal swaps for this album yet.</p>
+              <p>
+                Tip: if you used the{' '}
+                <a href="https://wc2026-sticker-tracker.pages.dev" target="_blank" rel="noreferrer">
+                  World Cup sticker tracker
+                </a>
+                , export a backup there and import it under{' '}
+                <Link to="/">My collection → Advanced</Link>.
+              </p>
+              <Button onClick={openNew}>Create first swap</Button>
+            </>
+          )}
         </div>
       )}
 
