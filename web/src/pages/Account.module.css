@@ -159,15 +159,12 @@
 
 .check input[type='checkbox']::before {
   content: '';
-  width: 0.65rem;
-  height: 0.65rem;
+  width: 0.7rem;
+  height: 0.7rem;
   transform: scale(0);
   transition: transform 0.12s ease;
-  box-shadow: inset 1em 1em var(--ink);
-  /* checkmark via clip-path */
+  background-color: #1a1520;
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
-  background-color: var(--ink);
-  box-shadow: none;
 }
 
 .check input[type='checkbox']:checked {
