@@ -4,11 +4,70 @@
   gap: var(--space-sm);
 }
 
+.jumpBar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0 var(--space-md);
+  margin: 0 0 var(--space-xs);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+.jumpLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  flex-shrink: 0;
+}
+
+.jumpFlags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+.jumpBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  color: inherit;
+  line-height: 0;
+}
+
+.jumpBtn:hover {
+  border-color: var(--yellow-dark);
+}
+
+.jumpBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.jumpBtnActive {
+  border-color: var(--yellow-dark);
+  background: var(--yellow-wash);
+}
+
 .section {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--bg-elevated);
+  scroll-margin-top: 4.5rem;
 }
 
 .sectionHead {

@@ -1,0 +1,52 @@
+.flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.flag img {
+  display: block;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.sm img {
+  width: 20px;
+  height: 15px;
+}
+
+.md img {
+  width: 24px;
+  height: 18px;
+}
+
+.mark.sm {
+  min-width: 20px;
+  height: 15px;
+  padding: 0 3px;
+  font-size: 0.5625rem;
+}
+
+.mark.md {
+  min-width: 24px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 0.625rem;
+}

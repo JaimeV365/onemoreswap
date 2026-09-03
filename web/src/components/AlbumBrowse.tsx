@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { getAlbumIndexes } from '../lib/catalogue'
 import { bumpCopies, sparesOf } from '../lib/storage'
+import { hasTeamFlagMap, sectionDomId } from '../lib/teamFlags'
 import type { CollectionAlbumState } from '../lib/types'
 import { StickerChip } from './StickerChip'
+import { TeamFlag } from './TeamFlag'
 import styles from './AlbumBrowse.module.css'
 
 export type BrowseFilter = 'all' | 'needs' | 'spares' | 'incoming'
@@ -27,6 +29,7 @@ export function AlbumBrowse({
 }: AlbumBrowseProps) {
   const indexes = getAlbumIndexes(albumId)
   const [openSections, setOpenSections] = useState<Set<string>>(new Set())
+  const [activeJump, setActiveJump] = useState<string | null>(null)
 
   const q = search.trim().toLowerCase()
 
@@ -52,6 +55,11 @@ export function AlbumBrowse({
       .filter((sec) => sec.stickers.length > 0)
   }, [indexes, state, filter, q, incoming])
 
+  const showFlagJump = useMemo(
+    () => hasTeamFlagMap(visibleSections.map((s) => s.code)),
+    [visibleSections],
+  )
+
   if (!indexes) return null
 
   const toggleSection = (key: string) => {
@@ -61,6 +69,21 @@ export function AlbumBrowse({
       else next.add(key)
       return next
     })
+  }
+
+  const jumpToSection = (key: string) => {
+    setActiveJump(key)
+    setOpenSections((prev) => {
+      const next = new Set(prev)
+      next.add(key)
+      return next
+    })
+    window.setTimeout(() => {
+      document.getElementById(sectionDomId(key))?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }, 40)
   }
 
   const handleBump = (seq: number, delta: number) => {
@@ -82,13 +105,38 @@ export function AlbumBrowse({
 
   return (
     <div className={styles.wrap}>
+      {showFlagJump && (
+        <nav className={styles.jumpBar} aria-label="Jump to team">
+          <span className={styles.jumpLabel}>Teams</span>
+          <div className={styles.jumpFlags}>
+            {visibleSections.map((sec) => {
+              const key = `${sec.code}::${sec.name}`
+              const active = activeJump === key
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={[styles.jumpBtn, active ? styles.jumpBtnActive : ''].filter(Boolean).join(' ')}
+                  title={sec.name}
+                  aria-label={`Open ${sec.name}`}
+                  onClick={() => jumpToSection(key)}
+                >
+                  <TeamFlag code={sec.code} size="sm" />
+                </button>
+              )
+            })}
+          </div>
+        </nav>
+      )}
+
       {visibleSections.map((sec) => {
         const key = `${sec.code}::${sec.name}`
         const isOpen =
           openSections.has(key) || !!q || filter === 'incoming' || filter === 'needs' || filter === 'spares'
         return (
-          <section key={key} className={styles.section}>
+          <section key={key} id={sectionDomId(key)} className={styles.section}>
             <button type="button" className={styles.sectionHead} onClick={() => toggleSection(key)}>
+              <TeamFlag code={sec.code} size="md" />
               <span className={styles.sectionTitle}>{sec.name}</span>
               <span className={styles.sectionMeta}>
                 {sec.stickers.length} shown · {sec.code}
