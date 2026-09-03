@@ -1,9 +1,22 @@
-.flag {
+.flag,
+.emoji {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   line-height: 0;
+}
+
+.emoji {
+  line-height: 1;
+}
+
+.emoji.sm {
+  font-size: 1rem;
+}
+
+.emoji.md {
+  font-size: 1.25rem;
 }
 
 .flag img {

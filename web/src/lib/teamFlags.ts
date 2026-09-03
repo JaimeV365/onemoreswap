@@ -147,6 +147,34 @@ export function hasSectionMarks(albumId: string, codes: Iterable<string>): boole
   return false
 }
 
+/** Special WC sections without a national flag. */
+export function sectionGlyph(code: string): string | null {
+  if (code === '00') return '★'
+  if (code === 'FWC' || code === 'HIS') return '✦'
+  if (code === 'CC') return 'CC'
+  if (code === 'PL') return 'PL'
+  return null
+}
+
+export function isoToFlagEmoji(iso: string): string {
+  if (iso === 'gb-eng') return '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
+  if (iso === 'gb-sct') return '🏴󠁧󠁢󠁳󠁣󠁴󠁿'
+  if (iso.length !== 2) return '🏳️'
+  const base = 0x1f1e6
+  return String.fromCodePoint(
+    base + iso.toUpperCase().charCodeAt(0) - 65,
+    base + iso.toUpperCase().charCodeAt(1) - 65,
+  )
+}
+
+/** Always-available mark for WC (emoji) — does not depend on external image hosts. */
+export function sectionFlagEmoji(code: string): string | null {
+  const iso = TEAM_FLAG_ISO[code]
+  if (iso === undefined) return null
+  if (iso === null) return sectionGlyph(code)
+  return isoToFlagEmoji(iso)
+}
+
 export function sectionImageUrl(albumId: string, code: string, width = 40): string | null {
   if (albumId === 'wc2026') {
     const iso = TEAM_FLAG_ISO[code]
@@ -154,6 +182,7 @@ export function sectionImageUrl(albumId: string, code: string, width = 40): stri
     return `https://flagcdn.com/w${width}/${iso}.png`
   }
   if (albumId === 'pl2526') {
+    if (code === 'PL') return 'https://a.espncdn.com/i/leaguelogos/soccer/500/23.png'
     const id = PL_CREST_ESPN_ID[code]
     if (!id) return null
     return `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png`
@@ -163,4 +192,18 @@ export function sectionImageUrl(albumId: string, code: string, width = 40): stri
 
 export function sectionDomId(sectionKey: string): string {
   return `album-sec-${sectionKey.replace(/[^a-zA-Z0-9]+/g, '-')}`
+}
+
+/** Match browse search: full phrase or every whitespace token (e.g. "liverpool 5"). */
+export function stickerMatchesSearch(
+  sticker: { code: string; cardNum: number; seq: number; name: string; section: string },
+  query: string,
+): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const hay =
+    `${sticker.code}${sticker.cardNum} ${sticker.code} ${sticker.cardNum} ${sticker.seq} ${sticker.name} ${sticker.section}`.toLowerCase()
+  if (hay.includes(q)) return true
+  const tokens = q.split(/\s+/).filter(Boolean)
+  return tokens.length > 1 && tokens.every((t) => hay.includes(t))
 }

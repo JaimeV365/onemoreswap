@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { getAlbumIndexes } from '../lib/catalogue'
 import { bumpCopies, sparesOf } from '../lib/storage'
-import { hasSectionMarks, sectionDomId } from '../lib/teamFlags'
+import { hasSectionMarks, sectionDomId, stickerMatchesSearch } from '../lib/teamFlags'
 import type { CollectionAlbumState } from '../lib/types'
 import { StickerChip } from './StickerChip'
 import { TeamFlag } from './TeamFlag'
@@ -45,10 +45,7 @@ export function AlbumBrowse({
           }
           if (filter === 'spares' && sparesOf(state, s.seq) < 1) return false
           if (filter === 'incoming' && !isIncoming) return false
-          if (!q) return true
-          const hay =
-            `${s.code}${s.cardNum} ${s.code} ${s.cardNum} ${s.seq} ${s.name} ${s.section}`.toLowerCase()
-          return hay.includes(q)
+          return stickerMatchesSearch(s, q)
         })
         return { ...sec, stickers }
       })
@@ -121,7 +118,7 @@ export function AlbumBrowse({
                   aria-label={`Open ${sec.name}`}
                   onClick={() => jumpToSection(key)}
                 >
-                  <TeamFlag albumId={albumId} code={sec.code} size="sm" />
+                  <TeamFlag albumId={albumId} code={sec.code} size="sm" preferEmoji />
                   <span className={styles.jumpCode}>{sec.code}</span>
                 </button>
               )

@@ -223,7 +223,11 @@ export function Collection() {
         <input
           type="search"
           className={collectionStyles.search}
-          placeholder="Find sticker — ENG7, Messi, or 570…"
+          placeholder={
+            albumId === 'pl2526'
+              ? 'Find sticker — Liverpool 5, LIV7, Salah…'
+              : 'Find sticker — Mexico 5, ENG7, Messi…'
+          }
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
