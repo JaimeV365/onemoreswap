@@ -8,12 +8,13 @@ import {
   type ReactNode,
 } from 'react'
 
-export type AuthUser = { id: string; email: string }
+export type AuthUser = { id: string; email: string; emailVerified: boolean }
 
 type AuthConfig = {
   turnstileSiteKey: string
   authConfigured: boolean
   turnstileRequired: boolean
+  emailConfigured: boolean
 }
 
 type AuthContextValue = {
@@ -66,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const me = await api<{ user: AuthUser | null }>('/api/auth/me')
-    setUser(me.data?.user ?? null)
+    const u = me.data?.user ?? null
+    setUser(u ? { ...u, emailVerified: !!u.emailVerified } : null)
     setLoading(false)
   }, [])
 
@@ -116,4 +118,14 @@ export async function loginRequest(input: {
     method: 'POST',
     body: JSON.stringify(input),
   })
+}
+
+export async function resendVerificationRequest() {
+  return api<{
+    ok: boolean
+    sent?: boolean
+    alreadyVerified?: boolean
+    verifyUrl?: string
+    error?: string
+  }>('/api/auth/resend-verification', { method: 'POST', body: '{}' })
 }

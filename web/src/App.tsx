@@ -12,6 +12,7 @@ import { Postal } from './pages/Postal'
 import { Privacy } from './pages/Privacy'
 import { Settings } from './pages/Settings'
 import { Terms } from './pages/Terms'
+import { VerifyEmail } from './pages/VerifyEmail'
 import './index.css'
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
                 <Route path="paste" element={<PasteTool />} />
                 <Route path="postal" element={<Postal />} />
                 <Route path="account" element={<Account />} />
+                <Route path="verify" element={<VerifyEmail />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="welcome" element={<Home />} />
                 <Route path="about" element={<About />} />

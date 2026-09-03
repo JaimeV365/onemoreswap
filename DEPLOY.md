@@ -78,6 +78,31 @@ Or CLI: `npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v3
 
 Confirm `profile_sync` appears in `sqlite_master`.
 
+### Email verification table (v4)
+
+```sql
+CREATE TABLE IF NOT EXISTS email_tokens (
+  token TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  purpose TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_tokens_user ON email_tokens (user_id);
+CREATE INDEX IF NOT EXISTS idx_email_tokens_expires ON email_tokens (expires_at);
+```
+
+### Resend (real inbox emails)
+
+1. Create a [Resend](https://resend.com) account and API key  
+2. Pages → **onemoreswap** → Variables / Secrets:  
+   - Secret `RESEND_API_KEY`  
+   - Plaintext `EMAIL_FROM` = `One More Swap <you@your-verified-domain>`  
+3. Redeploy  
+
+Until Resend is set, Account → **Send confirmation email** returns a **test link** you can open manually.
+
 ### Or via CLI (full schema)
 
 ```powershell

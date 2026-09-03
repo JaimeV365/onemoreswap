@@ -1,4 +1,5 @@
 import { hashPassword } from '../../lib/crypto'
+import { createEmailToken, sendVerificationEmail, siteOrigin } from '../../lib/email'
 import {
   clientIp,
   createSession,
@@ -93,11 +94,31 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
       return error(dbHint(e), 500)
     }
 
+    let emailSent = false
+    let emailNotice =
+      'Account created. Confirm your email when verification mail is set up (Account → Resend).'
+    try {
+      const verifyToken = await createEmailToken(env.DB, id, 'verify')
+      const verifyUrl = `${siteOrigin(request)}/verify?token=${verifyToken}`
+      const sent = await sendVerificationEmail(env, email, verifyUrl)
+      emailSent = sent.sent
+      if (sent.sent) {
+        emailNotice = 'Account created. Check your inbox to confirm your email.'
+      } else if (!env.RESEND_API_KEY) {
+        emailNotice =
+          'Account created. Email sending is not configured yet — use Account → Resend when ready, or open the verify link from that response while testing.'
+      } else {
+        emailNotice = `Account created, but the confirmation email could not be sent (${sent.reason || 'unknown'}). Try Resend from Account.`
+      }
+    } catch {
+      /* token table may be missing — account still works */
+    }
+
     return json(
       {
-        user: { id, email },
-        notice:
-          'Account created for the parent/guardian. Email verification will be required in a later update.',
+        user: { id, email, emailVerified: false },
+        notice: emailNotice,
+        emailSent,
       },
       {
         status: 201,

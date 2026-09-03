@@ -10,7 +10,9 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
   return json({
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || '',
     authConfigured: !!env.DB,
-    turnstileRequired: !!(env.TURNSTILE_SECRET_KEY || env.TURNSTILE_SITE_KEY) &&
+    turnstileRequired:
+      !!(env.TURNSTILE_SECRET_KEY || env.TURNSTILE_SITE_KEY) &&
       env.AUTH_DEV_BYPASS_TURNSTILE !== '1',
+    emailConfigured: !!env.RESEND_API_KEY,
   })
 }

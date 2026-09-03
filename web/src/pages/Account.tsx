@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { ProfilesPanel } from '../components/ProfilesPanel'
 import { Turnstile } from '../components/Turnstile'
-import { loginRequest, signupRequest, useAuth } from '../lib/AuthContext'
+import { loginRequest, resendVerificationRequest, signupRequest, useAuth } from '../lib/AuthContext'
 import { useTheme } from '../lib/ThemeContext'
 import { validateEmail, validatePassword } from '../lib/password'
 import styles from './Page.module.css'
@@ -123,6 +123,7 @@ export function Account() {
         <h1 className={styles.title}>Account</h1>
         <p className={styles.lead}>
           Signed in as <strong>{user.email}</strong> (parent / guardian)
+          {user.emailVerified ? ' · email confirmed' : ' · email not confirmed yet'}
         </p>
 
         {justSignedUp && (
@@ -131,14 +132,64 @@ export function Account() {
           </p>
         )}
 
-        <section className={styles.panel}>
+        {!user.emailVerified && (
+          <section className={styles.panel}>
+            <h2 className={styles.panelTitle}>Confirm your email</h2>
+            <p className={authStyles.hint}>
+              We need the adult account email confirmed (UK Children’s Code / parental contact).
+              {config?.emailConfigured
+                ? ' We’ll send a link to your inbox.'
+                : ' Email sending is not fully configured on the server yet — Resend can still create a link for testing.'}
+            </p>
+            <div className={styles.actions}>
+              <Button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true)
+                  setError(null)
+                  setOkMsg(null)
+                  const res = await resendVerificationRequest()
+                  setBusy(false)
+                  if (res.data?.alreadyVerified) {
+                    await refresh()
+                    setOkMsg('Email already confirmed')
+                    return
+                  }
+                  if (res.data?.sent) {
+                    setOkMsg('Confirmation email sent — check your inbox')
+                    return
+                  }
+                  if (res.data?.verifyUrl) {
+                    setOkMsg(
+                      `Email provider not configured yet. Open this link to confirm: ${res.data.verifyUrl}`,
+                    )
+                    return
+                  }
+                  setError(res.error || res.data?.error || 'Could not send confirmation')
+                }}
+              >
+                {busy ? 'Sending…' : 'Send confirmation email'}
+              </Button>
+            </div>
+            {error && (
+              <p className={[styles.notice, styles.noticeError].join(' ')} role="alert">
+                {error}
+              </p>
+            )}
+            {okMsg && <p className={[styles.notice, styles.noticeOk].join(' ')}>{okMsg}</p>}
+          </section>
+        )}
+
+        <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
           <h2 className={styles.panelTitle}>What&apos;s next</h2>
           <ul className={authStyles.nextSteps}>
+            <li>Confirm the adult email (above).</li>
             <li>Add collector profiles — each has its own collection (switch in the header).</li>
             <li>
-              Open <Link to="/">My collection</Link> while that profile is selected.
+              Open <Link to="/">My collection</Link> and use <strong>Save to cloud</strong> when you
+              want a backup.
             </li>
-            <li>Cloud sync and email verification come next.</li>
           </ul>
           <div className={styles.actions}>
             <Button

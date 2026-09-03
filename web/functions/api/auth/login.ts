@@ -39,10 +39,10 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
 
   const email = normalizeEmail(body.email!)
   const row = await env.DB.prepare(
-    `SELECT id, email, password_hash FROM users WHERE email = ?`,
+    `SELECT id, email, password_hash, email_verified_at FROM users WHERE email = ?`,
   )
     .bind(email)
-    .first<{ id: string; email: string; password_hash: string }>()
+    .first<{ id: string; email: string; password_hash: string; email_verified_at: string | null }>()
 
   // Same message whether missing or wrong — avoid account enumeration timing slightly by still hashing
   if (!row) {
@@ -55,7 +55,13 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
 
   const token = await createSession(env.DB, row.id)
   return json(
-    { user: { id: row.id, email: row.email } },
+    {
+      user: {
+        id: row.id,
+        email: row.email,
+        emailVerified: !!row.email_verified_at,
+      },
+    },
     { headers: { 'Set-Cookie': sessionCookie(token) } },
   )
 }
