@@ -1,11 +1,10 @@
 # One More Swap — Cloudflare Pages
 # Root directory in dashboard = web
-# Functions: web/functions → /api/*
 #
-# Bindings here (dashboard Add is greyed out when wrangler.toml exists).
-# Secrets stay in the dashboard only — do NOT also put the same name in [vars]:
+# Dashboard Secrets (only):
 #   TURNSTILE_SECRET_KEY
-#   TURNSTILE_SITE_KEY   (you already added this as a Secret — that works)
+# Do NOT also create a dashboard secret named TURNSTILE_SITE_KEY
+# (that clashes with [vars] below and blanks the widget).
 
 name = "onemoreswap"
 pages_build_output_dir = "dist"
@@ -15,3 +14,6 @@ compatibility_date = "2025-03-01"
 binding = "DB"
 database_name = "onemoreswap"
 database_id = "ad1c4fc5-4ca4-46d5-bee2-5d8b7aaeeae3"
+
+[vars]
+TURNSTILE_SITE_KEY = "0x4AAAAAAEk_-dz81cJr7r2D"
