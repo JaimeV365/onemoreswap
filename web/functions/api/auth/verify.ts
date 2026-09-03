@@ -1,4 +1,4 @@
-import { error, json, type Env } from '../../lib/http'
+import { error, json, requireUser, type Env } from '../../lib/http'
 
 type PagesContext = {
   request: Request
@@ -21,15 +21,25 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
   if (token.length < 32) return error('Invalid or expired link')
 
   try {
+    // Consume atomically so a double-submit cannot race on the same token
     const row = await env.DB.prepare(
-      `SELECT user_id, purpose, expires_at FROM email_tokens WHERE token = ?`,
+      `DELETE FROM email_tokens
+       WHERE token = ? AND purpose = 'verify'
+       RETURNING user_id, expires_at`,
     )
       .bind(token)
-      .first<{ user_id: string; purpose: string; expires_at: string }>()
+      .first<{ user_id: string; expires_at: string }>()
 
-    if (!row || row.purpose !== 'verify') return error('Invalid or expired link', 400)
+    if (!row) {
+      // Likely a duplicate page load after a successful verify — treat as OK if already confirmed
+      const auth = await requireUser(request, env)
+      if (!(auth instanceof Response) && auth.emailVerified) {
+        return json({ ok: true, verified: true, alreadyVerified: true })
+      }
+      return error('Invalid or expired link', 400)
+    }
+
     if (new Date(row.expires_at).getTime() < Date.now()) {
-      await env.DB.prepare(`DELETE FROM email_tokens WHERE token = ?`).bind(token).run()
       return error('This link has expired — request a new one from Account', 400)
     }
 
@@ -48,6 +58,9 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
     const msg = e instanceof Error ? e.message : String(e)
     if (/no such table/i.test(msg)) {
       return error('Email tables missing — run schema-migrate-v4-email.sql on D1', 503)
+    }
+    if (/no such column/i.test(msg)) {
+      return error('Run schema-migrate-v2.sql on D1 (email_verified_at column)', 503)
     }
     return error('Could not verify email', 500)
   }
