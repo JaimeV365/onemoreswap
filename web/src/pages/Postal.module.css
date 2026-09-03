@@ -157,3 +157,57 @@
   gap: var(--space-xs);
   width: 100%;
 }
+
+.toolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.settledHint {
+  margin: var(--space-md) 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  line-height: 1.45;
+}
+
+.inboxBucket {
+  margin-top: var(--space-md);
+}
+
+.inboxBucket h3 {
+  margin: 0 0 var(--space-xs);
+  font-size: 0.9rem;
+}
+
+.inboxBucket ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.inboxEmpty {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+}
+
+.reportOk {
+  margin: 0 0 var(--space-md);
+  font-weight: 600;
+  color: var(--green);
+}
+
+.ok {
+  color: var(--green);
+}
+
+.warn {
+  color: var(--yellow-dark);
+}
+
+.bad {
+  color: var(--red);
+}
+

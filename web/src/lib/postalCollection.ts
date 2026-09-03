@@ -1,5 +1,5 @@
 import type { CollectionAlbumState } from './types'
-import { bumpCopies, copiesOf, sparesOf } from './storage'
+import { bumpCopies, copiesOf, getAlbumState, loadCollection, sparesOf } from './storage'
 import { getAlbumIndexes, stickerDisplayLabel } from './catalogue'
 import type { PostalSwap } from './postalTypes'
 import { linesToMap, loadPostal, pendingIncomingMap } from './postal'
@@ -104,7 +104,6 @@ export function pendingMapFromSwap(swap: PostalSwap): Map<number, number> {
   return m
 }
 
-/** Pending from all open swaps except one (for editing). */
 export function otherPendingMap(albumId: string, excludeSwapId?: string): Map<number, number> {
   const m = new Map<number, number>()
   for (const swap of loadPostal().swaps) {
@@ -116,6 +115,57 @@ export function otherPendingMap(albumId: string, excludeSwapId?: string): Map<nu
     }
   }
   return m
+}
+
+/** First open swap still expecting this sticker (FIFO). */
+export function pendingHitsFor(
+  albumId: string,
+  seq: number,
+): Array<{ swap: PostalSwap; line: { seq: number; qty: number; status: string } }> {
+  const hits: Array<{ swap: PostalSwap; line: { seq: number; qty: number; status: string } }> = []
+  const open = loadPostal()
+    .swaps.filter((s) => s.albumId === albumId && s.status === 'open')
+    .sort(
+      (a, b) =>
+        String(a.postedDate || '').localeCompare(String(b.postedDate || '')) ||
+        String(a.createdAt || '').localeCompare(String(b.createdAt || '')),
+    )
+  for (const swap of open) {
+    for (const line of swap.expected) {
+      if (line.status === 'pending' && Number(line.seq) === Number(seq)) {
+        hits.push({ swap, line })
+      }
+    }
+  }
+  return hits
+}
+
+export type ExpectedWarnings = {
+  alreadyHave: string[]
+  alreadyPending: string[]
+}
+
+/** Block double-booking; warn if already owned (pack find / album copy). */
+export function analyzeExpectedWarnings(
+  albumId: string,
+  expectedCounts: Map<number, number>,
+  excludeSwapId?: string,
+): ExpectedWarnings {
+  const indexes = getAlbumIndexes(albumId)
+  const state = getAlbumState(loadCollection(), albumId)
+  const alreadyHave: string[] = []
+  const alreadyPending: string[] = []
+
+  for (const seq of expectedCounts.keys()) {
+    const info = indexes?.seqToInfo.get(seq)
+    const label = info ? stickerDisplayLabel(info) : `#${seq}`
+    if (copiesOf(state, seq) >= 1) alreadyHave.push(label)
+    const other = pendingHitsFor(albumId, seq).find((h) => h.swap.id !== excludeSwapId)
+    if (other) {
+      alreadyPending.push(`${label} (already expected from ${other.swap.person || 'another swap'})`)
+    }
+  }
+  return { alreadyHave, alreadyPending }
 }
 
 export function describePostalRevert(swap: PostalSwap): string[] {

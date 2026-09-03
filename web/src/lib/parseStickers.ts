@@ -7,9 +7,13 @@ import type { AlbumIndexes, ParsedCounts } from './types'
  *   KOR 3
  *   ESP - 8
  *   ENG5 ENG7
+ *   MEX3X2 / 570×2
  */
 function tokenizeStickerInput(raw: string): string[] {
   return raw
+    .replace(/[×*]/g, 'X')
+    .replace(/([A-Z0-9]{2,4}\d{1,2})X(\d{1,2})\b/gi, '$1 X$2')
+    .replace(/(\d{1,4})X(\d{1,2})\b/gi, '$1 X$2')
     .replace(/[,;|/\\]+/g, ' ')
     .replace(/[:\-–—=.]+/g, ' ')
     .replace(/\s+/g, ' ')

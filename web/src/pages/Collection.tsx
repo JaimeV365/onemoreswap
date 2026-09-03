@@ -15,10 +15,18 @@ import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { enableAlbum, loadEnabledAlbums } from '../lib/enabledAlbums'
 import { importAnyBackup } from '../lib/importBackup'
 import { parseStickerInput } from '../lib/parseStickers'
-import { upsertPostalSwaps, pendingIncomingMap } from '../lib/postal'
+import {
+  pendingIncomingMap,
+  saveSwap,
+  setExpectedStatus,
+  upsertPostalSwaps,
+} from '../lib/postal'
+import { pendingHitsFor } from '../lib/postalCollection'
 import {
   addParsedCounts,
   albumProgress,
+  bumpCopies,
+  copiesOf,
   downloadJson,
   emptyAlbumState,
   exportCollectionJson,
@@ -130,6 +138,35 @@ export function Collection() {
     setConfirmClear(false)
     persist(emptyAlbumState())
     setMessage('Album cleared.')
+  }
+
+  const markArrived = (seq: number) => {
+    if (!albumId) return
+    const hits = pendingHitsFor(albumId, seq)
+    if (!hits.length) {
+      setMessage('Not expected in an open postal swap.')
+      return
+    }
+    const hit = hits[0]!
+    const line = hit.line
+    const next = setExpectedStatus(hit.swap, seq, 'received')
+    saveSwap(next)
+    const store = loadCollection()
+    const current = getAlbumState(store, albumId)
+    const alreadyOwned = copiesOf(current, seq) >= 1
+    const allSeqs = indexes?.catalogue.stickers.map((s) => s.seq) ?? []
+    persist(bumpCopies(current, seq, line.qty, allSeqs))
+    const more = hits.length > 1
+      ? ` Still expected from ${hits
+          .slice(1)
+          .map((h) => h.swap.person || 'another swap')
+          .join(', ')}.`
+      : ''
+    setMessage(
+      (alreadyOwned
+        ? `Arrived from ${hit.swap.person || 'swap'} — added as a spare.`
+        : `Arrived from ${hit.swap.person || 'swap'} — added to your album.`) + more,
+    )
   }
 
   return (
@@ -253,6 +290,7 @@ export function Collection() {
               filter={filter}
               search={search}
               incoming={incoming}
+              onMarkArrived={markArrived}
             />
           </section>
 

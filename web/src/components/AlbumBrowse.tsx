@@ -17,6 +17,8 @@ type AlbumBrowseProps = {
   search?: string
   /** seq → qty pending from postal swaps */
   incoming?: Map<number, number>
+  /** Mark first open postal expected line as received */
+  onMarkArrived?: (seq: number) => void
 }
 
 export function AlbumBrowse({
@@ -26,6 +28,7 @@ export function AlbumBrowse({
   filter = 'all',
   search = '',
   incoming = new Map(),
+  onMarkArrived,
 }: AlbumBrowseProps) {
   const indexes = getAlbumIndexes(albumId)
   const [openSections, setOpenSections] = useState<Set<string>>(new Set())
@@ -151,6 +154,9 @@ export function AlbumBrowse({
                     onBump={handleBump}
                     compact
                     incoming={incoming.has(Number(s.seq))}
+                    onMarkArrived={
+                      incoming.has(Number(s.seq)) && onMarkArrived ? onMarkArrived : undefined
+                    }
                   />
                 ))}
               </div>

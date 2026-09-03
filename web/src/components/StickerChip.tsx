@@ -9,9 +9,18 @@ type StickerChipProps = {
   compact?: boolean
   /** Pending inbound from an open postal swap */
   incoming?: boolean
+  /** Mark the first open postal expected line as received */
+  onMarkArrived?: (seq: number) => void
 }
 
-export function StickerChip({ sticker, state, onBump, compact, incoming }: StickerChipProps) {
+export function StickerChip({
+  sticker,
+  state,
+  onBump,
+  compact,
+  incoming,
+  onMarkArrived,
+}: StickerChipProps) {
   const copies = copiesOf(state, sticker.seq)
   const spares = sparesOf(state, sticker.seq)
 
@@ -31,32 +40,49 @@ export function StickerChip({ sticker, state, onBump, compact, incoming }: Stick
           ? '✓'
           : `+${spares}`
 
+  const blockMinus = incoming && copies < 1
+
   return (
-    <button
-      type="button"
-      className={[
-        styles.chip,
-        styles[status],
-        incoming && status !== 'incoming' ? styles.hasIncoming : '',
-        compact ? styles.compact : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      title={`${sticker.code}${sticker.cardNum} ${sticker.name}${
-        incoming
-          ? copies <= 0
-            ? ' · incoming in post'
-            : ' · also incoming in post'
-          : ''
-      } — click +1, shift-click −1`}
-      onClick={(e) => onBump(sticker.seq, e.shiftKey ? -1 : 1)}
-    >
-      <span className={styles.code}>
-        {sticker.code}
-        {sticker.cardNum}
-      </span>
-      {!compact && <span className={styles.name}>{sticker.name}</span>}
-      <span className={styles.tag}>{tag}</span>
-    </button>
+    <div className={styles.wrap}>
+      <button
+        type="button"
+        className={[
+          styles.chip,
+          styles[status],
+          incoming && status !== 'incoming' ? styles.hasIncoming : '',
+          compact ? styles.compact : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        title={`${sticker.code}${sticker.cardNum} ${sticker.name}${
+          incoming
+            ? copies <= 0
+              ? ' · incoming in post'
+              : ' · also incoming in post'
+            : ''
+        } — click +1, shift-click −1`}
+        onClick={(e) => {
+          const delta = e.shiftKey ? -1 : 1
+          if (delta < 0 && blockMinus) return
+          onBump(sticker.seq, delta)
+        }}
+      >
+        <span className={styles.code}>
+          {sticker.code}
+          {sticker.cardNum}
+        </span>
+        {!compact && <span className={styles.name}>{sticker.name}</span>}
+        <span className={styles.tag}>{tag}</span>
+      </button>
+      {incoming && onMarkArrived && (
+        <button
+          type="button"
+          className={styles.arriveBtn}
+          onClick={() => onMarkArrived(sticker.seq)}
+        >
+          Arrived
+        </button>
+      )}
+    </div>
   )
 }
