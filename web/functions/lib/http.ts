@@ -104,3 +104,13 @@ export async function userFromSession(
     .first<{ id: string; email: string }>()
   return row || null
 }
+
+export async function requireUser(
+  request: Request,
+  env: Env,
+): Promise<SessionUser | Response> {
+  if (!env.DB) return error('Account service is not configured yet', 503)
+  const user = await userFromSession(env.DB, readCookie(request, SESSION_COOKIE))
+  if (!user) return error('Please sign in', 401)
+  return user
+}

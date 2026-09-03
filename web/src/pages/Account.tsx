@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
+import { ProfilesPanel } from '../components/ProfilesPanel'
 import { Turnstile } from '../components/Turnstile'
 import { loginRequest, signupRequest, useAuth } from '../lib/AuthContext'
 import { useTheme } from '../lib/ThemeContext'
@@ -15,6 +16,7 @@ export function Account() {
   const { resolved } = useTheme()
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>('login')
+  const [justSignedUp, setJustSignedUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [guardianConfirmed, setGuardianConfirmed] = useState(false)
@@ -104,7 +106,7 @@ export function Account() {
     await refresh()
     setOkMsg(mode === 'signup' ? 'Account created' : 'Signed in')
     setPassword('')
-    navigate('/settings')
+    if (mode === 'signup') setJustSignedUp(true)
   }
 
   if (loading) {
@@ -120,28 +122,41 @@ export function Account() {
       <main className={styles.page}>
         <h1 className={styles.title}>Account</h1>
         <p className={styles.lead}>
-          Signed in as <strong>{user.email}</strong> (parent / guardian account)
+          Signed in as <strong>{user.email}</strong> (parent / guardian)
         </p>
-        <section className={styles.panel}>
-          <p className={authStyles.hint}>
-            This login belongs to the adult. Child collector profiles (no separate child password)
-            come next, along with email verification and cloud sync.
+
+        {justSignedUp && (
+          <p className={[styles.notice, styles.noticeOk].join(' ')}>
+            Account created. Add a collector profile below, then head to your collection.
           </p>
+        )}
+
+        <section className={styles.panel}>
+          <h2 className={styles.panelTitle}>What&apos;s next</h2>
+          <ul className={authStyles.nextSteps}>
+            <li>Add collector profiles for your family (no child emails or passwords).</li>
+            <li>
+              Keep tracking stickers in <Link to="/">My collection</Link> on this device for now.
+            </li>
+            <li>Cloud sync and email verification come next.</li>
+          </ul>
           <div className={styles.actions}>
             <Button
               variant="secondary"
               onClick={async () => {
                 await logout()
-                setOkMsg('Signed out')
+                setJustSignedUp(false)
               }}
             >
               Sign out
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/settings')}>
-              Settings
+            <Button variant="ghost" onClick={() => navigate('/')}>
+              Go to collection
             </Button>
           </div>
         </section>
+
+        <ProfilesPanel />
       </main>
     )
   }
