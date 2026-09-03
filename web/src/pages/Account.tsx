@@ -28,6 +28,16 @@ export function Account() {
 
   const pwCheck = validatePassword(password)
   const emailErr = email ? validateEmail(email) : null
+  const emailOk = !validateEmail(email)
+  const botOk = !config?.turnstileRequired || !!turnstileToken
+  const signupReady =
+    emailOk &&
+    pwCheck.ok &&
+    guardianConfirmed &&
+    acceptedTerms &&
+    acceptedPrivacy &&
+    botOk
+  const loginReady = emailOk && !!password && botOk
 
   const resetTurnstile = () => {
     setTurnstileToken('')
@@ -297,14 +307,15 @@ export function Account() {
           <div className={styles.actions}>
             <Button
               type="submit"
-              disabled={
-                busy ||
-                (mode === 'signup' &&
-                  (!pwCheck.ok || !guardianConfirmed || !acceptedTerms || !acceptedPrivacy))
-              }
+              disabled={busy || (mode === 'signup' ? !signupReady : !loginReady)}
             >
               {busy ? 'Please wait…' : mode === 'signup' ? 'Create adult account' : 'Sign in'}
             </Button>
+            {mode === 'signup' && !signupReady && !busy && (
+              <p className={authStyles.fieldHint}>
+                Complete email, password, adult ticks, and the bot check to continue.
+              </p>
+            )}
           </div>
         </form>
       </section>

@@ -46,7 +46,7 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
 
   // Same message whether missing or wrong — avoid account enumeration timing slightly by still hashing
   if (!row) {
-    await verifyPassword(body.password, 'pbkdf2$210000$00000000000000000000000000000000$0000000000000000000000000000000000000000000000000000000000000000')
+    await verifyPassword(body.password, 'pbkdf2$100000$00000000000000000000000000000000$0000000000000000000000000000000000000000000000000000000000000000')
     return error('Invalid email or password', 401)
   }
 

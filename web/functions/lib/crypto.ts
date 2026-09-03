@@ -1,6 +1,6 @@
 /** PBKDF2-SHA-256 password hashing (Web Crypto — Workers + browsers). */
-
-const ITERATIONS = 210_000
+/** Cloudflare Workers cap PBKDF2 iterations at 100_000. */
+const ITERATIONS = 100_000
 const SALT_BYTES = 16
 const KEY_BITS = 256
 
@@ -50,7 +50,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const parts = stored.split('$')
   if (parts.length !== 4 || parts[0] !== 'pbkdf2') return false
   const iterations = Number(parts[1])
-  if (!Number.isFinite(iterations) || iterations < 100_000) return false
+  if (!Number.isFinite(iterations) || iterations !== 100_000) return false
   let salt: Uint8Array
   let expected: Uint8Array
   try {
