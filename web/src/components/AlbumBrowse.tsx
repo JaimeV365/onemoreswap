@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { getAlbumIndexes } from '../lib/catalogue'
 import { bumpCopies, sparesOf } from '../lib/storage'
-import { hasTeamFlagMap, sectionDomId } from '../lib/teamFlags'
+import { hasSectionMarks, sectionDomId } from '../lib/teamFlags'
 import type { CollectionAlbumState } from '../lib/types'
 import { StickerChip } from './StickerChip'
 import { TeamFlag } from './TeamFlag'
@@ -55,9 +55,9 @@ export function AlbumBrowse({
       .filter((sec) => sec.stickers.length > 0)
   }, [indexes, state, filter, q, incoming])
 
-  const showFlagJump = useMemo(
-    () => hasTeamFlagMap(visibleSections.map((s) => s.code)),
-    [visibleSections],
+  const showJumpBar = useMemo(
+    () => hasSectionMarks(albumId, visibleSections.map((s) => s.code)),
+    [albumId, visibleSections],
   )
 
   if (!indexes) return null
@@ -105,9 +105,9 @@ export function AlbumBrowse({
 
   return (
     <div className={styles.wrap}>
-      {showFlagJump && (
+      {showJumpBar && (
         <nav className={styles.jumpBar} aria-label="Jump to team">
-          <span className={styles.jumpLabel}>Teams</span>
+          <span className={styles.jumpLabel}>Jump to</span>
           <div className={styles.jumpFlags}>
             {visibleSections.map((sec) => {
               const key = `${sec.code}::${sec.name}`
@@ -121,7 +121,8 @@ export function AlbumBrowse({
                   aria-label={`Open ${sec.name}`}
                   onClick={() => jumpToSection(key)}
                 >
-                  <TeamFlag code={sec.code} size="sm" />
+                  <TeamFlag albumId={albumId} code={sec.code} size="sm" />
+                  <span className={styles.jumpCode}>{sec.code}</span>
                 </button>
               )
             })}
@@ -136,7 +137,7 @@ export function AlbumBrowse({
         return (
           <section key={key} id={sectionDomId(key)} className={styles.section}>
             <button type="button" className={styles.sectionHead} onClick={() => toggleSection(key)}>
-              <TeamFlag code={sec.code} size="md" />
+              <TeamFlag albumId={albumId} code={sec.code} size="md" />
               <span className={styles.sectionTitle}>{sec.name}</span>
               <span className={styles.sectionMeta}>
                 {sec.stickers.length} shown · {sec.code}

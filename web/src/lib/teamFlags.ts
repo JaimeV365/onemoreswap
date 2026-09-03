@@ -54,17 +54,111 @@ export const TEAM_FLAG_ISO: Record<string, string | null> = {
   HIS: null,
 }
 
-export function hasTeamFlagMap(codes: Iterable<string>): boolean {
-  for (const code of codes) {
-    if (Object.prototype.hasOwnProperty.call(TEAM_FLAG_ISO, code)) return true
+/** WC26 album nation order (48 teams). CC sits after the first 24 in the physical album. */
+export const WC_NATION_ORDER = [
+  'MEX',
+  'RSA',
+  'KOR',
+  'CZE',
+  'CAN',
+  'BIH',
+  'QAT',
+  'SUI',
+  'BRA',
+  'MAR',
+  'HAI',
+  'SCO',
+  'USA',
+  'PAR',
+  'AUS',
+  'TUR',
+  'GER',
+  'CUW',
+  'CIV',
+  'ECU',
+  'NED',
+  'JPN',
+  'SWE',
+  'TUN',
+  'BEL',
+  'EGY',
+  'IRN',
+  'NZL',
+  'ESP',
+  'CPV',
+  'KSA',
+  'URU',
+  'FRA',
+  'SEN',
+  'IRQ',
+  'NOR',
+  'ARG',
+  'ALG',
+  'AUT',
+  'JOR',
+  'POR',
+  'COD',
+  'UZB',
+  'COL',
+  'ENG',
+  'CRO',
+  'GHA',
+  'PAN',
+] as const
+
+/**
+ * Premier League club codes → ESPN soccer team logo IDs.
+ * Crests load from ESPN’s public CDN (free to hotlink for display; trademarks remain with clubs).
+ */
+export const PL_CREST_ESPN_ID: Record<string, number> = {
+  ARS: 359,
+  AVL: 362,
+  BOU: 349,
+  BRE: 337,
+  BHA: 331,
+  CHE: 363,
+  CRY: 384,
+  EVE: 368,
+  FUL: 370,
+  IPS: 372,
+  LEI: 375,
+  LIV: 364,
+  MCI: 382,
+  MUN: 360,
+  NEW: 361,
+  NFO: 393,
+  SOU: 376,
+  TOT: 367,
+  WHU: 371,
+  WOL: 380,
+}
+
+export function hasSectionMarks(albumId: string, codes: Iterable<string>): boolean {
+  if (albumId === 'wc2026') {
+    for (const code of codes) {
+      if (Object.prototype.hasOwnProperty.call(TEAM_FLAG_ISO, code)) return true
+    }
+  }
+  if (albumId === 'pl2526') {
+    for (const code of codes) {
+      if (PL_CREST_ESPN_ID[code] || code === 'PL') return true
+    }
   }
   return false
 }
 
-export function flagImageUrl(code: string, width = 40): string | null {
-  const iso = TEAM_FLAG_ISO[code]
-  if (!iso) return null
-  return `https://flagcdn.com/w${width}/${iso}.png`
+export function sectionImageUrl(albumId: string, code: string, width = 40): string | null {
+  if (albumId === 'wc2026') {
+    const iso = TEAM_FLAG_ISO[code]
+    if (!iso) return null
+    return `https://flagcdn.com/w${width}/${iso}.png`
+  }
+  if (albumId === 'pl2526') {
+    const id = PL_CREST_ESPN_ID[code]
+    if (!id) return null
+    return `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png`
+  }
+  return null
 }
 
 export function sectionDomId(sectionKey: string): string {

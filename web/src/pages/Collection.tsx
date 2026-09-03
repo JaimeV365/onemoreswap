@@ -160,8 +160,17 @@ export function Collection() {
       <section className={styles.panel}>
         <h2 className={styles.panelTitle}>Quick add</h2>
         <p className={collectionStyles.addHint}>
-          Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
-          <code>570 571</code>. First copy goes in the album; extras become spares.
+          {albumId === 'pl2526' ? (
+            <>
+              Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
+              <code>353 354</code>. First copy goes in the album; extras become spares.
+            </>
+          ) : (
+            <>
+              Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
+              <code>570 571</code>. First copy goes in the album; extras become spares.
+            </>
+          )}
         </p>
         <Textarea
           label="Stickers to add"

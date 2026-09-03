@@ -3,6 +3,7 @@ import wcRaw from '../data/wc2026-catalogue.json'
 import plRaw from '../data/pl2526-catalogue.json'
 import { copiesOf, sparesOf } from './storage'
 import { pendingIncomingMap } from './postal'
+import { WC_NATION_ORDER } from './teamFlags'
 
 const catalogues = [wcRaw, plRaw] as AlbumCatalogue[]
 
@@ -22,6 +23,38 @@ function buildSections(stickers: StickerEntry[]): AlbumSection[] {
     byKey.get(key)!.stickers.push(sticker)
   }
   return sections
+}
+
+/** Match physical WC26 album order: opening → intro → 24 teams → Coca-Cola → 24 teams → history. */
+function orderSections(albumId: string, sections: AlbumSection[]): AlbumSection[] {
+  if (albumId !== 'wc2026') {
+    return [...sections].sort((a, b) => (a.stickers[0]?.seq ?? 0) - (b.stickers[0]?.seq ?? 0))
+  }
+
+  const used = new Set<AlbumSection>()
+  const out: AlbumSection[] = []
+  const push = (sec: AlbumSection | undefined) => {
+    if (!sec || used.has(sec)) return
+    used.add(sec)
+    out.push(sec)
+  }
+
+  const byCodeName = (code: string, nameMatch: RegExp) =>
+    sections.find((s) => s.code === code && nameMatch.test(s.name))
+
+  push(byCodeName('00', /./))
+  push(byCodeName('FWC', /intro|host/i))
+  for (const code of WC_NATION_ORDER.slice(0, 24)) {
+    push(sections.find((s) => s.code === code))
+  }
+  push(byCodeName('CC', /./))
+  for (const code of WC_NATION_ORDER.slice(24)) {
+    push(sections.find((s) => s.code === code))
+  }
+  push(byCodeName('FWC', /history/i))
+
+  for (const sec of sections) push(sec)
+  return out
 }
 
 export function getAlbumIds(): string[] {
@@ -55,7 +88,7 @@ export function getAlbumIndexes(id: string): AlbumIndexes | undefined {
     codeToSeq,
     seqToInfo,
     teamCodes,
-    sections: buildSections(catalogue.stickers),
+    sections: orderSections(id, buildSections(catalogue.stickers)),
   }
   indexCache.set(id, indexes)
   return indexes

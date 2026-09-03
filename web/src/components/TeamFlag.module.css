@@ -13,6 +13,13 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
+.crest img {
+  object-fit: contain;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
 .mark {
   display: inline-flex;
   align-items: center;
@@ -37,6 +44,16 @@
   height: 18px;
 }
 
+.crest.sm img {
+  width: 20px;
+  height: 20px;
+}
+
+.crest.md img {
+  width: 24px;
+  height: 24px;
+}
+
 .mark.sm {
   min-width: 20px;
   height: 15px;
@@ -49,4 +66,14 @@
   height: 18px;
   padding: 0 4px;
   font-size: 0.625rem;
+}
+
+.crestMark.sm {
+  height: 20px;
+  min-width: 20px;
+}
+
+.crestMark.md {
+  height: 24px;
+  min-width: 24px;
 }

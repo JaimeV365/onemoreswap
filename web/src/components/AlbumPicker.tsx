@@ -6,6 +6,7 @@ import {
   enableAlbum,
   loadEnabledAlbums,
 } from '../lib/enabledAlbums'
+import { ConfirmDialog } from './ConfirmDialog'
 import styles from './AlbumPicker.module.css'
 
 type AlbumPickerProps = {
@@ -23,8 +24,10 @@ export function AlbumPicker({
 }: AlbumPickerProps) {
   const [enabled, setEnabled] = useState(() => loadEnabledAlbums())
   const [adding, setAdding] = useState(false)
+  const [hideId, setHideId] = useState<string | null>(null)
 
   const available = useMemo(() => albumsAvailableToAdd(enabled), [enabled])
+  const hideAlbum = hideId ? getAlbum(hideId) : null
 
   const sync = (next: string[]) => {
     setEnabled(next)
@@ -39,16 +42,10 @@ export function AlbumPicker({
     setAdding(false)
   }
 
-  const removeAlbum = (id: string) => {
-    const album = getAlbum(id)
-    if (
-      !confirm(
-        `Hide “${album?.name || id}” from this profile?\n\nSticker data stays on this device — you can add the album again later.`,
-      )
-    ) {
-      return
-    }
-    sync(disableAlbum(id))
+  const confirmHide = () => {
+    if (!hideId) return
+    sync(disableAlbum(hideId))
+    setHideId(null)
   }
 
   const addMenu = (
@@ -119,7 +116,7 @@ export function AlbumPicker({
                 <button
                   type="button"
                   className={styles.removeBtn}
-                  onClick={() => removeAlbum(id)}
+                  onClick={() => setHideId(id)}
                   aria-label={`Hide ${album.name}`}
                 >
                   Hide
@@ -141,6 +138,17 @@ export function AlbumPicker({
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!hideId}
+        title={`Hide “${hideAlbum?.name || hideId}” from this profile?`}
+        body="Sticker data stays on this device — you can add the album again later."
+        confirmLabel="Hide album"
+        cancelLabel="Keep"
+        danger
+        onConfirm={confirmHide}
+        onCancel={() => setHideId(null)}
+      />
     </div>
   )
 }
