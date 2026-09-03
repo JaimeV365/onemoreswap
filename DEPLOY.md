@@ -43,7 +43,20 @@ Until this binding exists, `/api/auth/*` returns “not configured”.
 
 ## Step 3 — Create the users tables (schema)
 
-On your PC (PowerShell), in the app folder:
+### Easiest: D1 Console in the browser
+
+1. Dashboard → **Storage & databases** → **D1** → **`onemoreswap`**
+2. Open **Console** (or **Explore data** → query)
+3. Paste the contents of `web/schema-console.sql` (or `web/schema.sql`) and **Run**
+4. Confirm with:
+
+```sql
+SELECT name FROM sqlite_master WHERE type='table';
+```
+
+You want `users`, `sessions`, and `profiles`.
+
+### Or via CLI on your PC
 
 ```powershell
 cd "C:\Users\jaime\OneDrive\Documents\JAND Games\Panini World Cup 2026\One More Swap\web"
@@ -51,21 +64,11 @@ npx wrangler login
 npx wrangler d1 execute onemoreswap --remote --file=./schema.sql
 ```
 
-If you already ran an older `schema.sql` once, also run:
+If an older schema already created bare `users`/`sessions` columns, also run:
 
 ```powershell
 npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v2.sql
 ```
-
-(That adds guardian-consent columns and the `profiles` table.)
-
-Check: D1 → `onemoreswap` → **Console** → run:
-
-```sql
-SELECT name FROM sqlite_master WHERE type='table';
-```
-
-You want `users`, `sessions`, and (after migrate) `profiles`.
 
 If signup says tables are missing, this step was skipped.
 ---
