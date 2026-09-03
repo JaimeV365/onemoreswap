@@ -3,13 +3,13 @@ import {
   json,
   requireUser,
   type Env,
-} from '../../lib/http'
+} from '../lib/http'
 import {
   isAgeBand,
   MAX_PROFILES,
   normalizeDisplayName,
   validateDisplayName,
-} from '../../lib/profiles'
+} from '../lib/profiles'
 
 type PagesContext = {
   request: Request
