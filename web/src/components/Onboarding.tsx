@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { scopedStorageKey } from '../lib/profileScope'
 import { Button } from './Button'
 import styles from './Onboarding.module.css'
 
-const KEY = 'onemoreswap-onboarding-v1'
+const KEY_BASE = 'onemoreswap-onboarding-v1'
 
 type OnboardingProps = {
   show: boolean
@@ -15,7 +16,10 @@ export function OnboardingBanner({ show }: OnboardingProps) {
   useEffect(() => {
     if (!show) return
     try {
-      if (localStorage.getItem(KEY) === 'done') return
+      const done =
+        localStorage.getItem(scopedStorageKey(KEY_BASE)) === 'done' ||
+        localStorage.getItem(KEY_BASE) === 'done'
+      if (done) return
       setVisible(true)
     } catch {
       setVisible(true)
@@ -25,7 +29,7 @@ export function OnboardingBanner({ show }: OnboardingProps) {
   if (!visible) return null
 
   const dismiss = () => {
-    localStorage.setItem(KEY, 'done')
+    localStorage.setItem(scopedStorageKey(KEY_BASE), 'done')
     setVisible(false)
   }
 

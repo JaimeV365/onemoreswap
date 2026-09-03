@@ -1,6 +1,7 @@
 import { Navigate, BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AuthProvider } from './lib/AuthContext'
+import { ProfileProvider } from './lib/ProfileContext'
 import { ThemeProvider } from './lib/ThemeContext'
 import { About } from './pages/About'
 import { Account } from './pages/Account'
@@ -18,20 +19,22 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route index element={<Collection />} />
-              <Route path="collection" element={<Navigate to="/" replace />} />
-              <Route path="paste" element={<PasteTool />} />
-              <Route path="postal" element={<Postal />} />
-              <Route path="account" element={<Account />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="welcome" element={<Home />} />
-              <Route path="about" element={<About />} />
-              <Route path="privacy" element={<Privacy />} />
-              <Route path="terms" element={<Terms />} />
-            </Route>
-          </Routes>
+          <ProfileProvider>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route index element={<Collection />} />
+                <Route path="collection" element={<Navigate to="/" replace />} />
+                <Route path="paste" element={<PasteTool />} />
+                <Route path="postal" element={<Postal />} />
+                <Route path="account" element={<Account />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="welcome" element={<Home />} />
+                <Route path="about" element={<About />} />
+                <Route path="privacy" element={<Privacy />} />
+                <Route path="terms" element={<Terms />} />
+              </Route>
+            </Routes>
+          </ProfileProvider>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

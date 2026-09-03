@@ -9,7 +9,7 @@ export const AGE_BANDS = [
 
 export type AgeBandId = (typeof AGE_BANDS)[number]['id']
 
-export const MAX_PROFILES = 8
+export const MAX_PROFILES = 5
 export const DISPLAY_NAME_MAX = 40
 
 const PRINTABLE = /^[\p{L}\p{N} .'\-]+$/u

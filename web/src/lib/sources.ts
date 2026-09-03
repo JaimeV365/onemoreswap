@@ -1,5 +1,7 @@
+import { scopedStorageKey } from './profileScope'
+
 const BUILTIN = ['WhatsApp', 'Facebook', 'Friend'] as const
-const STORAGE_KEY = 'onemoreswap-sources-v1'
+const STORAGE_BASE = 'onemoreswap-sources-v1'
 
 export type BuiltinSource = (typeof BUILTIN)[number]
 
@@ -9,7 +11,9 @@ export function builtinSources(): string[] {
 
 export function loadCustomSources(): string[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw =
+      localStorage.getItem(scopedStorageKey(STORAGE_BASE)) ||
+      localStorage.getItem(STORAGE_BASE)
     if (!raw) return []
     const data = JSON.parse(raw) as unknown
     if (!Array.isArray(data)) return []
@@ -22,7 +26,7 @@ export function loadCustomSources(): string[] {
 }
 
 function saveCustomSources(list: string[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+  localStorage.setItem(scopedStorageKey(STORAGE_BASE), JSON.stringify(list))
 }
 
 export function allSources(): string[] {

@@ -1,6 +1,7 @@
 import type { CollectionAlbumState, CollectionStore } from './types'
+import { scopedStorageKey } from './profileScope'
 
-const STORAGE_KEY = 'onemoreswap-collection-v2'
+const STORAGE_BASE = 'onemoreswap-collection-v2'
 
 /** Legacy v1 shape */
 type CollectionAlbumStateV1 = {
@@ -47,10 +48,15 @@ function migrateStore(raw: unknown): CollectionStore {
 
 export function loadCollection(): CollectionStore {
   try {
-    const v2 = localStorage.getItem(STORAGE_KEY)
+    const v2 = localStorage.getItem(scopedStorageKey(STORAGE_BASE))
     if (v2) return migrateStore(JSON.parse(v2))
 
-    const v1 = localStorage.getItem('onemoreswap-collection-v1')
+    // Unscoped legacy (pre-profile) — only for guest key, or as migrate source
+    const legacyV2 = localStorage.getItem(STORAGE_BASE)
+    if (legacyV2) return migrateStore(JSON.parse(legacyV2))
+
+    const v1 = localStorage.getItem(scopedStorageKey('onemoreswap-collection-v1'))
+      || localStorage.getItem('onemoreswap-collection-v1')
     if (v1) {
       const migrated = migrateStore(JSON.parse(v1))
       saveCollection(migrated)
@@ -63,7 +69,7 @@ export function loadCollection(): CollectionStore {
 }
 
 export function saveCollection(store: CollectionStore) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+  localStorage.setItem(scopedStorageKey(STORAGE_BASE), JSON.stringify(store))
 }
 
 export function getAlbumState(store: CollectionStore, albumId: string): CollectionAlbumState {

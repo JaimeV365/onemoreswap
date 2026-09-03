@@ -1,6 +1,7 @@
 import type { PostalExpectedLine, PostalStore, PostalSwap } from './postalTypes'
+import { scopedStorageKey } from './profileScope'
 
-const STORAGE_KEY = 'onemoreswap-postal-v1'
+const STORAGE_BASE = 'onemoreswap-postal-v1'
 
 export function emptyPostalStore(): PostalStore {
   return { version: 1, swaps: [] }
@@ -8,7 +9,9 @@ export function emptyPostalStore(): PostalStore {
 
 export function loadPostal(): PostalStore {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw =
+      localStorage.getItem(scopedStorageKey(STORAGE_BASE)) ||
+      localStorage.getItem(STORAGE_BASE)
     if (!raw) return emptyPostalStore()
     const data = JSON.parse(raw) as PostalStore
     if (data.version !== 1 || !Array.isArray(data.swaps)) return emptyPostalStore()
@@ -19,7 +22,7 @@ export function loadPostal(): PostalStore {
 }
 
 export function savePostal(store: PostalStore) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+  localStorage.setItem(scopedStorageKey(STORAGE_BASE), JSON.stringify(store))
 }
 
 export function upsertPostalSwaps(incoming: PostalSwap[], replace = false): PostalStore {

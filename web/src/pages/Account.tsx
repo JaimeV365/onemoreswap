@@ -134,9 +134,9 @@ export function Account() {
         <section className={styles.panel}>
           <h2 className={styles.panelTitle}>What&apos;s next</h2>
           <ul className={authStyles.nextSteps}>
-            <li>Add collector profiles for your family (no child emails or passwords).</li>
+            <li>Add collector profiles — each has its own collection (switch in the header).</li>
             <li>
-              Keep tracking stickers in <Link to="/">My collection</Link> on this device for now.
+              Open <Link to="/">My collection</Link> while that profile is selected.
             </li>
             <li>Cloud sync and email verification come next.</li>
           </ul>

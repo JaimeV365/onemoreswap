@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Button } from './Button'
+import { useProfiles } from '../lib/ProfileContext'
 import { AGE_BANDS, MAX_PROFILES, type AgeBandId, type ChildProfile } from '../lib/profiles'
 import styles from '../pages/Page.module.css'
 import authStyles from '../pages/Account.module.css'
@@ -25,6 +26,7 @@ function ageLabel(id: string | null) {
 }
 
 export function ProfilesPanel() {
+  const { refreshProfiles, setActiveProfileId, activeProfile } = useProfiles()
   const [profiles, setProfiles] = useState<ChildProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
@@ -45,8 +47,18 @@ export function ProfilesPanel() {
       return
     }
     setError(null)
-    setProfiles(res.data?.profiles || [])
-  }, [])
+    const raw = res.data?.profiles || []
+    setProfiles(
+      raw.map((p) => ({
+        ...p,
+        displayName:
+          p.displayName ||
+          (p as unknown as { display_name?: string }).display_name ||
+          'Profile',
+      })),
+    )
+    await refreshProfiles()
+  }, [refreshProfiles])
 
   useEffect(() => {
     load()
@@ -73,6 +85,7 @@ export function ProfilesPanel() {
     setAgeBand('unspecified')
     setMessage('Profile added')
     await load()
+    if (res.data?.profile?.id) setActiveProfileId(res.data.profile.id)
   }
 
   const onSaveEdit = async (id: string) => {
@@ -112,8 +125,14 @@ export function ProfilesPanel() {
     <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
       <h2 className={styles.panelTitle}>Collector profiles</h2>
       <p className={authStyles.hint}>
-        Add children (or yourself) as profiles under this adult login. They do not get their own
-        email or password. Up to {MAX_PROFILES} profiles.
+        Each profile has its own sticker collection and postal swaps on this device. Switch profiles
+        in the header (“Collecting as”) without signing out. Up to {MAX_PROFILES} profiles.
+        {activeProfile ? (
+          <>
+            {' '}
+            Active now: <strong>{activeProfile.displayName}</strong>.
+          </>
+        ) : null}
       </p>
 
       {loading ? (

@@ -16,5 +16,5 @@ export type ChildProfile = {
   createdAt: string
 }
 
-export const MAX_PROFILES = 8
+export const MAX_PROFILES = 5
 export const DISPLAY_NAME_MAX = 40
