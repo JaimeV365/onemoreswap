@@ -17,13 +17,22 @@ export function Account() {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [guardianConfirmed, setGuardianConfirmed] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileKey, setTurnstileKey] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [okMsg, setOkMsg] = useState<string | null>(null)
 
   const pwCheck = validatePassword(password)
   const emailErr = email ? validateEmail(email) : null
+
+  const resetTurnstile = () => {
+    setTurnstileToken('')
+    setTurnstileKey((k) => k + 1)
+  }
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -43,20 +52,39 @@ export function Account() {
       setError('Enter your password')
       return
     }
+    if (mode === 'signup') {
+      if (!guardianConfirmed) {
+        setError('A parent or guardian (18+) must create this account')
+        return
+      }
+      if (!acceptedTerms || !acceptedPrivacy) {
+        setError('Please accept the Terms and Privacy policy')
+        return
+      }
+    }
     if (config?.turnstileRequired && !turnstileToken) {
       setError('Complete the bot check')
       return
     }
 
     setBusy(true)
-    const req = mode === 'signup' ? signupRequest : loginRequest
-    const res = await req({
-      email,
-      password,
-      turnstileToken: turnstileToken || '',
-    })
+    const res =
+      mode === 'signup'
+        ? await signupRequest({
+            email,
+            password,
+            turnstileToken: turnstileToken || '',
+            guardianConfirmed,
+            acceptedTerms,
+            acceptedPrivacy,
+          })
+        : await loginRequest({
+            email,
+            password,
+            turnstileToken: turnstileToken || '',
+          })
     setBusy(false)
-    setTurnstileToken('')
+    resetTurnstile()
 
     if (res.error) {
       setError(res.error)
@@ -81,10 +109,13 @@ export function Account() {
     return (
       <main className={styles.page}>
         <h1 className={styles.title}>Account</h1>
-        <p className={styles.lead}>Signed in as <strong>{user.email}</strong></p>
+        <p className={styles.lead}>
+          Signed in as <strong>{user.email}</strong> (parent / guardian account)
+        </p>
         <section className={styles.panel}>
           <p className={authStyles.hint}>
-            Collection sync to the cloud comes next. Your data still lives on this device for now.
+            This login belongs to the adult. Child collector profiles (no separate child password)
+            come next, along with email verification and cloud sync.
           </p>
           <div className={styles.actions}>
             <Button
@@ -123,7 +154,9 @@ export function Account() {
     <main className={styles.page}>
       <h1 className={styles.title}>Account</h1>
       <p className={styles.lead}>
-        Email and password — stored on One More Swap (hashed). No Google sign-in.
+        {mode === 'signup'
+          ? 'A parent or guardian creates the account. Kids use profiles under that login — not their own email.'
+          : 'Sign in with the parent / guardian email and password.'}
       </p>
 
       <div className={authStyles.tabs}>
@@ -152,7 +185,7 @@ export function Account() {
       <section className={styles.panel}>
         <form className={authStyles.form} onSubmit={onSubmit} autoComplete="on">
           <label className={authStyles.field}>
-            <span>Email</span>
+            <span>{mode === 'signup' ? 'Parent / guardian email' : 'Email'}</span>
             <input
               type="email"
               name="email"
@@ -163,6 +196,11 @@ export function Account() {
               required
               spellCheck={false}
             />
+            {mode === 'signup' && (
+              <span className={authStyles.fieldHint}>
+                Use an adult email you can access. This is the primary contact for the account.
+              </span>
+            )}
             {emailErr && <span className={authStyles.fieldError}>{emailErr}</span>}
           </label>
 
@@ -191,9 +229,54 @@ export function Account() {
             </ul>
           )}
 
+          {mode === 'signup' && (
+            <fieldset className={authStyles.legal}>
+              <legend>Adult confirmation</legend>
+              <p className={authStyles.legalLead}>
+                One More Swap is for families. The account holder must be an adult. Children collect
+                under this account later as profiles — they do not create their own login.
+              </p>
+              <label className={authStyles.check}>
+                <input
+                  type="checkbox"
+                  checked={guardianConfirmed}
+                  onChange={(e) => setGuardianConfirmed(e.target.checked)}
+                  required
+                />
+                <span>
+                  I confirm I am <strong>18 or over</strong> and the parent or legal guardian creating
+                  this account (or an adult creating an account for myself).
+                </span>
+              </label>
+              <label className={authStyles.check}>
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  required
+                />
+                <span>
+                  I accept the <Link to="/terms" target="_blank">Terms</Link>
+                </span>
+              </label>
+              <label className={authStyles.check}>
+                <input
+                  type="checkbox"
+                  checked={acceptedPrivacy}
+                  onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                  required
+                />
+                <span>
+                  I accept the <Link to="/privacy" target="_blank">Privacy policy</Link>
+                </span>
+              </label>
+            </fieldset>
+          )}
+
           {config?.turnstileSiteKey ? (
             <div className={authStyles.turnstile}>
               <Turnstile
+                key={turnstileKey}
                 siteKey={config.turnstileSiteKey}
                 theme={resolved === 'dark' ? 'dark' : 'light'}
                 onToken={setTurnstileToken}
@@ -212,8 +295,15 @@ export function Account() {
           )}
 
           <div className={styles.actions}>
-            <Button type="submit" disabled={busy || (mode === 'signup' && !pwCheck.ok)}>
-              {busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Sign in'}
+            <Button
+              type="submit"
+              disabled={
+                busy ||
+                (mode === 'signup' &&
+                  (!pwCheck.ok || !guardianConfirmed || !acceptedTerms || !acceptedPrivacy))
+              }
+            >
+              {busy ? 'Please wait…' : mode === 'signup' ? 'Create adult account' : 'Sign in'}
             </Button>
           </div>
         </form>

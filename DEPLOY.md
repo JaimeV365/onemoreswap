@@ -51,8 +51,13 @@ npx wrangler login
 npx wrangler d1 execute onemoreswap --remote --file=./schema.sql
 ```
 
-You should see success / rows written.  
-If Wrangler asks which account, pick the same one as Pages.
+If you already ran an older `schema.sql` once, also run:
+
+```powershell
+npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v2.sql
+```
+
+(That adds guardian-consent columns and the `profiles` table.)
 
 Check: D1 → `onemoreswap` → **Console** → run:
 
@@ -60,8 +65,9 @@ Check: D1 → `onemoreswap` → **Console** → run:
 SELECT name FROM sqlite_master WHERE type='table';
 ```
 
-You want `users` and `sessions`.
+You want `users`, `sessions`, and (after migrate) `profiles`.
 
+If signup says tables are missing, this step was skipped.
 ---
 
 ## Step 4 — Cloudflare Turnstile (bot tick)

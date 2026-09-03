@@ -1,11 +1,19 @@
 -- One More Swap auth schema (D1 / SQLite)
--- Apply: npx wrangler d1 execute onemoreswap --remote --file=./schema.sql
---    or: npx wrangler d1 execute onemoreswap --local --file=./schema.sql
+-- Fresh install:
+--   npx wrangler d1 execute onemoreswap --remote --file=./schema.sql
+-- If you already ran an older schema.sql, also run:
+--   npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v2.sql
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL COLLATE NOCASE UNIQUE,
   password_hash TEXT NOT NULL,
+  -- Adult / guardian owns the login (UK Children’s Code + COPPA-friendly model)
+  account_role TEXT NOT NULL DEFAULT 'guardian',
+  guardian_confirmed_at TEXT,
+  accepted_terms_at TEXT,
+  accepted_privacy_at TEXT,
+  email_verified_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -21,3 +29,15 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions (user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions (expires_at);
+
+-- Child profiles under a guardian account (no separate child login yet)
+CREATE TABLE IF NOT EXISTS profiles (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL,
+  age_band TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_user ON profiles (user_id);

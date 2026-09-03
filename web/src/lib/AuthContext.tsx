@@ -38,7 +38,11 @@ async function api<T>(path: string, init?: RequestInit): Promise<{ data?: T; err
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {
-      return { error: (body as { error?: string }).error || 'Something went wrong', status: res.status }
+      const msg = (body as { error?: string }).error
+      return {
+        error: msg || `Something went wrong (${res.status})`,
+        status: res.status,
+      }
     }
     return { data: body as T, status: res.status }
   } catch {
@@ -93,8 +97,11 @@ export async function signupRequest(input: {
   email: string
   password: string
   turnstileToken: string
+  guardianConfirmed: boolean
+  acceptedTerms: boolean
+  acceptedPrivacy: boolean
 }) {
-  return api<{ user: AuthUser }>('/api/auth/signup', {
+  return api<{ user: AuthUser; notice?: string }>('/api/auth/signup', {
     method: 'POST',
     body: JSON.stringify(input),
   })

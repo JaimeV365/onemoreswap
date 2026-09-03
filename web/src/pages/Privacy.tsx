@@ -21,12 +21,20 @@ export function Privacy() {
             (localStorage). We do not receive it.
           </li>
           <li>
-            <strong>With an account:</strong> email address and a hashed password (we never store
-            your password in plain text), plus collection/sync data when cloud sync is enabled.
-            Addresses only when a trade is confirmed. Cloudflare Turnstile may process a bot-check
-            token on sign-up and sign-in.
+            <strong>With an account:</strong> the login email and hashed password belong to a{' '}
+            <strong>parent or guardian (18+)</strong>. We store when they confirmed they are the adult
+            account holder and accepted the Terms and Privacy policy. Child collector profiles (display
+            name / age band) may be stored under that account later — children do not get a separate
+            login. Collection/sync data when cloud sync is enabled; addresses only when a trade is
+            confirmed. Cloudflare Turnstile may process a bot-check token on sign-up and sign-in.
           </li>
         </ul>
+        <h2>Children</h2>
+        <p>
+          Under the UK Children’s Code we design for high privacy by default for under-18s. The adult
+          owns the account and is the primary contact. We aim to collect only what is needed for
+          sticker collecting and swaps — not school details, photos, or unnecessary personal data.
+        </p>
         <h2>Why we use data</h2>
         <p>
           To provide the service — matching, introductions, and trade coordination. We do not sell

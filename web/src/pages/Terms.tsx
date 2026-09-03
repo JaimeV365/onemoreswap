@@ -34,13 +34,15 @@ export function Terms() {
         </p>
         <h2>Eligibility</h2>
         <p>
-          You must be 18+ or use the service with a parent or guardian who accepts these terms on
-          your behalf. UK-first; trades are at your own risk under applicable law.
+          Account holders must be 18 or over. A parent or legal guardian creates and owns the account
+          and accepts these terms. Children may use the service only under that adult account (child
+          profiles). UK-first; trades are at your own risk under applicable law.
         </p>
         <h2>Accounts</h2>
         <p>
-          Sign-in uses Google OAuth; we do not store passwords. Keep your account secure and use the
-          service honestly.
+          Sign-in uses email and password for the adult account holder. Passwords are stored as secure
+          hashes only. Keep your login private. Child profiles do not have separate passwords in the
+          current design.
         </p>
       </div>
     </main>
