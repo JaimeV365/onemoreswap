@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { CloudSyncBanner } from '../components/CloudSyncBanner'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { SourcePicker } from '../components/SourcePicker'
 import { StickerList } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
@@ -65,6 +67,8 @@ export function Postal() {
   const [expectedText, setExpectedText] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [filter, setFilter] = useState<'open' | 'completed' | 'all'>('open')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [syncEpoch, setSyncEpoch] = useState(0)
 
   const indexes = getAlbumIndexes(albumId)
   const album = getAlbum(albumId)
@@ -90,7 +94,10 @@ export function Postal() {
     if (filter === 'completed' && !hasCompleted) setFilter('open')
   }, [filter, hasCompleted])
 
-  const refresh = () => setSwaps(loadPostal().swaps)
+  const refresh = () => {
+    setSwaps(loadPostal().swaps)
+    setSyncEpoch((n) => n + 1)
+  }
 
   const openNew = () => {
     setDraft(emptyDraft(albumId))
@@ -218,14 +225,8 @@ export function Postal() {
 
   const deleteDraft = () => {
     if (!draft) return
+    setConfirmDelete(false)
     const parts = describePostalRevert(draft)
-    const msg =
-      `Delete swap with "${draft.person || 'this person'}"?\n\n` +
-      (parts.length
-        ? `This reverts collection changes from this swap:\n• ${parts.join('\n• ')}`
-        : 'No collection changes to revert.') +
-      '\n\nThis cannot be undone.'
-    if (!confirm(msg)) return
     const store = loadCollection()
     const current = getAlbumState(store, draft.albumId)
     saveCollection(
@@ -236,6 +237,17 @@ export function Postal() {
     setView('list')
     setMessage(parts.length ? 'Swap deleted — collection changes reverted.' : 'Swap deleted.')
   }
+
+  const deleteConfirmBody = draft
+    ? (() => {
+        const parts = describePostalRevert(draft)
+        return (
+          (parts.length
+            ? `This reverts collection changes from this swap:\n• ${parts.join('\n• ')}\n\n`
+            : 'No collection changes to revert.\n\n') + 'This cannot be undone.'
+        )
+      })()
+    : ''
 
   if (view === 'edit' && draft) {
     return (
@@ -248,6 +260,8 @@ export function Postal() {
           Track what you posted and what you&apos;re waiting for. You can only send spare copies — each
           sent sticker drops one (+2 → +1 → ✓), same as the World Cup tracker.
         </p>
+
+        <CloudSyncBanner refreshKey={syncEpoch} />
 
         <AlbumPicker
           value={albumId}
@@ -304,7 +318,7 @@ export function Postal() {
           </div>
           <div className={styles.actions}>
             <Button onClick={saveDraft}>Save swap</Button>
-            <Button variant="ghost" onClick={deleteDraft}>
+            <Button variant="ghost" onClick={() => setConfirmDelete(true)}>
               Delete
             </Button>
           </div>
@@ -372,6 +386,17 @@ export function Postal() {
             />
           </section>
         </div>
+
+        <ConfirmDialog
+          open={confirmDelete}
+          title={`Delete swap with “${draft.person || 'this person'}”?`}
+          body={deleteConfirmBody}
+          confirmLabel="Delete swap"
+          cancelLabel="Cancel"
+          danger
+          onConfirm={deleteDraft}
+          onCancel={() => setConfirmDelete(false)}
+        />
       </main>
     )
   }
@@ -384,6 +409,8 @@ export function Postal() {
         Keep a record of what you posted and what you&apos;re waiting for. Import from the World Cup
         tracker via Collection → Advanced, or start a new swap here.
       </p>
+
+      <CloudSyncBanner refreshKey={syncEpoch} />
 
       <AlbumPicker value={albumId} onChange={setAlbumId} />
 

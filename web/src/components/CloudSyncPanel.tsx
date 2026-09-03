@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext'
 import { useProfiles } from '../lib/ProfileContext'
@@ -7,15 +7,23 @@ import {
   pullCloudSync,
   pushCloudSync,
 } from '../lib/cloudSync'
+import {
+  getSyncDirtyState,
+  loadSyncMeta,
+  recordLocalSynced,
+} from '../lib/syncStatus'
 import { Button } from './Button'
+import { ConfirmDialog } from './ConfirmDialog'
 import styles from '../pages/Page.module.css'
 import syncStyles from './CloudSync.module.css'
 
 type CloudSyncPanelProps = {
   onApplied?: () => void
+  /** Bump when local data may have changed */
+  refreshKey?: number | string
 }
 
-export function CloudSyncPanel({ onApplied }: CloudSyncPanelProps) {
+export function CloudSyncPanel({ onApplied, refreshKey = 0 }: CloudSyncPanelProps) {
   const { user } = useAuth()
   const { activeProfile } = useProfiles()
   const [busy, setBusy] = useState(false)
@@ -24,6 +32,16 @@ export function CloudSyncPanel({ onApplied }: CloudSyncPanelProps) {
   const [cloudMeta, setCloudMeta] = useState<{ updatedAt: string | null; revision: number } | null>(
     null,
   )
+  const [confirmLoad, setConfirmLoad] = useState(false)
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    setTick((t) => t + 1)
+    const meta = loadSyncMeta()
+    if (meta) {
+      setCloudMeta({ updatedAt: meta.updatedAt, revision: meta.revision })
+    }
+  }, [refreshKey, activeProfile?.id])
 
   if (!user) {
     return (
@@ -47,6 +65,9 @@ export function CloudSyncPanel({ onApplied }: CloudSyncPanelProps) {
       </section>
     )
   }
+
+  void tick
+  const dirty = getSyncDirtyState()
 
   const checkCloud = async () => {
     setBusy(true)
@@ -79,21 +100,16 @@ export function CloudSyncPanel({ onApplied }: CloudSyncPanelProps) {
       setError(res.error)
       return
     }
-    setCloudMeta({
-      updatedAt: res.data?.updatedAt ?? null,
-      revision: res.data?.revision ?? 0,
-    })
+    const updatedAt = res.data?.updatedAt ?? null
+    const revision = res.data?.revision ?? 0
+    recordLocalSynced({ updatedAt, revision })
+    setCloudMeta({ updatedAt, revision })
+    setTick((t) => t + 1)
     setMessage(`Saved to cloud for ${activeProfile.displayName}.`)
   }
 
   const loadFromCloud = async () => {
-    if (
-      !confirm(
-        `Replace this device’s data for “${activeProfile.displayName}” with the cloud copy?\n\nCollection, postal swaps, and custom sources will be overwritten.`,
-      )
-    ) {
-      return
-    }
+    setConfirmLoad(false)
     setBusy(true)
     setError(null)
     setMessage(null)
@@ -108,31 +124,47 @@ export function CloudSyncPanel({ onApplied }: CloudSyncPanelProps) {
       return
     }
     applyCloudSyncLocally(res.data)
+    recordLocalSynced({
+      updatedAt: res.data.updatedAt,
+      revision: res.data.revision,
+    })
     setCloudMeta({
       updatedAt: res.data.updatedAt,
       revision: res.data.revision,
     })
+    setTick((t) => t + 1)
     setMessage('Loaded from cloud.')
     onApplied?.()
   }
 
   return (
-    <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
+    <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }} id="cloud-sync">
       <h2 className={styles.panelTitle}>Cloud sync</h2>
       <p className={syncStyles.hint}>
         Back up <strong>{activeProfile.displayName}</strong>’s collection and postal swaps to your
         One More Swap account. Does not merge — save uploads this device; load replaces this device.
       </p>
-      {cloudMeta?.updatedAt && (
+      {dirty.dirty && (
+        <p className={syncStyles.dirty}>
+          {dirty.neverSynced
+            ? 'This profile has not been saved to the cloud yet.'
+            : 'Local changes pending — save to update the cloud copy.'}
+        </p>
+      )}
+      {(cloudMeta?.updatedAt || dirty.lastPushedAt) && (
         <p className={syncStyles.meta}>
-          Last cloud save: {new Date(cloudMeta.updatedAt).toLocaleString()} · rev {cloudMeta.revision}
+          Last cloud save:{' '}
+          {new Date(cloudMeta?.updatedAt || dirty.lastPushedAt || '').toLocaleString()}
+          {(cloudMeta?.revision || dirty.revision) > 0
+            ? ` · rev ${cloudMeta?.revision || dirty.revision}`
+            : ''}
         </p>
       )}
       <div className={styles.actions}>
         <Button type="button" disabled={busy} onClick={saveToCloud}>
           Save to cloud
         </Button>
-        <Button type="button" variant="secondary" disabled={busy} onClick={loadFromCloud}>
+        <Button type="button" variant="secondary" disabled={busy} onClick={() => setConfirmLoad(true)}>
           Load from cloud
         </Button>
         <Button type="button" variant="ghost" disabled={busy} onClick={checkCloud}>
@@ -145,6 +177,17 @@ export function CloudSyncPanel({ onApplied }: CloudSyncPanelProps) {
         </p>
       )}
       {message && <p className={[styles.notice, styles.noticeOk].join(' ')}>{message}</p>}
+
+      <ConfirmDialog
+        open={confirmLoad}
+        title={`Replace “${activeProfile.displayName}” on this device?`}
+        body="Collection, postal swaps, and custom sources will be overwritten with the cloud copy."
+        confirmLabel="Load from cloud"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={loadFromCloud}
+        onCancel={() => setConfirmLoad(false)}
+      />
     </section>
   )
 }

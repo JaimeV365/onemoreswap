@@ -4,7 +4,9 @@ import { AlbumBrowse } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
+import { CloudSyncBanner } from '../components/CloudSyncBanner'
 import { CloudSyncPanel } from '../components/CloudSyncPanel'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
@@ -45,6 +47,9 @@ export function Collection() {
   const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
   const [message, setMessage] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [syncEpoch, setSyncEpoch] = useState(0)
+  const [confirmFresh, setConfirmFresh] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
 
   const album = getAlbum(albumId)
   const indexes = getAlbumIndexes(albumId)
@@ -54,6 +59,7 @@ export function Collection() {
       setState(next)
       const store = loadCollection()
       saveCollection(setAlbumState(store, albumId, next))
+      setSyncEpoch((n) => n + 1)
     },
     [albumId],
   )
@@ -64,6 +70,7 @@ export function Collection() {
       return
     }
     setState(getAlbumState(loadCollection(), albumId))
+    setSyncEpoch((n) => n + 1)
   }, [albumId])
 
   useEffect(() => {
@@ -109,11 +116,9 @@ export function Collection() {
     )
   }
 
-  const markAllMissing = () => {
+  const doMarkAllMissing = () => {
     if (!indexes) return
-    if (!confirm(`Mark all ${indexes.catalogue.total} stickers as missing? This replaces your current list.`)) {
-      return
-    }
+    setConfirmFresh(false)
     persist({
       missing: indexes.catalogue.stickers.map((s) => s.seq),
       counts: {},
@@ -121,8 +126,8 @@ export function Collection() {
     setMessage('Full album marked as missing — add stickers as you get them.')
   }
 
-  const clearAlbum = () => {
-    if (!confirm('Clear this album from your device?')) return
+  const doClearAlbum = () => {
+    setConfirmClear(false)
     persist(emptyAlbumState())
     setMessage('Album cleared.')
   }
@@ -138,174 +143,209 @@ export function Collection() {
         <Link to="/postal">postal swap</Link>.
       </p>
 
+      <CloudSyncBanner refreshKey={syncEpoch} />
+
       <OnboardingBanner show={!isAlbumStarted(state)} />
 
-      <AlbumPicker value={albumId} onChange={setAlbumId} />
+      <AlbumPicker
+        value={albumId}
+        onChange={setAlbumId}
+        onEnabledChange={() => setSyncEpoch((n) => n + 1)}
+      />
 
       {!albumId ? (
         <p className={styles.lead}>Add an album above to start tracking stickers for this profile.</p>
       ) : (
         <>
-      <ProgressBar
-        pct={progress.pct}
-        label={
-          progress.started
-            ? `${progress.inAlbum} of ${progress.total} in album · ${progress.missing} missing${
-                progress.pending ? ` · ${progress.pending} incoming` : ''
-              } · ${progress.spareCopies} spare copies`
-            : `Not started — use Quick add or "Start fresh" to begin tracking`
-        }
-      />
+          <ProgressBar
+            pct={progress.pct}
+            label={
+              progress.started
+                ? `${progress.inAlbum} of ${progress.total} in album · ${progress.missing} missing${
+                    progress.pending ? ` · ${progress.pending} incoming` : ''
+                  } · ${progress.spareCopies} spare copies`
+                : `Not started — use Quick add or "Start fresh" to begin tracking`
+            }
+          />
 
-      <section className={styles.panel}>
-        <h2 className={styles.panelTitle}>Quick add</h2>
-        <p className={collectionStyles.addHint}>
-          {albumId === 'pl2526' ? (
-            <>
-              Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
-              <code>353 354</code>. First copy goes in the album; extras become spares.
-            </>
-          ) : (
-            <>
-              Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
-              <code>570 571</code>. First copy goes in the album; extras become spares.
-            </>
-          )}
-        </p>
-        <Textarea
-          label="Stickers to add"
-          value={addInput}
-          onChange={(e) => setAddInput(e.target.value)}
-          placeholder="Paste or type sticker codes…"
-          rows={3}
-        />
-        <div className={styles.actions}>
-          <Button onClick={handleQuickAdd}>Add to collection</Button>
-          <Button variant="secondary" onClick={markAllMissing}>
-            Start fresh (all missing)
-          </Button>
-        </div>
-      </section>
+          <section className={styles.panel}>
+            <h2 className={styles.panelTitle}>Quick add</h2>
+            <p className={collectionStyles.addHint}>
+              {albumId === 'pl2526' ? (
+                <>
+                  Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
+                  <code>353 354</code>. First copy goes in the album; extras become spares.
+                </>
+              ) : (
+                <>
+                  Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
+                  <code>570 571</code>. First copy goes in the album; extras become spares.
+                </>
+              )}
+            </p>
+            <Textarea
+              label="Stickers to add"
+              value={addInput}
+              onChange={(e) => setAddInput(e.target.value)}
+              placeholder="Paste or type sticker codes…"
+              rows={3}
+            />
+            <div className={styles.actions}>
+              <Button onClick={handleQuickAdd}>Add to collection</Button>
+              <Button variant="secondary" onClick={() => setConfirmFresh(true)}>
+                Start fresh (all missing)
+              </Button>
+            </div>
+          </section>
 
-      {message && <p className={[styles.notice, styles.noticeOk].join(' ')}>{message}</p>}
+          {message && <p className={[styles.notice, styles.noticeOk].join(' ')}>{message}</p>}
 
-      <SharePanel albumId={albumId} state={state} />
+          <SharePanel albumId={albumId} state={state} />
 
-      <CloudSyncPanel
-        onApplied={() => {
-          reloadFromStorage()
-          setMessage('Collection loaded from cloud.')
-        }}
-      />
-
-      <section className={collectionStyles.browseSection}>
-        <div className={collectionStyles.browseToolbar}>
-          <h2 className={styles.panelTitle}>Browse album</h2>
-          <div className={collectionStyles.filters}>
-            {(['all', 'needs', 'spares', 'incoming'] as const).map((f) => (
-              <button
-                key={f}
-                type="button"
-                className={[collectionStyles.filterBtn, filter === f ? collectionStyles.filterActive : ''].join(' ')}
-                onClick={() => setFilter(f)}
-              >
-                {f === 'all'
-                  ? 'All'
-                  : f === 'needs'
-                    ? 'Needs'
-                    : f === 'spares'
-                      ? 'Spares'
-                      : 'Incoming'}
-              </button>
-            ))}
-          </div>
-        </div>
-        <input
-          type="search"
-          className={collectionStyles.search}
-          placeholder={
-            albumId === 'pl2526'
-              ? 'Find sticker — Liverpool 5, LIV7, Salah…'
-              : 'Find sticker — Mexico 5, ENG7, Messi…'
-          }
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <AlbumBrowse
-          albumId={albumId}
-          state={state}
-          onChange={persist}
-          filter={filter}
-          search={search}
-          incoming={incoming}
-        />
-      </section>
-
-      <details
-        className={collectionStyles.advanced}
-        open={showAdvanced}
-        onToggle={(e) => setShowAdvanced((e.target as HTMLDetailsElement).open)}
-      >
-        <summary>Advanced — backup &amp; reset</summary>
-        <p className={collectionStyles.advancedHint}>
-          Export for a file copy on this device. Import accepts One More Swap backups or a World Cup
-          2026 sticker tracker JSON export (collection + postal swaps).
-        </p>
-        <div className={styles.actions}>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              downloadJson('onemoreswap-collection.json', exportCollectionJson(loadCollection()))
-              setMessage('Backup downloaded.')
+          <CloudSyncPanel
+            refreshKey={syncEpoch}
+            onApplied={() => {
+              reloadFromStorage()
+              setMessage('Collection loaded from cloud.')
             }}
-          >
-            Export backup
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              const input = document.createElement('input')
-              input.type = 'file'
-              input.accept = 'application/json'
-              input.onchange = async () => {
-                const file = input.files?.[0]
-                if (!file) return
-                try {
-                  const result = importAnyBackup(await file.text())
-                  saveCollection(result.store)
-                  if (result.postal?.length) {
-                    upsertPostalSwaps(result.postal, true)
-                  }
-                  const nextAlbum =
-                    result.kind === 'wc-tracker' ? 'wc2026' : albumId || 'wc2026'
-                  enableAlbum(nextAlbum)
-                  // Enable any albums present in OMS backup
-                  if (result.kind === 'onemoreswap') {
-                    Object.keys(result.store.albums).forEach((id) => enableAlbum(id))
-                  }
-                  setAlbumId(nextAlbum)
-                  setState(getAlbumState(loadCollection(), nextAlbum))
-                  setMessage(
-                    result.postal?.length
-                      ? `${result.message} Open Postal swaps to review them.`
-                      : result.message,
-                  )
-                } catch {
-                  setMessage('Invalid backup file.')
-                }
+          />
+
+          <section className={collectionStyles.browseSection}>
+            <div className={collectionStyles.browseToolbar}>
+              <h2 className={styles.panelTitle}>Browse album</h2>
+              <div className={collectionStyles.filters}>
+                {(['all', 'needs', 'spares', 'incoming'] as const).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    className={[
+                      collectionStyles.filterBtn,
+                      filter === f ? collectionStyles.filterActive : '',
+                    ].join(' ')}
+                    onClick={() => setFilter(f)}
+                  >
+                    {f === 'all'
+                      ? 'All'
+                      : f === 'needs'
+                        ? 'Needs'
+                        : f === 'spares'
+                          ? 'Spares'
+                          : 'Incoming'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <input
+              type="search"
+              className={collectionStyles.search}
+              placeholder={
+                albumId === 'pl2526'
+                  ? 'Find sticker — Liverpool 5, LIV7, Salah…'
+                  : 'Find sticker — Mexico 5, ENG7, Messi…'
               }
-              input.click()
-            }}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <AlbumBrowse
+              albumId={albumId}
+              state={state}
+              onChange={persist}
+              filter={filter}
+              search={search}
+              incoming={incoming}
+            />
+          </section>
+
+          <details
+            className={collectionStyles.advanced}
+            open={showAdvanced}
+            onToggle={(e) => setShowAdvanced((e.target as HTMLDetailsElement).open)}
           >
-            Import backup
-          </Button>
-          <Button variant="ghost" onClick={clearAlbum}>
-            Clear album
-          </Button>
-        </div>
-      </details>
+            <summary>Advanced — backup &amp; reset</summary>
+            <p className={collectionStyles.advancedHint}>
+              Export for a file copy on this device. Import accepts One More Swap backups or a World
+              Cup 2026 sticker tracker JSON export (collection + postal swaps).
+            </p>
+            <div className={styles.actions}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  downloadJson('onemoreswap-collection.json', exportCollectionJson(loadCollection()))
+                  setMessage('Backup downloaded.')
+                }}
+              >
+                Export backup
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  const input = document.createElement('input')
+                  input.type = 'file'
+                  input.accept = 'application/json'
+                  input.onchange = async () => {
+                    const file = input.files?.[0]
+                    if (!file) return
+                    try {
+                      const result = importAnyBackup(await file.text())
+                      saveCollection(result.store)
+                      if (result.postal?.length) {
+                        upsertPostalSwaps(result.postal, true)
+                      }
+                      const nextAlbum =
+                        result.kind === 'wc-tracker' ? 'wc2026' : albumId || 'wc2026'
+                      enableAlbum(nextAlbum)
+                      if (result.kind === 'onemoreswap') {
+                        Object.keys(result.store.albums).forEach((id) => enableAlbum(id))
+                      }
+                      setAlbumId(nextAlbum)
+                      setState(getAlbumState(loadCollection(), nextAlbum))
+                      setSyncEpoch((n) => n + 1)
+                      setMessage(
+                        result.postal?.length
+                          ? `${result.message} Open Postal swaps to review them.`
+                          : result.message,
+                      )
+                    } catch {
+                      setMessage('Invalid backup file.')
+                    }
+                  }
+                  input.click()
+                }}
+              >
+                Import backup
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirmClear(true)}>
+                Clear album
+              </Button>
+            </div>
+          </details>
         </>
       )}
+
+      <ConfirmDialog
+        open={confirmFresh}
+        title="Start fresh?"
+        body={
+          indexes
+            ? `Mark all ${indexes.catalogue.total} stickers as missing? This replaces your current list for this album.`
+            : 'Mark the full album as missing?'
+        }
+        confirmLabel="Start fresh"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={doMarkAllMissing}
+        onCancel={() => setConfirmFresh(false)}
+      />
+      <ConfirmDialog
+        open={confirmClear}
+        title="Clear this album?"
+        body="Remove tracking for this album on this device. Cloud data is unchanged until you save."
+        confirmLabel="Clear album"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={doClearAlbum}
+        onCancel={() => setConfirmClear(false)}
+      />
     </main>
   )
 }
