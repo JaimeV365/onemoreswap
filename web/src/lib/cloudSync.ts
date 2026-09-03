@@ -1,3 +1,4 @@
+import { loadEnabledAlbums } from './enabledAlbums'
 import { loadPostal, savePostal } from './postal'
 import type { PostalStore } from './postalTypes'
 import { loadCustomSources } from './sources'
@@ -11,6 +12,7 @@ export type SyncPayload = {
   collection: CollectionStore | null
   postal: PostalStore | null
   sources: string[] | null
+  enabledAlbums: string[] | null
   updatedAt: string | null
   revision: number
 }
@@ -35,6 +37,7 @@ export function readLocalSyncBundle() {
     collection: loadCollection(),
     postal: loadPostal(),
     sources: loadCustomSources(),
+    enabledAlbums: loadEnabledAlbums(),
   }
 }
 
@@ -51,6 +54,7 @@ export async function pushCloudSync(profileId: string) {
       collection: local.collection,
       postal: local.postal,
       sources: local.sources,
+      enabledAlbums: local.enabledAlbums,
     }),
   })
 }
@@ -63,6 +67,12 @@ export function applyCloudSyncLocally(payload: SyncPayload) {
     localStorage.setItem(
       scopedStorageKey('onemoreswap-sources-v1'),
       JSON.stringify(payload.sources),
+    )
+  }
+  if (payload.enabledAlbums) {
+    localStorage.setItem(
+      scopedStorageKey('onemoreswap-albums-v1'),
+      JSON.stringify(payload.enabledAlbums),
     )
   }
 }

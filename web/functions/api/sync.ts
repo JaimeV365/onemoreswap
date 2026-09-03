@@ -19,6 +19,28 @@ function parseJsonObject(raw: string, fallback: unknown) {
   }
 }
 
+/** sources_json may be a bare array (legacy) or { sources, enabledAlbums }. */
+function parseSourcesPack(raw: string): { sources: string[]; enabledAlbums: string[] } {
+  const data = parseJsonObject(raw, [])
+  if (Array.isArray(data)) return { sources: data.map(String), enabledAlbums: [] }
+  if (data && typeof data === 'object') {
+    const o = data as { sources?: unknown; enabledAlbums?: unknown }
+    return {
+      sources: Array.isArray(o.sources) ? o.sources.map(String) : [],
+      enabledAlbums: Array.isArray(o.enabledAlbums) ? o.enabledAlbums.map(String) : [],
+    }
+  }
+  return { sources: [], enabledAlbums: [] }
+}
+
+function packSourcesJson(sources: unknown, enabledAlbums: unknown): string {
+  return JSON.stringify({
+    v: 1,
+    sources: Array.isArray(sources) ? sources : [],
+    enabledAlbums: Array.isArray(enabledAlbums) ? enabledAlbums : [],
+  })
+}
+
 /** GET /api/sync?profileId=… — pull cloud copy for a profile */
 export const onRequestGet = async (context: PagesContext): Promise<Response> => {
   const { request, env } = context
@@ -53,17 +75,21 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
         collection: null,
         postal: null,
         sources: null,
+        enabledAlbums: null,
         updatedAt: null,
         revision: 0,
       })
     }
+
+    const packed = parseSourcesPack(row.sources_json)
 
     return json({
       exists: true,
       profileId,
       collection: parseJsonObject(row.collection_json, { version: 2, albums: {} }),
       postal: parseJsonObject(row.postal_json, { version: 1, swaps: [] }),
-      sources: parseJsonObject(row.sources_json, []),
+      sources: packed.sources,
+      enabledAlbums: packed.enabledAlbums,
       updatedAt: row.updated_at,
       revision: row.revision,
     })
@@ -87,6 +113,7 @@ export const onRequestPut = async (context: PagesContext): Promise<Response> => 
     collection?: unknown
     postal?: unknown
     sources?: unknown
+    enabledAlbums?: unknown
   }
   try {
     body = await request.json()
@@ -105,7 +132,7 @@ export const onRequestPut = async (context: PagesContext): Promise<Response> => 
 
   const collectionJson = JSON.stringify(body.collection)
   const postalJson = JSON.stringify(body.postal)
-  const sourcesJson = JSON.stringify(body.sources ?? [])
+  const sourcesJson = packSourcesJson(body.sources ?? [], body.enabledAlbums ?? [])
 
   // Soft size guard (~1.5MB text) — albums are small JSON
   if (collectionJson.length + postalJson.length > 1_500_000) {

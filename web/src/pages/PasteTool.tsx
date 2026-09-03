@@ -5,6 +5,7 @@ import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { StickerList, stickerListAsText } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
+import { loadEnabledAlbums } from '../lib/enabledAlbums'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { countsToSet, computeOverlap } from '../lib/overlap'
 import { parseStickerInput } from '../lib/parseStickers'
@@ -24,7 +25,7 @@ const DEFAULT_ALBUM = 'wc2026'
 type Mode = 'simple' | 'full'
 
 export function PasteTool() {
-  const [albumId, setAlbumId] = useState(DEFAULT_ALBUM)
+  const [albumId, setAlbumId] = useState(() => loadEnabledAlbums()[0] || DEFAULT_ALBUM)
   const [mode, setMode] = useState<Mode>('simple')
   const [yourNeeds, setYourNeeds] = useState('')
   const [yourSpares, setYourSpares] = useState('')

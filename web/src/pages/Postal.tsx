@@ -7,6 +7,7 @@ import { SourcePicker } from '../components/SourcePicker'
 import { StickerList } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes, stickerDisplayLabel } from '../lib/catalogue'
+import { loadEnabledAlbums } from '../lib/enabledAlbums'
 import { parseStickerInput } from '../lib/parseStickers'
 import {
   deleteSwap,
@@ -42,7 +43,7 @@ const DEFAULT_ALBUM = 'wc2026'
 function emptyDraft(albumId: string): PostalSwap {
   return {
     id: newSwapId(),
-    albumId,
+    albumId: albumId || DEFAULT_ALBUM,
     status: 'open',
     person: '',
     source: 'WhatsApp',
@@ -56,7 +57,7 @@ function emptyDraft(albumId: string): PostalSwap {
 }
 
 export function Postal() {
-  const [albumId, setAlbumId] = useState(DEFAULT_ALBUM)
+  const [albumId, setAlbumId] = useState(() => loadEnabledAlbums()[0] || '')
   const [swaps, setSwaps] = useState(() => loadPostal().swaps)
   const [view, setView] = useState<'list' | 'edit'>('list')
   const [draft, setDraft] = useState<PostalSwap | null>(null)

@@ -10,6 +10,7 @@ import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
 import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
+import { enableAlbum, loadEnabledAlbums } from '../lib/enabledAlbums'
 import { importAnyBackup } from '../lib/importBackup'
 import { parseStickerInput } from '../lib/parseStickers'
 import { upsertPostalSwaps, pendingIncomingMap } from '../lib/postal'
@@ -29,12 +30,15 @@ import type { CollectionAlbumState } from '../lib/types'
 import styles from './Page.module.css'
 import collectionStyles from './Collection.module.css'
 
-const DEFAULT_ALBUM = 'wc2026'
+function initialAlbumId(): string {
+  const enabled = loadEnabledAlbums()
+  return enabled[0] || ''
+}
 
 export function Collection() {
-  const [albumId, setAlbumId] = useState(DEFAULT_ALBUM)
-  const [state, setState] = useState<CollectionAlbumState>(() =>
-    getAlbumState(loadCollection(), DEFAULT_ALBUM),
+  const [albumId, setAlbumId] = useState(initialAlbumId)
+  const [state, setState] = useState(() =>
+    albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState(),
   )
   const [addInput, setAddInput] = useState('')
   const [search, setSearch] = useState('')
@@ -55,7 +59,20 @@ export function Collection() {
   )
 
   const reloadFromStorage = useCallback(() => {
+    if (!albumId) {
+      setState(emptyAlbumState())
+      return
+    }
     setState(getAlbumState(loadCollection(), albumId))
+  }, [albumId])
+
+  useEffect(() => {
+    const enabled = loadEnabledAlbums()
+    if (albumId && !enabled.includes(albumId)) {
+      setAlbumId(enabled[0] || '')
+      return
+    }
+    if (!albumId && enabled.length) setAlbumId(enabled[0]!)
   }, [albumId])
 
   useEffect(() => {
@@ -125,6 +142,10 @@ export function Collection() {
 
       <AlbumPicker value={albumId} onChange={setAlbumId} />
 
+      {!albumId ? (
+        <p className={styles.lead}>Add an album above to start tracking stickers for this profile.</p>
+      ) : (
+        <>
       <ProgressBar
         pct={progress.pct}
         label={
@@ -243,8 +264,13 @@ export function Collection() {
                     upsertPostalSwaps(result.postal, true)
                   }
                   const nextAlbum =
-                    result.kind === 'wc-tracker' ? 'wc2026' : albumId
-                  if (nextAlbum !== albumId) setAlbumId(nextAlbum)
+                    result.kind === 'wc-tracker' ? 'wc2026' : albumId || 'wc2026'
+                  enableAlbum(nextAlbum)
+                  // Enable any albums present in OMS backup
+                  if (result.kind === 'onemoreswap') {
+                    Object.keys(result.store.albums).forEach((id) => enableAlbum(id))
+                  }
+                  setAlbumId(nextAlbum)
                   setState(getAlbumState(loadCollection(), nextAlbum))
                   setMessage(
                     result.postal?.length
@@ -265,6 +291,8 @@ export function Collection() {
           </Button>
         </div>
       </details>
+        </>
+      )}
     </main>
   )
 }

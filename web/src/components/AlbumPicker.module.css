@@ -7,6 +7,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: var(--space-sm);
+  color: var(--ink);
 }
 
 .options {
@@ -15,18 +16,27 @@
   gap: var(--space-md);
 }
 
+.optionWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .option {
   text-align: left;
   padding: var(--space-md);
   border-radius: var(--radius-md);
   border: 2px solid var(--border);
   background: var(--bg-elevated);
+  color: var(--ink);
   cursor: pointer;
   transition: border-color 0.15s, transform 0.15s;
+  width: 100%;
 }
 
 .option:hover {
   transform: translateY(-1px);
+  border-color: var(--border-strong);
 }
 
 .option.active {
@@ -53,4 +63,57 @@
 
 .pl.active {
   border-color: var(--album-pl);
+}
+
+.empty {
+  margin: 0 0 var(--space-md);
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.addRow {
+  margin-top: var(--space-md);
+}
+
+.addBtn,
+.cancelAdd,
+.removeBtn {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--red);
+  padding: 0.25rem 0;
+}
+
+.addBtn:hover,
+.cancelAdd:hover,
+.removeBtn:hover {
+  color: var(--red-dark);
+}
+
+.removeBtn {
+  align-self: flex-start;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.addMenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.addLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.addOption {
+  max-width: 28rem;
 }

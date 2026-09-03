@@ -14,6 +14,7 @@ const SCOPED_BASES = [
   'onemoreswap-postal-v1',
   'onemoreswap-sources-v1',
   'onemoreswap-onboarding-v1',
+  'onemoreswap-albums-v1',
 ] as const
 
 let activeKey: string = GUEST_PROFILE_KEY
