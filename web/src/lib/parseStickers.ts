@@ -1,8 +1,17 @@
 import type { AlbumIndexes, ParsedCounts } from './types'
 
+/**
+ * Tokenise paste lists. Accept common separators collectors use:
+ *   CIV: 11
+ *   MEX: 1, 2,14
+ *   KOR 3
+ *   ESP - 8
+ *   ENG5 ENG7
+ */
 function tokenizeStickerInput(raw: string): string[] {
   return raw
     .replace(/[,;|/\\]+/g, ' ')
+    .replace(/[:\-–—=.]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .split(' ')
@@ -54,8 +63,9 @@ export function parseStickerInput(raw: string, indexes: AlbumIndexes): ParsedCou
       } else {
         unknown.push(tok)
       }
-    } else if (/^[A-Z]{2,4}\d{1,2}$/.test(tok)) {
-      const cm = tok.match(/^([A-Z]{2,4})(\d{1,2})$/)!
+    } else if (/^[A-Z0-9]{2,4}\d{1,2}$/.test(tok)) {
+      // ENG5, MEX12, 001 (album opening card) etc.
+      const cm = tok.match(/^([A-Z0-9]{2,4})(\d{1,2})$/)!
       const code = cm[1]
       const cardNum = parseInt(cm[2], 10)
       const seq = indexes.codeToSeq.get(`${code}${cardNum}`)
@@ -67,7 +77,7 @@ export function parseStickerInput(raw: string, indexes: AlbumIndexes): ParsedCou
       } else {
         unknown.push(tok)
       }
-    } else if (/^[A-Z]{2,4}$/.test(tok) && indexes.teamCodes.has(tok)) {
+    } else if (/^[A-Z0-9]{2,4}$/.test(tok) && indexes.teamCodes.has(tok)) {
       lastCode = tok
     } else {
       unknown.push(tok)

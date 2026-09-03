@@ -94,7 +94,7 @@ export function AlbumBrowse({
         {filter === 'incoming'
           ? 'No stickers currently expected in the post. Add expected stickers on a postal swap.'
           : filter === 'needs'
-            ? 'No needs right now — or they’re all marked Incoming.'
+            ? 'No needs right now — incoming stickers are under Incoming until you own a copy or write them off.'
             : 'No stickers match your filter.'}
       </p>
     )

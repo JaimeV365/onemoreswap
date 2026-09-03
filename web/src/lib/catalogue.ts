@@ -121,7 +121,8 @@ export function buildShareText(
     const dupeCards: number[] = []
 
     for (const s of sec.stickers) {
-      // WC26: pending inbound stickers are not listed as needs
+      // Pending inbound: hide from needs share (still tracked as Incoming / postal pending).
+      // Ownership wins: if you have a copy, it is never a need — even while mail is pending.
       if (missing.has(Number(s.seq)) && !incoming.has(Number(s.seq))) {
         missCards.push(s.cardNum)
       }

@@ -42,7 +42,13 @@ export function StickerChip({ sticker, state, onBump, compact, incoming }: Stick
       ]
         .filter(Boolean)
         .join(' ')}
-      title={`${sticker.code}${sticker.cardNum} ${sticker.name}${incoming ? ' · incoming' : ''} — click +1, shift-click −1`}
+      title={`${sticker.code}${sticker.cardNum} ${sticker.name}${
+        incoming
+          ? copies <= 0
+            ? ' · incoming in post'
+            : ' · also incoming in post'
+          : ''
+      } — click +1, shift-click −1`}
       onClick={(e) => onBump(sticker.seq, e.shiftKey ? -1 : 1)}
     >
       <span className={styles.code}>

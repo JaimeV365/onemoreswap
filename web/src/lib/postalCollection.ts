@@ -65,8 +65,10 @@ export function applySentDeltas(
 }
 
 /**
- * When stickers become expected/pending, remove from needs (in transit).
- * When a pending expected is removed and you still don't have it, mark need again.
+ * Keep pending mail and album ownership independent.
+ * - Becoming pending must NOT clear ownership / remove a need that the user later fills from a pack.
+ * - Leaving pending while still unowned → ensure it is on the need list.
+ * - Currently pending + unowned → stay on the need list (for consistency).
  */
 export function syncPendingExpected(
   state: CollectionAlbumState,
@@ -75,17 +77,20 @@ export function syncPendingExpected(
 ): CollectionAlbumState {
   let missing = state.missing.map(Number)
   const counts = { ...state.counts }
+  const snap = () => ({ missing, counts })
 
   for (const seq of previousPending.keys()) {
-    if (!nextPending.has(seq) && copiesOf({ missing, counts }, seq) === 0) {
+    if (!nextPending.has(seq) && copiesOf(snap(), seq) === 0) {
       if (!missing.includes(seq)) missing.push(seq)
     }
   }
+
   for (const seq of nextPending.keys()) {
-    if (!previousPending.has(seq)) {
-      missing = missing.filter((s) => s !== seq)
+    if (copiesOf(snap(), seq) === 0 && !missing.includes(seq)) {
+      missing.push(seq)
     }
   }
+
   missing.sort((a, b) => a - b)
   return { missing, counts }
 }
@@ -169,11 +174,16 @@ export function revertPostalSwapEffects(
   return next
 }
 
-/** Write off: put sticker back on the need list (WC26). */
+/**
+ * Write off a pending expected line.
+ * If you already own a copy (e.g. pack find), keep ownership — only unowned stickers
+ * go back on the need list.
+ */
 export function writeOffExpected(
   state: CollectionAlbumState,
   seq: number,
 ): CollectionAlbumState {
+  if (copiesOf(state, seq) >= 1) return state
   const missing = state.missing.map(Number)
   if (!missing.includes(seq)) {
     missing.push(seq)

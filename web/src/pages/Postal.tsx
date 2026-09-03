@@ -32,6 +32,7 @@ import {
 } from '../lib/postalCollection'
 import {
   bumpCopies,
+  copiesOf,
   getAlbumState,
   loadCollection,
   saveCollection,
@@ -176,7 +177,7 @@ export function Postal() {
       albumState = applySentDeltas(albumState, deltas, allSeqs)
     }
 
-    // Expected pending: leave "needs", show as Incoming (same idea as WC26 missingSet toggle)
+    // Pending expected stays independent of ownership (pack find while in post).
     albumState = syncPendingExpected(
       albumState,
       previous ? pendingMapFromSwap(previous) : new Map(),
@@ -203,13 +204,22 @@ export function Postal() {
     if (line) {
       const store = loadCollection()
       const current = getAlbumState(store, albumId)
+      const alreadyOwned = copiesOf(current, seq) >= 1
       saveCollection(
         setAlbumState(store, albumId, bumpCopies(current, seq, line.qty, allSeqs)),
       )
+      refresh()
+      if (draft?.id === swap.id) setDraft(next)
+      setMessage(
+        alreadyOwned
+          ? 'Marked received — added as a spare (you already had a copy).'
+          : 'Marked received and added to your collection.',
+      )
+      return
     }
     refresh()
     if (draft?.id === swap.id) setDraft(next)
-    setMessage('Marked received and added to your collection.')
+    setMessage('Marked received.')
   }
 
   const markWrittenOff = (swap: PostalSwap, seq: number) => {
@@ -217,10 +227,15 @@ export function Postal() {
     saveSwap(next)
     const store = loadCollection()
     const current = getAlbumState(store, albumId)
+    const owned = copiesOf(current, seq) >= 1
     saveCollection(setAlbumState(store, albumId, writeOffExpected(current, seq)))
     refresh()
     if (draft?.id === swap.id) setDraft(next)
-    setMessage('Written off — sticker back on your need list.')
+    setMessage(
+      owned
+        ? 'Written off — kept your album copy; pending mail cleared.'
+        : 'Written off — sticker back on your need list.',
+    )
   }
 
   const deleteDraft = () => {
