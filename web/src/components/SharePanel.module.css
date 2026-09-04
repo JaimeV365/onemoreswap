@@ -18,6 +18,34 @@
   line-height: 1.5;
 }
 
+.subTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: var(--space-lg) 0 var(--space-xs);
+}
+
+.linkActions {
+  margin-bottom: var(--space-md);
+}
+
+.linkError {
+  margin: 0 0 var(--space-md);
+  color: var(--red);
+  font-size: 0.875rem;
+}
+
+.linkBox {
+  margin-bottom: var(--space-lg);
+}
+
+.linkUrl {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+  word-break: break-all;
+  margin: 0 0 var(--space-sm);
+  color: var(--ink-soft);
+}
+
 .tabs {
   display: flex;
   flex-wrap: wrap;

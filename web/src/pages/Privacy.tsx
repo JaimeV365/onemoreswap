@@ -21,6 +21,12 @@ export function Privacy() {
             (localStorage). We do not receive it.
           </li>
           <li>
+            <strong>Anonymous share links:</strong> if you create a match link, we store only the
+            sticker numbers you chose to share (needs and/or spares) plus an expiry. The public page
+            never shows your name, email, or profile. Anyone with the link can see those sticker
+            numbers.
+          </li>
+          <li>
             <strong>With an account:</strong> the login email and hashed password belong to a{' '}
             <strong>parent or guardian (18+)</strong>. We store when they confirmed they are the adult
             account holder and accepted the Terms and Privacy policy. Child collector profiles (display

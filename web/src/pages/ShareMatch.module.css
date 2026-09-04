@@ -1,0 +1,52 @@
+.anon {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 var(--space-sm);
+}
+
+.meta {
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  margin: 0 0 var(--space-lg);
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin: 0 0 var(--space-md);
+  line-height: 1.45;
+}
+
+.hint code {
+  font-size: 0.8125rem;
+  background: var(--bg-muted);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.sub {
+  font-size: 0.9rem;
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.cta {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+}
+
+.cta p {
+  margin: 0 0 var(--space-md);
+  color: var(--ink-soft);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.ctaLink {
+  text-decoration: none;
+}

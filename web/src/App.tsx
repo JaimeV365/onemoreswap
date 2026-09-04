@@ -11,6 +11,7 @@ import { PasteTool } from './pages/PasteTool'
 import { Postal } from './pages/Postal'
 import { Privacy } from './pages/Privacy'
 import { Settings } from './pages/Settings'
+import { ShareMatch } from './pages/ShareMatch'
 import { Terms } from './pages/Terms'
 import { VerifyEmail } from './pages/VerifyEmail'
 import './index.css'
@@ -27,6 +28,7 @@ export default function App() {
                 <Route path="collection" element={<Navigate to="/" replace />} />
                 <Route path="paste" element={<PasteTool />} />
                 <Route path="postal" element={<Postal />} />
+                <Route path="s/:token" element={<ShareMatch />} />
                 <Route path="account" element={<Account />} />
                 <Route path="verify" element={<VerifyEmail />} />
                 <Route path="settings" element={<Settings />} />

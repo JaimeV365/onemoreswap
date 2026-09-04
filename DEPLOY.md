@@ -103,6 +103,29 @@ CREATE INDEX IF NOT EXISTS idx_email_tokens_expires ON email_tokens (expires_at)
 
 Until Resend is set, Account → **Send confirmation email** returns a **test link** you can open manually.
 
+### Anonymous share links (v5)
+
+Paste in D1 Console:
+
+```sql
+CREATE TABLE IF NOT EXISTS share_links (
+  token TEXT PRIMARY KEY,
+  album_id TEXT NOT NULL,
+  mode TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  owner_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_share_links_expires ON share_links (expires_at);
+CREATE INDEX IF NOT EXISTS idx_share_links_owner ON share_links (owner_user_id);
+```
+
+Or: `npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v5-share.sql`
+
+Public pages `/s/:token` only expose sticker lists — never account identity.
+
 ### Or via CLI (full schema)
 
 ```powershell
