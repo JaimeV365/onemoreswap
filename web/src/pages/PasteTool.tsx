@@ -67,54 +67,88 @@ export function PasteTool() {
     return { needs: countsToSet(yn.counts), spares: ys.counts }
   }, [indexes, useCollection, albumId, yourNeeds, yourSpares])
 
-  const parsed = useMemo(() => {
-    if (!indexes || !yourSide) return null
+  const theirParsed = useMemo(() => {
+    if (!indexes) return null
     const tn = parseStickerInput(theirNeeds, indexes)
     const ts = parseStickerInput(theirSpares, indexes)
-    const overlap = computeOverlap(yourSide.needs, yourSide.spares, countsToSet(tn.counts), ts.counts)
+    return { needs: tn, spares: ts }
+  }, [indexes, theirNeeds, theirSpares])
+
+  const parsed = useMemo(() => {
+    if (!indexes || !yourSide || !theirParsed) return null
+    const overlap = computeOverlap(
+      yourSide.needs,
+      yourSide.spares,
+      countsToSet(theirParsed.needs.counts),
+      theirParsed.spares.counts,
+    )
 
     const unknown = useCollection
-      ? [...tn.unknown, ...ts.unknown]
+      ? [...theirParsed.needs.unknown, ...theirParsed.spares.unknown]
       : [
           ...parseStickerInput(yourNeeds, indexes).unknown,
           ...parseStickerInput(yourSpares, indexes).unknown,
-          ...tn.unknown,
-          ...ts.unknown,
+          ...theirParsed.needs.unknown,
+          ...theirParsed.spares.unknown,
         ]
 
-    return { ...overlap, unknown }
-  }, [indexes, yourSide, theirNeeds, theirSpares, useCollection, yourNeeds, yourSpares])
+    const theirSpareTypes = theirParsed.spares.counts.size
+    const theirNeedTypes = theirParsed.needs.counts.size
+    const theyMatch = overlap.theyCanSend.length
+    const youMatch = overlap.youCanSend.length
 
-  const copyOverlap = (side: 'you' | 'they') => {
+    return {
+      ...overlap,
+      unknown,
+      theirSpareTypes,
+      theirNeedTypes,
+      theyNoMatch: Math.max(0, theirSpareTypes - theyMatch),
+      youNoMatch: Math.max(0, theirNeedTypes - youMatch),
+    }
+  }, [indexes, yourSide, theirParsed, useCollection, yourNeeds, yourSpares])
+
+  const hasTheirInput = theirNeeds.trim().length > 0 || theirSpares.trim().length > 0
+
+  const copyOverlap = async (side: 'you' | 'they' | 'both') => {
     if (!parsed) return
-    const items = side === 'you' ? parsed.youCanSend : parsed.theyCanSend
-    const text = stickerListAsText(albumId, items)
+    let text = ''
+    if (side === 'you' || side === 'both') {
+      const list = stickerListAsText(albumId, parsed.youCanSend)
+      if (list) {
+        text += side === 'both' ? `I can send you:\n${list}` : list
+      }
+    }
+    if (side === 'they' || side === 'both') {
+      const list = stickerListAsText(albumId, parsed.theyCanSend)
+      if (list) {
+        if (text) text += '\n\n'
+        text += side === 'both' ? `You can send me:\n${list}` : list
+      }
+    }
     if (!text) {
-      setMessage({ type: 'warn', text: 'Nothing to copy on that side yet.' })
+      setMessage({ type: 'warn', text: 'No matches to copy yet.' })
       return
     }
-    navigator.clipboard.writeText(text)
-    setMessage({ type: 'ok', text: 'Copied to clipboard.' })
-  }
-
-  const tryExample = () => {
-    setTheirNeeds('ENG 5 7 12')
-    setTheirSpares('MEX 1 2')
-    setMessage({ type: 'ok', text: 'Example list loaded — add your collection or paste your side.' })
+    await navigator.clipboard.writeText(text)
+    setMessage({
+      type: 'ok',
+      text:
+        side === 'both'
+          ? 'Both match lists copied — paste into your reply.'
+          : 'Match list copied — paste it wherever you like.',
+    })
   }
 
   const collectionEmpty =
-    useCollection &&
-    !isAlbumStarted(getAlbumState(loadCollection(), albumId))
+    useCollection && !isAlbumStarted(getAlbumState(loadCollection(), albumId))
 
   return (
     <main className={styles.page} id="main-content">
       <Badge>Always free · No account</Badge>
       <h1 className={styles.title}>Paste &amp; match</h1>
       <p className={styles.lead}>
-        Paste a list from WhatsApp or a forum and see what you can swap. Your saved collection loads
-        automatically — or{' '}
-        <Link to="/collection">set it up first</Link>.
+        Paste their needs and/or spares. We compare with your collection and show what matches —
+        ready to copy into a reply.
       </p>
 
       <AlbumPicker value={albumId} onChange={setAlbumId} />
@@ -122,7 +156,9 @@ export function PasteTool() {
       <div className={pasteStyles.modeTabs}>
         <button
           type="button"
-          className={[pasteStyles.modeTab, mode === 'simple' ? pasteStyles.modeActive : ''].join(' ')}
+          className={[pasteStyles.modeTab, mode === 'simple' ? pasteStyles.modeActive : ''].join(
+            ' ',
+          )}
           onClick={() => setMode('simple')}
         >
           Match their list
@@ -139,7 +175,7 @@ export function PasteTool() {
       {collectionEmpty && useCollection && (
         <p className={[styles.notice, styles.noticeWarn].join(' ')}>
           Your collection is empty for this album.{' '}
-          <Link to="/collection">Add stickers</Link> or switch to manual entry below.
+          <Link to="/">Add stickers</Link> or switch to Compare two full lists and paste both sides.
         </p>
       )}
 
@@ -149,22 +185,23 @@ export function PasteTool() {
           <div className={styles.grid}>
             <Textarea
               label="Their needs (missing)"
-              hint="What they still want"
+              hint="What they still want — so we see what you can send"
               value={theirNeeds}
               onChange={(e) => setTheirNeeds(e.target.value)}
-              placeholder="e.g. ENG 5 7 12"
+              placeholder="Paste their needs…"
             />
             <Textarea
               label="Their spares (duplicates)"
-              hint="What they can swap away"
+              hint="What they can give you — so we see what you can receive"
               value={theirSpares}
               onChange={(e) => setTheirSpares(e.target.value)}
-              placeholder="e.g. MEX 1 2 3"
+              placeholder="Paste their spares…"
             />
           </div>
           <div className={styles.actions}>
-            <Button variant="secondary" onClick={tryExample}>Try example</Button>
-            <Button variant="ghost" onClick={loadFromCollection}>Refresh my collection</Button>
+            <Button variant="ghost" onClick={loadFromCollection}>
+              Refresh my collection
+            </Button>
           </div>
         </section>
       ) : (
@@ -195,17 +232,31 @@ export function PasteTool() {
             )}
             {useCollection && indexes && (
               <div className={pasteStyles.summaryBox}>
-                <p><strong>Needs:</strong> {yourSide?.needs.size ?? 0} stickers</p>
-                <p><strong>Spares:</strong> {yourSide?.spares.size ?? 0} types</p>
-                <Button variant="ghost" onClick={loadFromCollection}>Refresh</Button>
+                <p>
+                  <strong>Needs:</strong> {yourSide?.needs.size ?? 0} stickers
+                </p>
+                <p>
+                  <strong>Spares:</strong> {yourSide?.spares.size ?? 0} types
+                </p>
+                <Button variant="ghost" onClick={loadFromCollection}>
+                  Refresh
+                </Button>
               </div>
             )}
           </section>
           <section className={styles.panel}>
             <h2 className={styles.panelTitle}>Their list</h2>
             <div className={styles.grid}>
-              <Textarea label="Their needs" value={theirNeeds} onChange={(e) => setTheirNeeds(e.target.value)} />
-              <Textarea label="Their spares" value={theirSpares} onChange={(e) => setTheirSpares(e.target.value)} />
+              <Textarea
+                label="Their needs"
+                value={theirNeeds}
+                onChange={(e) => setTheirNeeds(e.target.value)}
+              />
+              <Textarea
+                label="Their spares"
+                value={theirSpares}
+                onChange={(e) => setTheirSpares(e.target.value)}
+              />
             </div>
           </section>
         </div>
@@ -215,7 +266,7 @@ export function PasteTool() {
         <p className={pasteStyles.yourSummary}>
           Matching against your collection: <strong>{yourSide?.needs.size ?? 0}</strong> needs,{' '}
           <strong>{yourSide?.spares.size ?? 0}</strong> spare types.{' '}
-          <Link to="/collection">Edit collection</Link>
+          <Link to="/">Edit collection</Link>
         </p>
       )}
 
@@ -241,40 +292,106 @@ export function PasteTool() {
         </p>
       )}
 
-      <div className={pasteStyles.results}>
-        <section className={styles.panel}>
-          <h2 className={styles.panelTitle}>You can send them ({parsed?.youCanSend.length ?? 0})</h2>
-          <p className={pasteStyles.resultHint}>Your spares they still need</p>
-          <StickerList
-            albumId={albumId}
-            items={parsed?.youCanSend ?? []}
-            emptyMessage="No overlap — they don't need any of your spares (or paste their needs)."
-            accent={album?.accent}
-          />
-          <div className={styles.actions}>
-            <Button variant="secondary" onClick={() => copyOverlap('you')}>Copy list</Button>
-          </div>
-        </section>
-
-        <section className={styles.panel}>
-          <h2 className={styles.panelTitle}>They can send you ({parsed?.theyCanSend.length ?? 0})</h2>
-          <p className={pasteStyles.resultHint}>Their spares you still need</p>
-          <StickerList
-            albumId={albumId}
-            items={parsed?.theyCanSend ?? []}
-            emptyMessage="No overlap — you don't need any of their spares (or add your needs)."
-            accent={album?.accent}
-          />
-          <div className={styles.actions}>
-            <Button variant="secondary" onClick={() => copyOverlap('they')}>Copy list</Button>
-          </div>
-        </section>
-      </div>
-
-      {parsed && parsed.youCanSend.length > 0 && parsed.theyCanSend.length > 0 && (
-        <p className={[styles.notice, styles.noticeOk].join(' ')}>
-          Mutual swap potential — you both have stickers the other needs.
+      {!hasTheirInput ? (
+        <p className={pasteStyles.emptyResults}>
+          Paste their spares and/or needs above — results appear here with match counts and copy
+          buttons.
         </p>
+      ) : (
+        <>
+          <section className={pasteStyles.scorecard} aria-live="polite">
+            <h2 className={pasteStyles.scoreTitle}>Results</h2>
+            <div className={pasteStyles.scoreGrid}>
+              <div className={pasteStyles.scoreCard}>
+                <p className={pasteStyles.scoreLabel}>They can send you</p>
+                <p className={pasteStyles.scoreMain}>
+                  <strong>{parsed?.theyCanSend.length ?? 0}</strong> match
+                </p>
+                <p className={pasteStyles.scoreSub}>
+                  {parsed?.theyNoMatch ?? 0} no match
+                  {parsed?.theirSpareTypes
+                    ? ` · of ${parsed.theirSpareTypes} spare types they listed`
+                    : ' · paste their spares to check'}
+                </p>
+              </div>
+              <div className={pasteStyles.scoreCard}>
+                <p className={pasteStyles.scoreLabel}>You can send them</p>
+                <p className={pasteStyles.scoreMain}>
+                  <strong>{parsed?.youCanSend.length ?? 0}</strong> match
+                </p>
+                <p className={pasteStyles.scoreSub}>
+                  {parsed?.youNoMatch ?? 0} no match
+                  {parsed?.theirNeedTypes
+                    ? ` · of ${parsed.theirNeedTypes} needs they listed`
+                    : ' · paste their needs to check'}
+                </p>
+              </div>
+            </div>
+            <div className={styles.actions}>
+              <Button
+                type="button"
+                disabled={!parsed?.theyCanSend.length && !parsed?.youCanSend.length}
+                onClick={() => void copyOverlap('both')}
+              >
+                Copy both match lists
+              </Button>
+            </div>
+          </section>
+
+          <div className={pasteStyles.results}>
+            <section className={styles.panel}>
+              <h2 className={styles.panelTitle}>
+                Matches for you ({parsed?.theyCanSend.length ?? 0})
+              </h2>
+              <p className={pasteStyles.resultHint}>Their spares you still need — copy to reply</p>
+              <StickerList
+                albumId={albumId}
+                items={parsed?.theyCanSend ?? []}
+                emptyMessage="No matches — none of their spares are on your need list."
+                accent={album?.accent}
+              />
+              <div className={styles.actions}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!parsed?.theyCanSend.length}
+                  onClick={() => void copyOverlap('they')}
+                >
+                  Copy this list
+                </Button>
+              </div>
+            </section>
+
+            <section className={styles.panel}>
+              <h2 className={styles.panelTitle}>
+                Matches for them ({parsed?.youCanSend.length ?? 0})
+              </h2>
+              <p className={pasteStyles.resultHint}>Your spares they still need — copy to reply</p>
+              <StickerList
+                albumId={albumId}
+                items={parsed?.youCanSend ?? []}
+                emptyMessage="No matches — they don’t need any of your spares (or paste their needs)."
+                accent={album?.accent}
+              />
+              <div className={styles.actions}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!parsed?.youCanSend.length}
+                  onClick={() => void copyOverlap('you')}
+                >
+                  Copy this list
+                </Button>
+              </div>
+            </section>
+          </div>
+
+          {parsed && parsed.youCanSend.length > 0 && parsed.theyCanSend.length > 0 && (
+            <p className={[styles.notice, styles.noticeOk].join(' ')}>
+              Mutual swap possible — you both have stickers the other needs.
+            </p>
+          )}
+        </>
       )}
     </main>
   )

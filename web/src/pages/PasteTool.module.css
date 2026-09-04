@@ -77,3 +77,72 @@
   color: var(--ink-soft);
   margin-bottom: var(--space-lg);
 }
+
+.emptyResults {
+  margin: var(--space-xl) 0;
+  padding: var(--space-xl);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.scorecard {
+  margin: var(--space-xl) 0 var(--space-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+}
+
+.scoreTitle {
+  margin: 0 0 var(--space-md);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.scoreGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .scoreGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scoreCard {
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+}
+
+.scoreLabel {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.scoreMain {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.scoreMain strong {
+  font-size: 1.6rem;
+}
+
+.scoreSub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
