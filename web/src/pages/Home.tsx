@@ -25,16 +25,21 @@ const available = [
     link: '/',
     linkLabel: 'Create a link from Collection →',
   },
+  {
+    title: 'Contacts',
+    badge: 'Ready now',
+    body: 'Invite people you already know. Compare needs and spares from cloud backups — mutual overlaps only. Face-to-face at your discretion.',
+    link: '/contacts',
+    linkLabel: 'Open contacts →',
+  },
 ]
 
 const coming = [
   {
-    title: 'Contacts',
-    body: 'Swap with people you already know — school mates, family, WhatsApp groups — with shared needs/spares only.',
-  },
-  {
     title: 'Platform matching',
-    body: 'Match with collectors near you who need what you have. Post-only introductions, reputation built in. Free at launch when it ships.',
+    body: 'Match with collectors you don’t know yet. Post-only introductions, reputation built in. Free at launch when it ships.',
+    link: '/matching',
+    linkLabel: 'See what’s planned →',
   },
 ]
 
@@ -93,8 +98,8 @@ export function Home() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Coming next</h2>
         <p className={styles.sectionLead}>
-          Contact networks and stranger matching are on the roadmap — we won’t pretend they’re live
-          until they are.
+          Stranger matching waits until there are enough collectors — we won’t pretend it’s live
+          until it is.
         </p>
         <div className={styles.cardGrid}>
           {coming.map((item) => (
@@ -102,6 +107,11 @@ export function Home() {
               <span className={styles.badgeSoon}>Coming soon</span>
               <h3>{item.title}</h3>
               <p>{item.body}</p>
+              {item.link && (
+                <Link to={item.link} className={styles.cardLink}>
+                  {item.linkLabel}
+                </Link>
+              )}
             </article>
           ))}
         </div>

@@ -14,15 +14,17 @@ export function About() {
         <h2>Three ways to swap</h2>
         <ul>
           <li>
-            <strong>Contacts</strong> — swap with people you already know (always free).
+            <strong>Contacts</strong> —{' '}
+            <Link to="/contacts">invite people you already know</Link> and compare needs/spares
+            (always free).
           </li>
           <li>
             <strong>Paste &amp; match</strong> — paste lists from WhatsApp or forums; see overlaps
             instantly (always free, no account).
           </li>
           <li>
-            <strong>Platform matching</strong> — we introduce you to collectors near you (free at
-            launch).
+            <strong>Platform matching</strong> — stranger introductions later (
+            <Link to="/matching">what’s planned</Link>); free at launch when it ships.
           </li>
         </ul>
         <h2>Albums</h2>

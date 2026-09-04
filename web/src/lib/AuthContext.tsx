@@ -129,3 +129,20 @@ export async function resendVerificationRequest() {
     error?: string
   }>('/api/auth/resend-verification', { method: 'POST', body: '{}' })
 }
+
+export async function changePasswordRequest(input: {
+  currentPassword: string
+  newPassword: string
+}) {
+  return api<{ ok: boolean }>('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export async function deleteAccountRequest(input: { password: string; confirm: string }) {
+  return api<{ ok: boolean }>('/api/auth/delete-account', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}

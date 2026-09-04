@@ -72,3 +72,24 @@ CREATE TABLE IF NOT EXISTS share_links (
 
 CREATE INDEX IF NOT EXISTS idx_share_links_expires ON share_links (expires_at);
 CREATE INDEX IF NOT EXISTS idx_share_links_owner ON share_links (owner_user_id);
+
+CREATE TABLE IF NOT EXISTS contact_invites (
+  code TEXT PRIMARY KEY,
+  from_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT NOT NULL,
+  accepted_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  accepted_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_contact_invites_from ON contact_invites (from_user_id);
+CREATE INDEX IF NOT EXISTS idx_contact_invites_expires ON contact_invites (expires_at);
+
+CREATE TABLE IF NOT EXISTS contacts (
+  user_low TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_high TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_low, user_high)
+);
+
+CREATE INDEX IF NOT EXISTS idx_contacts_high ON contacts (user_high);

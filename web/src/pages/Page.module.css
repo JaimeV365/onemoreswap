@@ -79,6 +79,18 @@
   color: var(--red-dark);
 }
 
+.bulletList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.bulletList li {
+  margin-bottom: 0.35rem;
+}
+
 .stats {
   display: flex;
   flex-wrap: wrap;

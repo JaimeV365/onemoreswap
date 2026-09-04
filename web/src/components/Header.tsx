@@ -8,6 +8,7 @@ const nav = [
   { to: '/', label: 'Collection', end: true },
   { to: '/paste', label: 'Paste tool' },
   { to: '/postal', label: 'Postal' },
+  { to: '/contacts', label: 'Contacts' },
   { to: '/account', label: 'Account' },
 ]
 

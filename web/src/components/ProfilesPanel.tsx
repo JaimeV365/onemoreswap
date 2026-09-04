@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Button } from './Button'
+import { ConfirmDialog } from './ConfirmDialog'
 import { useProfiles } from '../lib/ProfileContext'
 import { AGE_BANDS, MAX_PROFILES, type AgeBandId, type ChildProfile } from '../lib/profiles'
 import styles from '../pages/Page.module.css'
@@ -37,6 +38,7 @@ export function ProfilesPanel() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editAge, setEditAge] = useState<AgeBandId | ''>('')
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; label: string } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -108,11 +110,11 @@ export function ProfilesPanel() {
     await load()
   }
 
-  const onRemove = async (id: string, label: string) => {
-    if (!confirm(`Remove profile “${label}”? This cannot be undone.`)) return
+  const onRemove = async (id: string) => {
     setBusy(true)
     const res = await api<{ ok: boolean }>(`/api/profiles/${id}`, { method: 'DELETE' })
     setBusy(false)
+    setRemoveTarget(null)
     if (res.error) {
       setError(res.error)
       return
@@ -197,7 +199,7 @@ export function ProfilesPanel() {
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => onRemove(p.id, p.displayName)}
+                      onClick={() => setRemoveTarget({ id: p.id, label: p.displayName })}
                     >
                       Remove
                     </Button>
@@ -251,6 +253,19 @@ export function ProfilesPanel() {
         </p>
       )}
       {message && <p className={[styles.notice, styles.noticeOk].join(' ')}>{message}</p>}
+
+      <ConfirmDialog
+        open={!!removeTarget}
+        title={`Remove profile “${removeTarget?.label || ''}”?`}
+        body="Cloud backup for this profile is deleted. Sticker data still on this device stays until you clear it. This cannot be undone."
+        confirmLabel="Remove profile"
+        cancelLabel="Keep"
+        danger
+        onConfirm={() => {
+          if (removeTarget) void onRemove(removeTarget.id)
+        }}
+        onCancel={() => setRemoveTarget(null)}
+      />
     </section>
   )
 }

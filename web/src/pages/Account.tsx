@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AccountSecurityPanel } from '../components/AccountSecurityPanel'
 import { Button } from '../components/Button'
 import { ProfilesPanel } from '../components/ProfilesPanel'
 import { Turnstile } from '../components/Turnstile'
@@ -191,6 +192,10 @@ export function Account() {
             <li>
               Open <Link to="/">My collection</Link> — signed-in changes auto-save to the cloud.
             </li>
+            <li>
+              Invite family or friends under <Link to="/contacts">Contacts</Link> to compare needs
+              and spares.
+            </li>
           </ul>
           <div className={styles.actions}>
             <Button
@@ -205,10 +210,14 @@ export function Account() {
             <Button variant="ghost" onClick={() => navigate('/')}>
               Go to collection
             </Button>
+            <Button variant="ghost" onClick={() => navigate('/contacts')}>
+              Contacts
+            </Button>
           </div>
         </section>
 
         <ProfilesPanel />
+        <AccountSecurityPanel />
       </main>
     )
   }

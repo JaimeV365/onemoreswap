@@ -1,0 +1,116 @@
+.hint {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.linkBox {
+  margin: var(--space-md) 0 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  word-break: break-all;
+  font-size: 0.8125rem;
+}
+
+.inviteList {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.inviteList strong {
+  color: var(--ink);
+  margin-right: 0.5rem;
+  font-family: ui-monospace, monospace;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+}
+
+.field input,
+.select {
+  font: inherit;
+  font-weight: 400;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.field input:focus,
+.select:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--yellow-dark);
+}
+
+.empty {
+  padding: var(--space-lg);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.list > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--space-sm);
+}
+
+.card {
+  flex: 1;
+  min-width: 12rem;
+  text-align: left;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.card span {
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+}
+
+.cardActive {
+  border-color: var(--yellow-dark);
+  box-shadow: var(--focus-ring);
+}

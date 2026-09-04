@@ -640,10 +640,27 @@ export function Postal() {
             )}
 
             {!albumSwaps.length && (
+              <div className={postalStyles.emptyBox}>
+                <p className={postalStyles.emptyTitle}>No postal swaps yet</p>
+                <p>
+                  Use the <strong>New</strong> tab to log what you posted and what you expect back —
+                  or import a World Cup tracker backup under{' '}
+                  <Link to="/">Collection → Backup</Link>.
+                </p>
+                <div className={styles.actions}>
+                  <Button type="button" onClick={() => selectTab('new')}>
+                    Create first swap
+                  </Button>
+                </div>
+              </div>
+            )}
+            {albumSwaps.length > 0 && filter === 'open' && !visible.length && (
               <p className={postalStyles.emptyHint}>
-                No swaps for this album yet — use <strong>New</strong>, or import a World Cup tracker
-                backup under <Link to="/">Collection → Backup</Link>.
+                No open swaps — try <strong>All</strong> or <strong>Completed</strong> above.
               </p>
+            )}
+            {albumSwaps.length > 0 && filter === 'completed' && !visible.length && (
+              <p className={postalStyles.emptyHint}>No completed swaps for this album yet.</p>
             )}
           </>
         )}
@@ -657,15 +674,18 @@ export function Postal() {
               You can only send spare copies — each sent sticker drops one (+2 → +1 → ✓).
             </p>
 
-            {!visible.length && tab === 'new' && (
-              <p className={postalStyles.emptyHint}>
-                Tip: if you used the{' '}
-                <a href="https://wc2026-sticker-tracker.pages.dev" target="_blank" rel="noreferrer">
-                  World Cup sticker tracker
-                </a>
-                , export a backup there and import it under{' '}
-                <Link to="/">My collection → Backup</Link>.
-              </p>
+            {!albumSwaps.length && tab === 'new' && (
+              <div className={postalStyles.emptyBox}>
+                <p className={postalStyles.emptyTitle}>Starting fresh?</p>
+                <p>
+                  Tip: if you used the{' '}
+                  <a href="https://wc2026-sticker-tracker.pages.dev" target="_blank" rel="noreferrer">
+                    World Cup sticker tracker
+                  </a>
+                  , export a backup there and import it under{' '}
+                  <Link to="/">My collection → Backup</Link> to bring swaps across.
+                </p>
+              </div>
             )}
 
             <div className={postalStyles.formGrid}>

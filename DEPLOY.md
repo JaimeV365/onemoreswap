@@ -78,6 +78,12 @@ Or CLI: `npx wrangler d1 execute onemoreswap --remote --file=./schema-migrate-v3
 
 Confirm `profile_sync` appears in `sqlite_master`.
 
+### Contacts tables (v6 — Tier 1)
+
+If the site already has users/profiles, also run `web/schema-migrate-v6-contacts.sql` in D1 Console (or wrangler). Until those tables exist, `/contacts` APIs return a “run schema-migrate-v6” error.
+
+Confirm `contacts` and `contact_invites` appear in `sqlite_master`.
+
 ### Email verification table (v4)
 
 ```sql
