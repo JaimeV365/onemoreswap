@@ -320,6 +320,30 @@ export function Postal() {
     setMessage('Marked received.')
   }
 
+  /** Undo a mistaken “received” — line goes pending again; album copies from that mark are removed. */
+  const markBackToPending = (swap: PostalSwap, seq: number) => {
+    const line = swap.expected.find((l) => l.seq === seq && l.status === 'received')
+    if (!line) return
+    const next = setExpectedStatus(swap, seq, 'pending')
+    saveSwap(next)
+    const store = loadCollection()
+    const current = getAlbumState(store, albumId)
+    saveCollection(
+      setAlbumState(store, albumId, bumpCopies(current, seq, -line.qty, allSeqs)),
+    )
+    refresh()
+    if (draft?.id === swap.id) {
+      setDraft(next)
+      setExpectedText(
+        linesToPaste(
+          next.expected.filter((l) => l.status === 'pending'),
+          indexes,
+        ),
+      )
+    }
+    setMessage('Back to pending — removed the album copy this swap had added.')
+  }
+
   const markWrittenOff = (swap: PostalSwap, seq: number) => {
     const next = setExpectedStatus(swap, seq, 'written_off')
     saveSwap(next)
@@ -780,19 +804,29 @@ export function Postal() {
                           {line.qty > 1 ? ` ×${line.qty}` : ''}
                         </span>
                         <span className={postalStyles.status}>{line.status}</span>
-                        {line.status === 'pending' && (
-                          <span className={postalStyles.checkActions}>
-                            <Button
-                              variant="secondary"
-                              onClick={() => markReceived(draft, line.seq)}
-                            >
-                              Received
-                            </Button>
-                            <Button variant="ghost" onClick={() => markWrittenOff(draft, line.seq)}>
-                              Write off
-                            </Button>
-                          </span>
-                        )}
+                    {line.status === 'pending' && (
+                      <span className={postalStyles.checkActions}>
+                        <Button
+                          variant="secondary"
+                          onClick={() => markReceived(draft, line.seq)}
+                        >
+                          Received
+                        </Button>
+                        <Button variant="ghost" onClick={() => markWrittenOff(draft, line.seq)}>
+                          Write off
+                        </Button>
+                      </span>
+                    )}
+                    {line.status === 'received' && (
+                      <span className={postalStyles.checkActions}>
+                        <Button
+                          variant="ghost"
+                          onClick={() => markBackToPending(draft, line.seq)}
+                        >
+                          Back to pending
+                        </Button>
+                      </span>
+                    )}
                       </li>
                     )
                   })}
