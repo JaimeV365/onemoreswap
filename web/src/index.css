@@ -11,6 +11,8 @@
   --yellow: #ffd700;
   --yellow-dark: #c9a800;
   --yellow-wash: #fff6cc;
+  /* Always dark — solid yellow stays bright in light and dark themes */
+  --ink-on-yellow: #1a1520;
   --red: #b42338;
   --red-dark: #8b1a2c;
   --green: #00a85a;

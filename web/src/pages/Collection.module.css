@@ -34,7 +34,7 @@
 .modeTabActive {
   background: var(--yellow);
   border-color: var(--yellow-dark);
-  color: var(--ink);
+  color: var(--ink-on-yellow);
 }
 
 .browseSection {

@@ -26,7 +26,7 @@
 
 .primary {
   background: var(--yellow);
-  color: #1a1520;
+  color: var(--ink-on-yellow);
 }
 
 .primary:hover:not(:disabled) {
