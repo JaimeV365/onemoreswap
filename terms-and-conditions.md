@@ -292,6 +292,7 @@ Permanent restrictions are applied at our sole discretion. If you believe a perm
 You must not use the platform to:
 
 - Send empty envelopes, wrong stickers, or damaged stickers deliberately
+- Offer or send unofficial or counterfeit stickers without clearly disclosing that before the other party accepts
 - Report no-shows that you know to be false
 - Create multiple accounts to inflate your free match allowance or circumvent penalties
 - Harvest personal data (including addresses) shared through the platform for any purpose other than completing the agreed trade
