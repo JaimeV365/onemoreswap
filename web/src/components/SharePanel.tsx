@@ -70,7 +70,8 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
       return
     }
     setShareUrl(res.data.url)
-    setPostText(socialPostBlurb(albumId, linkMode, res.data.url))
+    const listTab: ShareTab = linkMode === 'needs' ? 'missing' : linkMode
+    setPostText(socialPostBlurb(albumId, linkMode, res.data.url, buildShareText(albumId, state, listTab)))
   }
 
   const copyPost = async () => {

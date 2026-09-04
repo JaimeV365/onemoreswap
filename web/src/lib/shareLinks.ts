@@ -63,16 +63,29 @@ export function needsSetFromPayload(payload: SharePayload): Set<number> {
   return new Set((payload.needs || []).map(Number).filter((n) => Number.isFinite(n)))
 }
 
-export function socialPostBlurb(albumId: string, mode: ShareLinkMode, url: string): string {
+/** Strip the “— via …” footer from buildShareText for embedding in a social post. */
+export function listTextForPost(shareText: string): string {
+  return shareText.replace(/\n\n— via .+$/s, '').trim()
+}
+
+export function socialPostBlurb(
+  albumId: string,
+  mode: ShareLinkMode,
+  url: string,
+  listText: string,
+): string {
   const album = getAlbum(albumId)
   const name = album?.name || 'sticker album'
+  const list = listTextForPost(listText)
+  let intro: string
   if (mode === 'needs') {
-    return `Looking for these ${name} stickers — click to check if your spares match:\n${url}`
+    intro = `Looking for these ${name} stickers — click to check if your spares match:`
+  } else if (mode === 'both') {
+    intro = `My ${name} needs & spares — click to see overlaps with your list:`
+  } else {
+    intro = `Got ${name} spares — click to see if they match your needs:`
   }
-  if (mode === 'both') {
-    return `My ${name} needs & spares — click to see overlaps with your list:\n${url}`
-  }
-  return `Got ${name} spares — click to see if they match your needs:\n${url}`
+  return list ? `${intro}\n\n${list}\n\n${url}` : `${intro}\n${url}`
 }
 
 export async function createShareLink(input: {

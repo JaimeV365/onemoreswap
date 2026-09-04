@@ -7,9 +7,11 @@ type StickerListProps = {
   items: Array<{ seq: number; qty: number }>
   emptyMessage: string
   accent?: AlbumAccent
+  /** Hide ×N badges (e.g. anonymous share — spare count is not useful to the viewer). */
+  hideQty?: boolean
 }
 
-export function StickerList({ albumId, items, emptyMessage, accent }: StickerListProps) {
+export function StickerList({ albumId, items, emptyMessage, accent, hideQty }: StickerListProps) {
   const indexes = getAlbumIndexes(albumId)
   if (!indexes) return null
 
@@ -26,7 +28,7 @@ export function StickerList({ albumId, items, emptyMessage, accent }: StickerLis
           <li key={seq} className={styles.item}>
             <span className={styles.code}>{info.code}{info.cardNum}</span>
             <span className={styles.name}>{info.name}</span>
-            {qty > 1 && <span className={styles.qty}>×{qty}</span>}
+            {!hideQty && qty > 1 && <span className={styles.qty}>×{qty}</span>}
           </li>
         )
       })}
@@ -34,7 +36,11 @@ export function StickerList({ albumId, items, emptyMessage, accent }: StickerLis
   )
 }
 
-export function stickerListAsText(albumId: string, items: Array<{ seq: number; qty: number }>): string {
+export function stickerListAsText(
+  albumId: string,
+  items: Array<{ seq: number; qty: number }>,
+  opts?: { hideQty?: boolean },
+): string {
   const indexes = getAlbumIndexes(albumId)
   if (!indexes || !items.length) return ''
   return items
@@ -42,7 +48,7 @@ export function stickerListAsText(albumId: string, items: Array<{ seq: number; q
       const info = indexes.seqToInfo.get(seq)
       if (!info) return ''
       const label = stickerDisplayLabel(info)
-      return qty > 1 ? `${label} ×${qty}` : label
+      return !opts?.hideQty && qty > 1 ? `${label} ×${qty}` : label
     })
     .filter(Boolean)
     .join('\n')

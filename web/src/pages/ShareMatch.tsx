@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { StickerList, stickerListAsText } from '../components/StickerList'
@@ -14,11 +14,14 @@ import {
   type SharePayload,
 } from '../lib/shareLinks'
 import { copyToClipboard } from '../lib/storage'
+import { useTheme } from '../lib/ThemeContext'
 import styles from './Page.module.css'
 import matchStyles from './ShareMatch.module.css'
 
 export function ShareMatch() {
   const { token = '' } = useParams()
+  const { resolved, setPref } = useTheme()
+  const resultsRef = useRef<HTMLElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [albumId, setAlbumId] = useState('')
@@ -90,19 +93,16 @@ export function ShareMatch() {
   const runMatch = () => {
     setRan(true)
     setCopied(false)
-    if (overlap) setUnknown(overlap.unk)
-    else if (indexes) {
-      const unk = [
-        ...parseStickerInput(theirNeedsPaste, indexes).unknown,
-        ...parseStickerInput(theirSparesPaste, indexes).unknown,
-      ]
-      setUnknown(unk)
-    }
   }
 
-  // Recompute unknown when ran flips with fresh overlap
+  // After match runs: refresh unknowns and scroll results into view
   useEffect(() => {
-    if (ran && overlap) setUnknown(overlap.unk)
+    if (!ran || !overlap) return
+    setUnknown(overlap.unk)
+    // Defer so the Matches panel is in the DOM before scrolling
+    requestAnimationFrame(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   }, [ran, overlap])
 
   const matchesForVisitor = overlap?.result.youCanSend || [] // shared spares they need
@@ -112,11 +112,11 @@ export function ShareMatch() {
     const parts: string[] = []
     if (matchesForVisitor.length) {
       parts.push('Matches from the shared spares (I need these):')
-      parts.push(stickerListAsText(albumId, matchesForVisitor))
+      parts.push(stickerListAsText(albumId, matchesForVisitor, { hideQty: true }))
     }
     if (matchesVisitorCanOffer.length) {
       parts.push('I can offer these for their needs:')
-      parts.push(stickerListAsText(albumId, matchesVisitorCanOffer))
+      parts.push(stickerListAsText(albumId, matchesVisitorCanOffer, { hideQty: true }))
     }
     if (!parts.length) parts.push('(no matches)')
     await copyToClipboard(parts.join('\n'))
@@ -124,10 +124,24 @@ export function ShareMatch() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const themeToggle = (
+    <button
+      type="button"
+      className={matchStyles.themeToggle}
+      onClick={() => setPref(resolved === 'dark' ? 'light' : 'dark')}
+      aria-label={resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {resolved === 'dark' ? 'Light mode' : 'Dark mode'}
+    </button>
+  )
+
   if (loading) {
     return (
       <main className={styles.page}>
-        <h1 className={styles.title}>Shared list</h1>
+        <div className={matchStyles.topRow}>
+          <h1 className={styles.title}>Shared list</h1>
+          {themeToggle}
+        </div>
         <p className={styles.lead}>Loading…</p>
       </main>
     )
@@ -136,7 +150,10 @@ export function ShareMatch() {
   if (error || !payload) {
     return (
       <main className={styles.page}>
-        <h1 className={styles.title}>Shared list</h1>
+        <div className={matchStyles.topRow}>
+          <h1 className={styles.title}>Shared list</h1>
+          {themeToggle}
+        </div>
         <p className={[styles.notice, styles.noticeError].join(' ')}>{error || 'Not found'}</p>
         <p className={styles.lead}>
           <Link to="/">Open my collection</Link> · <Link to="/paste">Paste tool</Link>
@@ -147,7 +164,10 @@ export function ShareMatch() {
 
   return (
     <main className={styles.page}>
-      <p className={matchStyles.anon}>Anonymous swap list — no names or accounts shown</p>
+      <div className={matchStyles.topRow}>
+        <p className={matchStyles.anon}>Anonymous swap list — no names or accounts shown</p>
+        {themeToggle}
+      </div>
       <h1 className={styles.title}>{album?.name || 'Sticker'} share</h1>
       <p className={styles.lead}>
         Check overlaps with this list, copy the matches, and reply on social media. Nothing here
@@ -167,6 +187,7 @@ export function ShareMatch() {
             items={sharedSpares}
             emptyMessage="No spares on this link."
             accent={album?.accent}
+            hideQty
           />
         </section>
       )}
@@ -179,6 +200,7 @@ export function ShareMatch() {
             items={sharedNeeds}
             emptyMessage="No needs on this link."
             accent={album?.accent}
+            hideQty
           />
         </section>
       )}
@@ -223,7 +245,11 @@ export function ShareMatch() {
       </section>
 
       {ran && overlap && (
-        <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
+        <section
+          ref={resultsRef}
+          className={styles.panel}
+          style={{ marginTop: 'var(--space-lg)' }}
+        >
           <h2 className={styles.panelTitle}>Matches</h2>
           {unknown.length > 0 && (
             <p className={[styles.notice, styles.noticeError].join(' ')}>
@@ -238,6 +264,7 @@ export function ShareMatch() {
                 items={matchesForVisitor}
                 emptyMessage="No overlap with your needs."
                 accent={album?.accent}
+                hideQty
               />
             </>
           )}
@@ -249,6 +276,7 @@ export function ShareMatch() {
                 items={matchesVisitorCanOffer}
                 emptyMessage="No overlap with your spares."
                 accent={album?.accent}
+                hideQty
               />
             </>
           )}
