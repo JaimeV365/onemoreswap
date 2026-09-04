@@ -3,13 +3,14 @@ import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
 import { useAuth } from '../lib/AuthContext'
 import { useProfiles } from '../lib/ProfileContext'
-import { useAutoCloudSync } from '../lib/useAutoCloudSync'
+import { formatSavedAt, useAutoCloudSync } from '../lib/useAutoCloudSync'
 import styles from './Layout.module.css'
 
 export function Layout() {
-  const { storageKey } = useProfiles()
+  const { storageKey, activeProfile } = useProfiles()
   const { user } = useAuth()
-  const { status, error } = useAutoCloudSync()
+  const { status, error, lastSavedAt } = useAutoCloudSync()
+  const savedLabel = formatSavedAt(lastSavedAt)
 
   return (
     <>
@@ -17,7 +18,7 @@ export function Layout() {
         Skip to main content
       </a>
       <Header />
-      {user && status !== 'idle' && (
+      {user && activeProfile && (
         <div
           className={[
             styles.syncBar,
@@ -27,11 +28,21 @@ export function Layout() {
             .filter(Boolean)
             .join(' ')}
           role="status"
+          title={
+            savedLabel
+              ? `Last successful cloud backup: ${savedLabel}`
+              : 'Cloud backup for the active collector profile'
+          }
         >
           {status === 'pending' && 'Cloud backup pending…'}
           {status === 'saving' && 'Saving to cloud…'}
-          {status === 'saved' && 'Saved to cloud'}
+          {status === 'saved' &&
+            (savedLabel ? `Saved to cloud · ${savedLabel}` : 'Saved to cloud')}
           {status === 'error' && (error || 'Could not save to cloud')}
+          {status === 'idle' &&
+            (savedLabel
+              ? `Last cloud save · ${savedLabel}`
+              : 'Cloud backup on — waiting for your first save')}
         </div>
       )}
       {/* Remount pages when collector profile changes so each gets its own data */}

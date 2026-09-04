@@ -6,6 +6,7 @@ import { useProfiles } from './ProfileContext'
 import {
   getSyncDirtyState,
   hasLocalSyncableData,
+  loadSyncMeta,
   recordLocalSynced,
 } from './syncStatus'
 
@@ -13,15 +14,35 @@ const DEBOUNCE_MS = 1500
 
 export type AutoSyncStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error'
 
+export type AutoCloudSyncState = {
+  status: AutoSyncStatus
+  error: string | null
+  /** Last successful cloud push timestamp (ISO), if any */
+  lastSavedAt: string | null
+}
+
+function formatSavedAt(iso: string | null): string | null {
+  if (!iso) return null
+  const t = Date.parse(iso)
+  if (Number.isNaN(t)) return null
+  return new Date(t).toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+}
+
 /**
  * Debounced auto-push to cloud whenever local collection/postal/etc. change.
  * Only runs when signed in with an active profile.
  */
-export function useAutoCloudSync(): { status: AutoSyncStatus; error: string | null } {
+export function useAutoCloudSync(): AutoCloudSyncState {
   const { user } = useAuth()
   const { activeProfile } = useProfiles()
   const [status, setStatus] = useState<AutoSyncStatus>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(
+    () => loadSyncMeta()?.updatedAt ?? getSyncDirtyState().lastPushedAt,
+  )
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const profileId = activeProfile?.id
 
@@ -29,8 +50,11 @@ export function useAutoCloudSync(): { status: AutoSyncStatus; error: string | nu
     if (!user || !profileId) {
       setStatus('idle')
       setError(null)
+      setLastSavedAt(null)
       return
     }
+
+    setLastSavedAt(loadSyncMeta()?.updatedAt ?? getSyncDirtyState().lastPushedAt)
 
     const flush = async () => {
       if (!hasLocalSyncableData()) return
@@ -47,10 +71,12 @@ export function useAutoCloudSync(): { status: AutoSyncStatus; error: string | nu
         setError(res.error)
         return
       }
+      const updatedAt = res.data?.updatedAt ?? new Date().toISOString()
       recordLocalSynced({
-        updatedAt: res.data?.updatedAt ?? null,
+        updatedAt,
         revision: res.data?.revision ?? 0,
       })
+      setLastSavedAt(updatedAt)
       setStatus('saved')
       window.setTimeout(() => setStatus('idle'), 2500)
     }
@@ -63,7 +89,6 @@ export function useAutoCloudSync(): { status: AutoSyncStatus; error: string | nu
       }, DEBOUNCE_MS)
     }
 
-    // Catch up if already dirty on mount / profile switch
     if (getSyncDirtyState().dirty && hasLocalSyncableData()) schedule()
 
     const unsub = onLocalDataChanged(schedule)
@@ -73,5 +98,7 @@ export function useAutoCloudSync(): { status: AutoSyncStatus; error: string | nu
     }
   }, [user, profileId])
 
-  return { status, error }
+  return { status, error, lastSavedAt }
 }
+
+export { formatSavedAt }
