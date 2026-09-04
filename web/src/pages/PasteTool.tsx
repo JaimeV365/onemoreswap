@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
-import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { StickerList, stickerListAsText } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
@@ -144,7 +143,6 @@ export function PasteTool() {
 
   return (
     <main className={styles.page} id="main-content">
-      <Badge>Always free · No account</Badge>
       <h1 className={styles.title}>Paste &amp; match</h1>
       <p className={styles.lead}>
         Paste their needs and/or spares. We compare with your collection and show what matches —
