@@ -187,6 +187,29 @@ export function addParsedCounts(
   return next
 }
 
+/**
+ * Treat pasted stickers as the need list; every other sticker in the album is owned.
+ * Keeps existing spare copies for stickers that remain owned.
+ */
+export function applyMissingList(
+  allSeqs: number[],
+  missingSeqs: Iterable<number>,
+  previous: CollectionAlbumState = emptyAlbumState(),
+): CollectionAlbumState {
+  const allowed = new Set(allSeqs.map(Number))
+  const missing = [...new Set([...missingSeqs].map(Number).filter((seq) => allowed.has(seq)))].sort(
+    (a, b) => a - b,
+  )
+  const missingSet = new Set(missing)
+  const counts: Record<number, number> = {}
+  for (const [k, qty] of Object.entries(previous.counts || {})) {
+    const seq = Number(k)
+    const n = Math.floor(Number(qty))
+    if (!missingSet.has(seq) && allowed.has(seq) && n >= 2) counts[seq] = n
+  }
+  return { missing, counts }
+}
+
 export function albumProgress(
   state: CollectionAlbumState,
   total: number,

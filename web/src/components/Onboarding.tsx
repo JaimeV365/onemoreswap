@@ -39,8 +39,8 @@ export function OnboardingBanner({ show }: OnboardingProps) {
         <h2 className={styles.title}>Get started in 3 steps</h2>
         <ol className={styles.steps}>
           <li>
-            <strong>Quick add</strong> stickers you have — or import a World Cup tracker backup under
-            Advanced.
+            <strong>Quick add</strong> what you have — or paste what’s missing so the rest counts as
+            owned. Import a World Cup tracker backup under Advanced if you already have one.
           </li>
           <li>
             <strong>Share list</strong> copy needs/spares for WhatsApp.

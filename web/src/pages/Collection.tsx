@@ -30,6 +30,7 @@ import { pendingHitsFor } from '../lib/postalCollection'
 import {
   addParsedCounts,
   albumProgress,
+  applyMissingList,
   bumpCopies,
   copiesOf,
   downloadJson,
@@ -45,6 +46,8 @@ import type { CollectionAlbumState } from '../lib/types'
 import styles from './Page.module.css'
 import collectionStyles from './Collection.module.css'
 
+type QuickAddMode = 'have' | 'missing'
+
 function initialAlbumId(): string {
   const enabled = loadEnabledAlbums()
   return enabled[0] || ''
@@ -56,6 +59,7 @@ export function Collection() {
     albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState(),
   )
   const [addInput, setAddInput] = useState('')
+  const [addMode, setAddMode] = useState<QuickAddMode>('have')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
   const [message, setMessage] = useState<string | null>(null)
@@ -63,6 +67,7 @@ export function Collection() {
   const [syncEpoch, setSyncEpoch] = useState(0)
   const [confirmFresh, setConfirmFresh] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [confirmMissing, setConfirmMissing] = useState(false)
   const [pendingImport, setPendingImport] = useState<ImportResult | null>(null)
 
   const album = getAlbum(albumId)
@@ -117,6 +122,18 @@ export function Collection() {
       setMessage(`Could not parse: ${unknown.slice(0, 6).join(', ')}`)
       return
     }
+    if (!counts.size) {
+      setMessage('No stickers recognised in that list.')
+      return
+    }
+    if (addMode === 'missing') {
+      if (isAlbumStarted(state)) {
+        setConfirmMissing(true)
+        return
+      }
+      applyMissingPaste(counts, unknown)
+      return
+    }
     const allSeqs = indexes.catalogue.stickers.map((s) => s.seq)
     const wasEmpty = state.missing.length === 0 && Object.keys(state.counts).length === 0
     persist(addParsedCounts(state, counts, allSeqs))
@@ -128,6 +145,38 @@ export function Collection() {
           ? `Album started — added stickers are in album; everything else is marked as a need. Share list is ready.`
           : `Added ${counts.size} sticker type(s). First copy → in album; duplicates → spares.`,
     )
+  }
+
+  const applyMissingPaste = (counts: Map<number, number>, unknown: string[]) => {
+    if (!indexes) return
+    const allSeqs = indexes.catalogue.stickers.map((s) => s.seq)
+    const owned = allSeqs.length - counts.size
+    persist(applyMissingList(allSeqs, counts.keys(), state))
+    setAddInput('')
+    setConfirmMissing(false)
+    setMessage(
+      unknown.length
+        ? `Marked ${counts.size} as missing · ${owned} as owned. Unrecognised: ${unknown.slice(0, 6).join(', ')}`
+        : `Marked ${counts.size} as missing · ${owned} as owned (everything else you have).`,
+    )
+  }
+
+  const doApplyMissingFromInput = () => {
+    if (!indexes || !addInput.trim()) {
+      setConfirmMissing(false)
+      return
+    }
+    const { counts, unknown } = parseStickerInput(addInput, indexes)
+    if (!counts.size) {
+      setConfirmMissing(false)
+      setMessage(
+        unknown.length
+          ? `Could not parse: ${unknown.slice(0, 6).join(', ')}`
+          : 'No stickers recognised in that list.',
+      )
+      return
+    }
+    applyMissingPaste(counts, unknown)
   }
 
   const doMarkAllMissing = () => {
@@ -230,34 +279,72 @@ export function Collection() {
                 ? `${progress.inAlbum} of ${progress.total} in album · ${progress.missing} missing${
                     progress.pending ? ` · ${progress.pending} incoming` : ''
                   } · ${progress.spareCopies} spare copies`
-                : `Not started — use Quick add or "Start fresh" to begin tracking`
+                : `Not started — Quick add what you have, or paste what’s missing`
             }
           />
 
           <section className={styles.panel}>
             <h2 className={styles.panelTitle}>Quick add</h2>
+            <div className={collectionStyles.modeTabs} role="tablist" aria-label="Quick add mode">
+              {(
+                [
+                  { id: 'have' as const, label: 'I have these' },
+                  { id: 'missing' as const, label: 'I’m missing these' },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={addMode === tab.id}
+                  className={[
+                    collectionStyles.modeTab,
+                    addMode === tab.id ? collectionStyles.modeTabActive : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => setAddMode(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
             <p className={collectionStyles.addHint}>
-              {albumId === 'pl2526' ? (
-                <>
-                  Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
-                  <code>353 354</code>. First copy goes in the album; extras become spares.
-                </>
+              {addMode === 'have' ? (
+                albumId === 'pl2526' ? (
+                  <>
+                    Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
+                    <code>353 354</code>. First copy goes in the album; extras become spares.
+                  </>
+                ) : (
+                  <>
+                    Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
+                    <code>570 571</code>. First copy goes in the album; extras become spares.
+                  </>
+                )
               ) : (
                 <>
-                  Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
-                  <code>570 571</code>. First copy goes in the album; extras become spares.
+                  Paste only what you still need — e.g.{' '}
+                  {albumId === 'pl2526' ? (
+                    <code>LIV: 1, 4, 9</code>
+                  ) : (
+                    <code>MEX: 1, 2, 14</code>
+                  )}
+                  . Everything else in the album is treated as owned. Handy when you’re nearly complete.
                 </>
               )}
             </p>
             <Textarea
-              label="Stickers to add"
+              label={addMode === 'have' ? 'Stickers to add' : 'Stickers still missing'}
               value={addInput}
               onChange={(e) => setAddInput(e.target.value)}
               placeholder="Paste or type sticker codes…"
               rows={3}
             />
             <div className={styles.actions}>
-              <Button onClick={handleQuickAdd}>Add to collection</Button>
+              <Button onClick={handleQuickAdd}>
+                {addMode === 'have' ? 'Add to collection' : 'Apply missing list'}
+              </Button>
               <Button variant="secondary" onClick={() => setConfirmFresh(true)}>
                 Start fresh (all missing)
               </Button>
@@ -390,6 +477,16 @@ export function Collection() {
         danger
         onConfirm={applyPendingImport}
         onCancel={() => setPendingImport(null)}
+      />
+      <ConfirmDialog
+        open={confirmMissing}
+        title="Apply this as your missing list?"
+        body="Only the pasted stickers stay as needs. Every other sticker in the album is treated as owned. Existing spares are kept where you still own that sticker."
+        confirmLabel="Apply missing list"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={doApplyMissingFromInput}
+        onCancel={() => setConfirmMissing(false)}
       />
       <ConfirmDialog
         open={confirmFresh}

@@ -12,6 +12,31 @@
   border-radius: 4px;
 }
 
+.modeTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.modeTab {
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.modeTabActive {
+  background: var(--yellow);
+  border-color: var(--yellow-dark);
+  color: var(--ink);
+}
+
 .browseSection {
   margin-top: var(--space-xl);
 }
