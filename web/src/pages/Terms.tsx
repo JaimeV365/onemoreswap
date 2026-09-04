@@ -21,6 +21,14 @@ export function Terms() {
           3 platform matching is post only — meet in person only with people you already know (Tier
           1 contacts).
         </p>
+        <h2>Official stickers</h2>
+        <p>
+          Everyone should assume swaps are for <strong>official</strong> album stickers (for example
+          Panini or Topps, as sold for that album). Unofficial or counterfeit stickers (including
+          many lookalikes sold on marketplaces) must be clearly disclosed before anyone agrees to the
+          swap. If they are not disclosed, treat the offer as official stock only. We do not verify
+          authenticity and we are not responsible for disputes over fakes.
+        </p>
         <h2>Fees</h2>
         <p>
           Tier 1 (contacts) and Tier 2 (paste tool) are always free. Tier 3 platform matching is free

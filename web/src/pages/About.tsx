@@ -32,6 +32,13 @@ export function About() {
           Built for more than one tournament. World Cup 2026 Panini and Premier League Topps are
           supported from day one, with more albums as demand grows.
         </p>
+        <h2>Official stickers only (unless said otherwise)</h2>
+        <p>
+          Swaps on One More Swap are for finishing real albums. Assume the other person means{' '}
+          <strong>official</strong> stickers. If anyone wants to include unofficial or counterfeit
+          stickers, they must say so clearly up front so both sides can agree — or walk away. Silent
+          fakes are not OK.
+        </p>
         <h2>Operator</h2>
         <p>
           Operated by JAND Games in the United Kingdom. The product brand is One More Swap; the

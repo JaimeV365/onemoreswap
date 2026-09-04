@@ -358,6 +358,14 @@ We are not Royal Mail or any postal service. We take no responsibility for lost,
 
 We do not inspect stickers. We cannot guarantee the condition of stickers sent by other users. If you receive stickers that are damaged or not as described, this is a matter between you and the other user.
 
+### 11.4 Official stickers and counterfeits
+
+Users must assume that proposed swaps involve **official** album stickers for the relevant collection (for example Panini or Topps product sold for that album), unless stated otherwise.
+
+If you intend to offer or accept **unofficial or counterfeit** stickers (including imitation product commonly sold on third-party marketplaces), you must disclose that clearly before either party accepts the swap, so both parties can agree or decline. Failure to disclose is a breach of these terms and may lead to account restrictions.
+
+We do not verify authenticity and we are not liable for disputes arising from counterfeit or misrepresented stickers.
+
 ### 14.4 Platform Availability
 
 We aim to keep the platform available at all times but cannot guarantee uninterrupted access. We may carry out maintenance, updates, or changes at any time. We are not liable for any loss resulting from platform downtime.
