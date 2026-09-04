@@ -77,27 +77,35 @@
 }
 
 .addBtn,
-.cancelAdd,
-.removeBtn {
+.cancelAdd {
   font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   background: transparent;
   border: none;
-  color: var(--red);
+  color: var(--ink-soft);
   padding: 0.25rem 0;
 }
 
 .addBtn:hover,
-.cancelAdd:hover,
-.removeBtn:hover {
-  color: var(--red-dark);
+.cancelAdd:hover {
+  color: var(--ink);
 }
 
 .removeBtn {
   align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  padding: 0.25rem 0;
+}
+
+.removeBtn:hover {
   color: var(--ink-soft);
 }
 

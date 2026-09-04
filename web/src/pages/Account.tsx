@@ -189,8 +189,7 @@ export function Account() {
             <li>Confirm the adult email (above).</li>
             <li>Add collector profiles — each has its own collection (switch in the header).</li>
             <li>
-              Open <Link to="/">My collection</Link> and use <strong>Save to cloud</strong> when you
-              want a backup.
+              Open <Link to="/">My collection</Link> — signed-in changes auto-save to the cloud.
             </li>
           </ul>
           <div className={styles.actions}>

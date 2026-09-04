@@ -1,15 +1,8 @@
-.toolbar {
+.filterRow {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-
-.filters {
-  display: flex;
   gap: var(--space-xs);
+  margin-bottom: var(--space-md);
 }
 
 .filterBtn {
@@ -30,65 +23,85 @@
   color: var(--ink);
 }
 
-.list {
-  list-style: none;
+.toolTabs {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.card {
-  width: 100%;
-  text-align: left;
-  padding: var(--space-md) var(--space-lg);
+  flex-wrap: nowrap;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-md);
+  padding: var(--space-xs);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-}
-
-.card:hover {
-  border-color: var(--border-strong);
-}
-
-.cardTop {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-md);
-  margin-bottom: 4px;
-}
-
-.cardMeta {
-  font-size: 0.8125rem;
-  color: var(--ink-faint);
-}
-
-.open {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--yellow-dark);
-  text-transform: uppercase;
-}
-
-.done {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--green);
-  text-transform: uppercase;
-}
-
-.empty {
-  padding: var(--space-xl);
-  border: 1px dashed var(--border);
   border-radius: var(--radius-lg);
-  text-align: center;
-  color: var(--ink-soft);
+  background: var(--bg-muted);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.toolTab {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
   align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  min-width: 4.25rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.55rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toolTab:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+}
+
+.toolTabActive {
+  background: var(--yellow);
+  color: var(--ink-on-yellow);
+}
+
+.toolTabActive:hover {
+  color: var(--ink-on-yellow);
+  background: var(--yellow);
+}
+
+.swapTab span {
+  max-width: 5.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swapDone:not(.toolTabActive) {
+  opacity: 0.75;
+}
+
+.toolPanel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.panelLead {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.emptyHint {
+  margin: var(--space-lg) 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
 }
 
 .formGrid {
@@ -158,17 +171,15 @@
   width: 100%;
 }
 
-.toolbarActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
 .settledHint {
   margin: var(--space-md) 0 0;
   font-size: 0.8125rem;
   color: var(--ink-faint);
   line-height: 1.45;
+}
+
+.inboxReport {
+  margin-top: var(--space-lg);
 }
 
 .inboxBucket {
@@ -211,3 +222,8 @@
   color: var(--red);
 }
 
+@media (max-width: 420px) {
+  .toolTab span {
+    font-size: 0.6875rem;
+  }
+}

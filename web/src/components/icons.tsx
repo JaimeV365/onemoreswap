@@ -93,3 +93,21 @@ export function DatabaseIcon({ size = 20, className }: IconProps) {
     </Svg>
   )
 }
+
+export function UserRoundIcon({ size = 20, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <circle cx="12" cy="8" r="5" />
+      <path d="M20 21a8 8 0 0 0-16 0" />
+    </Svg>
+  )
+}
+
+export function MailIcon({ size = 20, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+    </Svg>
+  )
+}
