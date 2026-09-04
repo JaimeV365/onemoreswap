@@ -79,11 +79,11 @@ export function socialPostBlurb(
   const list = listTextForPost(listText)
   let intro: string
   if (mode === 'needs') {
-    intro = `Swap? Looking for these ${name} stickers. Open the link, paste your list (no One More Swap account needed), and see if your spares match — then reply here to swap:`
+    intro = `Looking to swap these ${name} stickers. Open the link, paste your list, see matches:`
   } else if (mode === 'both') {
-    intro = `Swap? Here are my ${name} needs & spares. Open the link, paste your list (no account needed), see overlaps, and reply here if we can swap:`
+    intro = `Swapping ${name}. Open the link, paste your list, see matches:`
   } else {
-    intro = `Swap? I’ve got these ${name} spares. Open the link, paste what you still need (no One More Swap account needed), and see if we match — then reply here to swap:`
+    intro = `Got ${name} spares to swap. Open the link, paste your needs, see matches:`
   }
   return list ? `${intro}\n\n${list}\n\n${url}` : `${intro}\n${url}`
 }

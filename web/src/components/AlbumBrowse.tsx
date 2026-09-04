@@ -9,14 +9,9 @@ import styles from './AlbumBrowse.module.css'
 
 export type BrowseFilter = 'all' | 'needs' | 'spares' | 'incoming'
 
-export type SectionSort =
-  | 'album'
-  | 'complete-asc'
-  | 'complete-desc'
-  | 'incoming-desc'
-  | 'incoming-asc'
-  | 'spares-desc'
-  | 'spares-asc'
+/** What to sort teams/clubs by — direction is separate (standard table pattern). */
+export type SectionSortBy = 'album' | 'progress' | 'incoming' | 'spares'
+export type SectionSortDir = 'asc' | 'desc'
 
 type AlbumBrowseProps = {
   albumId: string
@@ -24,7 +19,8 @@ type AlbumBrowseProps = {
   onChange: (state: CollectionAlbumState) => void
   filter?: BrowseFilter
   search?: string
-  sectionSort?: SectionSort
+  sortBy?: SectionSortBy
+  sortDir?: SectionSortDir
   /** seq → qty pending from postal swaps */
   incoming?: Map<number, number>
   /** Mark first open postal expected line as received */
@@ -65,7 +61,8 @@ export function AlbumBrowse({
   onChange,
   filter = 'all',
   search = '',
-  sectionSort = 'album',
+  sortBy = 'album',
+  sortDir = 'asc',
   incoming = new Map(),
   onMarkArrived,
 }: AlbumBrowseProps) {
@@ -94,29 +91,25 @@ export function AlbumBrowse({
       .filter((sec) => sec.stickers.length > 0)
 
     const sorted = [...rows]
+    const dir = sortDir === 'asc' ? 1 : -1
     sorted.sort((a, b) => {
-      if (sectionSort === 'album') return a.albumIndex - b.albumIndex
-      if (sectionSort === 'complete-asc' || sectionSort === 'complete-desc') {
+      let d = 0
+      if (sortBy === 'progress') {
         const pa = a.total ? a.owned / a.total : 0
         const pb = b.total ? b.owned / b.total : 0
-        const d = pa - pb
-        if (d !== 0) return sectionSort === 'complete-asc' ? d : -d
-        return a.albumIndex - b.albumIndex
+        d = pa - pb
+      } else if (sortBy === 'incoming') {
+        d = a.incomingCount - b.incomingCount
+      } else if (sortBy === 'spares') {
+        d = a.spareCopies - b.spareCopies
+      } else {
+        d = a.albumIndex - b.albumIndex
       }
-      if (sectionSort === 'incoming-asc' || sectionSort === 'incoming-desc') {
-        const d = a.incomingCount - b.incomingCount
-        if (d !== 0) return sectionSort === 'incoming-asc' ? d : -d
-        return a.albumIndex - b.albumIndex
-      }
-      if (sectionSort === 'spares-asc' || sectionSort === 'spares-desc') {
-        const d = a.spareCopies - b.spareCopies
-        if (d !== 0) return sectionSort === 'spares-asc' ? d : -d
-        return a.albumIndex - b.albumIndex
-      }
+      if (d !== 0) return d * dir
       return a.albumIndex - b.albumIndex
     })
     return sorted
-  }, [indexes, state, filter, q, incoming, sectionSort])
+  }, [indexes, state, filter, q, incoming, sortBy, sortDir])
 
   const showJumpBar = useMemo(
     () => hasSectionMarks(albumId, visibleSections.map((s) => s.code)),

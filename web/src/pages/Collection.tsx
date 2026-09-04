@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlbumBrowse, type SectionSort } from '../components/AlbumBrowse'
+import { AlbumBrowse, type SectionSortBy, type SectionSortDir } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
@@ -80,7 +80,8 @@ export function Collection() {
   const [addMode, setAddMode] = useState<QuickAddMode>('have')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
-  const [sectionSort, setSectionSort] = useState<SectionSort>('album')
+  const [sectionSortBy, setSectionSortBy] = useState<SectionSortBy>('album')
+  const [sectionSortDir, setSectionSortDir] = useState<SectionSortDir>('asc')
   const [message, setMessage] = useState<string | null>(null)
   const [tab, setTab] = useState<CollectionTab>(() =>
     isAlbumStarted(albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState())
@@ -271,9 +272,7 @@ export function Collection() {
 
   return (
     <main className={styles.page} id="main-content">
-      <Badge>
-        {user ? 'Saved on this device · auto cloud backup' : 'Saved on this device'}
-      </Badge>
+      <Badge>{user ? 'Cloud backup on' : 'Saved on this device'}</Badge>
       <h1 className={styles.title}>My collection</h1>
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to
@@ -437,22 +436,42 @@ export function Collection() {
                       </button>
                     ))}
                   </div>
-                  <label className={collectionStyles.sortLabel}>
-                    <span>Sort teams</span>
-                    <select
-                      className={collectionStyles.sortSelect}
-                      value={sectionSort}
-                      onChange={(e) => setSectionSort(e.target.value as SectionSort)}
+                  <div className={collectionStyles.sortControls}>
+                    <label className={collectionStyles.sortLabel}>
+                      <span>Sort by</span>
+                      <select
+                        className={collectionStyles.sortSelect}
+                        value={sectionSortBy}
+                        onChange={(e) => {
+                          const next = e.target.value as SectionSortBy
+                          setSectionSortBy(next)
+                          // Sensible default direction when switching metric
+                          if (next === 'album') setSectionSortDir('asc')
+                          else if (next === 'progress') setSectionSortDir('asc')
+                          else setSectionSortDir('desc')
+                        }}
+                      >
+                        <option value="album">Album order</option>
+                        <option value="progress">Progress</option>
+                        <option value="incoming">Incoming</option>
+                        <option value="spares">Spares</option>
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      className={collectionStyles.sortDirBtn}
+                      disabled={sectionSortBy === 'album'}
+                      aria-label={
+                        sectionSortDir === 'asc' ? 'Ascending — click for descending' : 'Descending — click for ascending'
+                      }
+                      title={sectionSortDir === 'asc' ? 'Low → high' : 'High → low'}
+                      onClick={() =>
+                        setSectionSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+                      }
                     >
-                      <option value="album">Album order</option>
-                      <option value="complete-asc">Least complete</option>
-                      <option value="complete-desc">Most complete</option>
-                      <option value="incoming-desc">Most incoming</option>
-                      <option value="incoming-asc">Least incoming</option>
-                      <option value="spares-desc">Most spares</option>
-                      <option value="spares-asc">Least spares</option>
-                    </select>
-                  </label>
+                      {sectionSortDir === 'asc' ? '↑' : '↓'}
+                    </button>
+                  </div>
                 </div>
                 <label className={collectionStyles.searchLabel} htmlFor="album-sticker-search">
                   Search stickers
@@ -475,7 +494,8 @@ export function Collection() {
                   onChange={persist}
                   filter={filter}
                   search={search}
-                  sectionSort={sectionSort}
+                  sortBy={sectionSortBy}
+                  sortDir={sectionSortDir}
                   incoming={incoming}
                   onMarkArrived={markArrived}
                 />

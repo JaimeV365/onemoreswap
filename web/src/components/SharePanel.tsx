@@ -100,16 +100,13 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
     <div className={bare ? styles.bare : styles.panel}>
       {!bare && <h2 className={styles.title}>Share list</h2>}
       <p className={styles.hint}>
-        Two ways to share: a plain list for chat, or an <strong>anonymous match link</strong> for
-        people who are <em>not</em> on One More Swap — friends on WhatsApp, Facebook, forums, etc.
-        They open the link, paste their own sticker list, see overlaps with yours, and reply on that
-        social thread to arrange a swap. The link never shows your name, email, or profile.
+        Copy a list for chat, or post a match link so friends outside One More Swap can find swaps
+        with you — no account, no name on the link.
       </p>
 
-      <h3 className={styles.subTitle}>Match link for outside OMS</h3>
+      <h3 className={styles.subTitle}>Match link</h3>
       <p className={styles.hint}>
-        Best for posting where other collectors hang out. Creating a link copies ready-to-paste post
-        text (list + URL). Edit it below if you want to tweak the wording first.
+        For WhatsApp, Facebook, forums. Creates post text + link; edit below if you like.
       </p>
       <div className={styles.tabs}>
         {linkModes.map((t) => (

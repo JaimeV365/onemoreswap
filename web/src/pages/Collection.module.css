@@ -98,6 +98,12 @@
   margin-bottom: var(--space-md);
 }
 
+.sortControls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
 .sortLabel {
   display: flex;
   align-items: center;
@@ -123,6 +129,29 @@
   outline: none;
   box-shadow: var(--focus-ring);
   border-color: var(--yellow-dark);
+}
+
+.sortDirBtn {
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.sortDirBtn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.sortDirBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .searchLabel {
