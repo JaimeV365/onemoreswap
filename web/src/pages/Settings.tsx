@@ -67,7 +67,7 @@ export function Settings() {
         <h2 className={styles.panelTitle}>Data</h2>
         <p className={settingsStyles.hint}>
           Collection and postal swaps stay on this device until cloud sync is ready. Import World Cup
-          tracker backups from Collection → Advanced.
+          tracker backups from Collection → Backup.
         </p>
         <ul className={settingsStyles.links}>
           <li>

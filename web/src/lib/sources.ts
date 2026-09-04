@@ -1,3 +1,4 @@
+import { notifyLocalDataChanged } from './localDataEvents'
 import { scopedStorageKey } from './profileScope'
 
 const BUILTIN = ['WhatsApp', 'Facebook', 'Friend'] as const
@@ -27,6 +28,7 @@ export function loadCustomSources(): string[] {
 
 function saveCustomSources(list: string[]) {
   localStorage.setItem(scopedStorageKey(STORAGE_BASE), JSON.stringify(list))
+  notifyLocalDataChanged()
 }
 
 export function allSources(): string[] {

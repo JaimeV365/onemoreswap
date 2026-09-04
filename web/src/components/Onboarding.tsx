@@ -39,9 +39,8 @@ export function OnboardingBanner({ show }: OnboardingProps) {
         <h2 className={styles.title}>Get started in 3 steps</h2>
         <ol className={styles.steps}>
           <li>
-            <strong>Quick add</strong> what you have — or paste what’s missing so the rest counts as
-            owned. Use Share for chat lists or anonymous match links. Import a backup under Backup
-            &amp; reset if you already have one.
+            <strong>Quick add</strong> (Add tab) what you have — or paste what’s missing. Share for
+            chat lists or anonymous match links. Backup for export/import.
           </li>
           <li>
             <strong>Share list</strong> copy needs/spares for WhatsApp.

@@ -12,6 +12,58 @@
   border-radius: 4px;
 }
 
+.toolTabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-xs);
+  margin: var(--space-lg) 0 var(--space-md);
+  padding: var(--space-xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-muted);
+}
+
+.toolTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.35rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toolTab:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+}
+
+.toolTabActive {
+  background: var(--yellow);
+  color: var(--ink-on-yellow);
+}
+
+.toolTabActive:hover {
+  color: var(--ink-on-yellow);
+  background: var(--yellow);
+}
+
+.toolPanel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
 .modeTabs {
   display: flex;
   flex-wrap: wrap;
@@ -35,10 +87,6 @@
   background: var(--yellow);
   border-color: var(--yellow-dark);
   color: var(--ink-on-yellow);
-}
-
-.browseSection {
-  margin-top: var(--space-xl);
 }
 
 .browseToolbar {
@@ -74,7 +122,7 @@
   padding: 6px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  background: var(--bg);
   cursor: pointer;
   color: var(--ink-soft);
 }
@@ -90,7 +138,7 @@
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--bg-elevated);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 0.9375rem;
@@ -103,24 +151,11 @@
   border-color: var(--yellow-dark);
 }
 
-.advanced {
-  margin-top: var(--space-xl);
-  padding: var(--space-md);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-muted);
-}
-
-.advanced summary {
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
 .advancedHint {
   font-size: 0.8125rem;
   color: var(--ink-faint);
-  margin: var(--space-md) 0;
+  margin: 0 0 var(--space-md);
+  line-height: 1.45;
 }
 
 .confirmLead {
@@ -128,4 +163,10 @@
   font-size: 0.9375rem;
   line-height: 1.45;
   color: var(--ink-soft);
+}
+
+@media (max-width: 420px) {
+  .toolTab span {
+    font-size: 0.6875rem;
+  }
 }

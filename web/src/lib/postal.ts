@@ -1,4 +1,5 @@
 import type { PostalExpectedLine, PostalStore, PostalSwap } from './postalTypes'
+import { notifyLocalDataChanged } from './localDataEvents'
 import { scopedStorageKey } from './profileScope'
 
 const STORAGE_BASE = 'onemoreswap-postal-v1'
@@ -23,6 +24,7 @@ export function loadPostal(): PostalStore {
 
 export function savePostal(store: PostalStore) {
   localStorage.setItem(scopedStorageKey(STORAGE_BASE), JSON.stringify(store))
+  notifyLocalDataChanged()
 }
 
 export function upsertPostalSwaps(incoming: PostalSwap[], replace = false): PostalStore {

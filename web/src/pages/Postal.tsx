@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
-import { CloudSyncBanner } from '../components/CloudSyncBanner'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { SourcePicker } from '../components/SourcePicker'
 import { StickerList } from '../components/StickerList'
@@ -100,7 +99,6 @@ export function Postal() {
   const [confirmOwned, setConfirmOwned] = useState(false)
   const [confirmInbox, setConfirmInbox] = useState(false)
   const [ownedWarningBody, setOwnedWarningBody] = useState('')
-  const [syncEpoch, setSyncEpoch] = useState(0)
   const [inboxRaw, setInboxRaw] = useState('')
   const [inboxPreview, setInboxPreview] = useState<InboxPreview | null>(null)
 
@@ -137,7 +135,6 @@ export function Postal() {
 
   const refresh = () => {
     setSwaps(loadPostal().swaps)
-    setSyncEpoch((n) => n + 1)
   }
 
   const openNew = () => {
@@ -371,7 +368,6 @@ export function Postal() {
           Paste everything that arrived. We match it to open expected lines (oldest swaps first), then
           you confirm before anything is marked received.
         </p>
-        <CloudSyncBanner refreshKey={syncEpoch} />
         <AlbumPicker value={albumId} onChange={setAlbumId} />
 
         <section className={styles.panel}>
@@ -482,8 +478,6 @@ export function Postal() {
           Track what you posted and what you&apos;re waiting for. You can only send spare copies — each
           sent sticker drops one (+2 → +1 → ✓). Pending mail and album ownership stay independent.
         </p>
-
-        <CloudSyncBanner refreshKey={syncEpoch} />
 
         <AlbumPicker
           value={albumId}
@@ -650,10 +644,8 @@ export function Postal() {
       <h1 className={styles.title}>Postal swaps</h1>
       <p className={styles.lead}>
         Keep a record of what you posted and what you&apos;re waiting for. Import from the World Cup
-        tracker via Collection → Advanced, or start a new swap here.
+        tracker via Collection → Backup, or start a new swap here.
       </p>
-
-      <CloudSyncBanner refreshKey={syncEpoch} />
 
       <AlbumPicker value={albumId} onChange={setAlbumId} />
 
@@ -713,7 +705,7 @@ export function Postal() {
                   World Cup sticker tracker
                 </a>
                 , export a backup there and import it under{' '}
-                <Link to="/">My collection → Advanced</Link>.
+                <Link to="/">My collection → Backup</Link>.
               </p>
               <Button onClick={openNew}>Create first swap</Button>
             </>

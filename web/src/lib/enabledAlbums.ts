@@ -1,4 +1,5 @@
 import { getAlbum, getAlbumIds } from './catalogue'
+import { notifyLocalDataChanged } from './localDataEvents'
 import { scopedStorageKey } from './profileScope'
 import { getAlbumState, isAlbumStarted, loadCollection } from './storage'
 
@@ -35,6 +36,7 @@ export function loadEnabledAlbums(): string[] {
 
 export function saveEnabledAlbums(ids: string[]) {
   localStorage.setItem(scopedStorageKey(STORAGE_BASE), JSON.stringify(validIds(ids)))
+  notifyLocalDataChanged()
 }
 
 export function enableAlbum(albumId: string): string[] {

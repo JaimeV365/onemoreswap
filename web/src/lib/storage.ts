@@ -1,4 +1,5 @@
 import type { CollectionAlbumState, CollectionStore } from './types'
+import { notifyLocalDataChanged } from './localDataEvents'
 import { scopedStorageKey } from './profileScope'
 
 const STORAGE_BASE = 'onemoreswap-collection-v2'
@@ -70,6 +71,7 @@ export function loadCollection(): CollectionStore {
 
 export function saveCollection(store: CollectionStore) {
   localStorage.setItem(scopedStorageKey(STORAGE_BASE), JSON.stringify(store))
+  notifyLocalDataChanged()
 }
 
 export function getAlbumState(store: CollectionStore, albumId: string): CollectionAlbumState {

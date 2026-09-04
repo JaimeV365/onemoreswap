@@ -4,14 +4,19 @@ import { AlbumBrowse } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
-import { CloudSyncBanner } from '../components/CloudSyncBanner'
-import { CloudSyncPanel } from '../components/CloudSyncPanel'
-import { CollapsibleSection } from '../components/CollapsibleSection'
 import { ConfirmDialog, ConfirmStatList } from '../components/ConfirmDialog'
+import {
+  BookOpenTextIcon,
+  CirclePlusIcon,
+  DatabaseIcon,
+  Share2Icon,
+} from '../components/icons'
 import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
 import { Textarea } from '../components/Textarea'
+import { useAuth } from '../lib/AuthContext'
+import { applyCloudSyncLocally, pullCloudSync } from '../lib/cloudSync'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { enableAlbum, loadEnabledAlbums } from '../lib/enabledAlbums'
 import {
@@ -28,6 +33,7 @@ import {
   upsertPostalSwaps,
 } from '../lib/postal'
 import { pendingHitsFor } from '../lib/postalCollection'
+import { useProfiles } from '../lib/ProfileContext'
 import {
   addParsedCounts,
   albumProgress,
@@ -43,11 +49,24 @@ import {
   saveCollection,
   setAlbumState,
 } from '../lib/storage'
+import { recordLocalSynced } from '../lib/syncStatus'
 import type { CollectionAlbumState } from '../lib/types'
 import styles from './Page.module.css'
 import collectionStyles from './Collection.module.css'
 
 type QuickAddMode = 'have' | 'missing'
+type CollectionTab = 'add' | 'share' | 'album' | 'backup'
+
+const collectionTabs: {
+  id: CollectionTab
+  label: string
+  Icon: typeof CirclePlusIcon
+}[] = [
+  { id: 'add', label: 'Add', Icon: CirclePlusIcon },
+  { id: 'share', label: 'Share', Icon: Share2Icon },
+  { id: 'album', label: 'Album', Icon: BookOpenTextIcon },
+  { id: 'backup', label: 'Backup', Icon: DatabaseIcon },
+]
 
 function initialAlbumId(): string {
   const enabled = loadEnabledAlbums()
@@ -55,6 +74,8 @@ function initialAlbumId(): string {
 }
 
 export function Collection() {
+  const { user } = useAuth()
+  const { activeProfile } = useProfiles()
   const [albumId, setAlbumId] = useState(initialAlbumId)
   const [state, setState] = useState(() =>
     albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState(),
@@ -64,12 +85,18 @@ export function Collection() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
   const [message, setMessage] = useState<string | null>(null)
-  const [syncEpoch, setSyncEpoch] = useState(0)
+  const [tab, setTab] = useState<CollectionTab>(() =>
+    isAlbumStarted(albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState())
+      ? 'album'
+      : 'add',
+  )
   const [confirmFresh, setConfirmFresh] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [confirmMissing, setConfirmMissing] = useState(false)
+  const [confirmCloudLoad, setConfirmCloudLoad] = useState(false)
   const [pendingImport, setPendingImport] = useState<ImportResult | null>(null)
   const [alertModal, setAlertModal] = useState<{ title: string; body: string } | null>(null)
+  const [cloudBusy, setCloudBusy] = useState(false)
 
   const album = getAlbum(albumId)
   const indexes = getAlbumIndexes(albumId)
@@ -79,7 +106,6 @@ export function Collection() {
       setState(next)
       const store = loadCollection()
       saveCollection(setAlbumState(store, albumId, next))
-      setSyncEpoch((n) => n + 1)
     },
     [albumId],
   )
@@ -90,7 +116,6 @@ export function Collection() {
       return
     }
     setState(getAlbumState(loadCollection(), albumId))
-    setSyncEpoch((n) => n + 1)
   }, [albumId])
 
   useEffect(() => {
@@ -211,7 +236,6 @@ export function Collection() {
     }
     setAlbumId(nextAlbum)
     setState(getAlbumState(loadCollection(), nextAlbum))
-    setSyncEpoch((n) => n + 1)
     const detail = result.postal?.length
       ? `${result.message} Open Postal swaps to review them.`
       : result.message
@@ -248,11 +272,45 @@ export function Collection() {
     )
   }
 
+  const loadFromCloud = async () => {
+    if (!activeProfile) return
+    setConfirmCloudLoad(false)
+    setCloudBusy(true)
+    const res = await pullCloudSync(activeProfile.id)
+    setCloudBusy(false)
+    if (res.error || !res.data) {
+      setAlertModal({
+        title: 'Could not load from cloud',
+        body: res.error || 'No cloud copy found.',
+      })
+      return
+    }
+    if (!res.data.exists) {
+      setAlertModal({
+        title: 'Nothing in the cloud yet',
+        body: 'This profile has no cloud backup. Edits auto-save when you are signed in.',
+      })
+      return
+    }
+    applyCloudSyncLocally(res.data)
+    recordLocalSynced({
+      updatedAt: res.data.updatedAt,
+      revision: res.data.revision,
+    })
+    reloadFromStorage()
+    setAlertModal({
+      title: 'Loaded from cloud',
+      body: `Replaced this device with the cloud copy for ${activeProfile.displayName}.`,
+    })
+  }
+
   const albumStarted = isAlbumStarted(state)
 
   return (
     <main className={styles.page} id="main-content">
-      <Badge>Saved on this device</Badge>
+      <Badge>
+        {user ? 'Saved on this device · auto cloud backup' : 'Saved on this device'}
+      </Badge>
       <h1 className={styles.title}>My collection</h1>
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to
@@ -261,15 +319,9 @@ export function Collection() {
         <Link to="/postal">postal swap</Link>.
       </p>
 
-      <CloudSyncBanner refreshKey={syncEpoch} />
-
       <OnboardingBanner show={!albumStarted} />
 
-      <AlbumPicker
-        value={albumId}
-        onChange={setAlbumId}
-        onEnabledChange={() => setSyncEpoch((n) => n + 1)}
-      />
+      <AlbumPicker value={albumId} onChange={setAlbumId} />
 
       {!albumId ? (
         <p className={styles.lead}>Add an album above to start tracking stickers for this profile.</p>
@@ -292,219 +344,225 @@ export function Collection() {
             </p>
           )}
 
-          <CollapsibleSection
-            title="Quick add"
-            hint="Paste stickers you have — or only what’s missing"
-            defaultOpen={!albumStarted}
+          <div className={collectionStyles.toolTabs} role="tablist" aria-label="Collection tools">
+            {collectionTabs.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                id={`collection-tab-${t.id}`}
+                aria-selected={tab === t.id}
+                aria-controls={`collection-panel-${t.id}`}
+                tabIndex={tab === t.id ? 0 : -1}
+                className={[
+                  collectionStyles.toolTab,
+                  tab === t.id ? collectionStyles.toolTabActive : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => setTab(t.id)}
+              >
+                <t.Icon size={18} />
+                <span>{t.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div
+            className={collectionStyles.toolPanel}
+            role="tabpanel"
+            id={`collection-panel-${tab}`}
+            aria-labelledby={`collection-tab-${tab}`}
           >
-            <div className={collectionStyles.modeTabs} role="tablist" aria-label="Quick add mode">
-              {(
-                [
-                  { id: 'have' as const, label: 'I have these' },
-                  { id: 'missing' as const, label: 'I’m missing these' },
-                ] as const
-              ).map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  id={`quick-add-tab-${tab.id}`}
-                  aria-selected={addMode === tab.id}
-                  aria-controls="quick-add-panel"
-                  tabIndex={addMode === tab.id ? 0 : -1}
-                  className={[
-                    collectionStyles.modeTab,
-                    addMode === tab.id ? collectionStyles.modeTabActive : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => setAddMode(tab.id)}
-                  onKeyDown={(e) => {
-                    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
-                    e.preventDefault()
-                    setAddMode(addMode === 'have' ? 'missing' : 'have')
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            <div id="quick-add-panel" role="tabpanel" aria-labelledby={`quick-add-tab-${addMode}`}>
-              <p className={collectionStyles.addHint}>
-                {addMode === 'have' ? (
-                  albumId === 'pl2526' ? (
-                    <>
-                      Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
-                      <code>353 354</code>. First copy goes in the album; extras become spares.
-                    </>
+            {tab === 'add' && (
+              <>
+                <div className={collectionStyles.modeTabs} role="tablist" aria-label="Quick add mode">
+                  {(
+                    [
+                      { id: 'have' as const, label: 'I have these' },
+                      { id: 'missing' as const, label: 'I’m missing these' },
+                    ] as const
+                  ).map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={addMode === mode.id}
+                      className={[
+                        collectionStyles.modeTab,
+                        addMode === mode.id ? collectionStyles.modeTabActive : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      onClick={() => setAddMode(mode.id)}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+                </div>
+                <p className={collectionStyles.addHint}>
+                  {addMode === 'have' ? (
+                    albumId === 'pl2526' ? (
+                      <>
+                        Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
+                        <code>353 354</code>. First copy goes in the album; extras become spares.
+                      </>
+                    ) : (
+                      <>
+                        Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
+                        <code>570 571</code>. First copy goes in the album; extras become spares.
+                      </>
+                    )
                   ) : (
                     <>
-                      Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
-                      <code>570 571</code>. First copy goes in the album; extras become spares.
+                      Paste only what you still need — e.g.{' '}
+                      {albumId === 'pl2526' ? (
+                        <code>LIV: 1, 4, 9</code>
+                      ) : (
+                        <code>MEX: 1, 2, 14</code>
+                      )}
+                      . Everything else in the album is treated as owned. Handy when you’re nearly complete.
                     </>
-                  )
-                ) : (
-                  <>
-                    Paste only what you still need — e.g.{' '}
-                    {albumId === 'pl2526' ? (
-                      <code>LIV: 1, 4, 9</code>
-                    ) : (
-                      <code>MEX: 1, 2, 14</code>
-                    )}
-                    . Everything else in the album is treated as owned. Handy when you’re nearly complete.
-                  </>
-                )}
-              </p>
-              <Textarea
-                label={addMode === 'have' ? 'Stickers to add' : 'Stickers still missing'}
-                value={addInput}
-                onChange={(e) => setAddInput(e.target.value)}
-                placeholder="Paste or type sticker codes…"
-                rows={3}
-              />
-              <div className={styles.actions}>
-                <Button onClick={handleQuickAdd}>
-                  {addMode === 'have' ? 'Add to collection' : 'Apply missing list'}
-                </Button>
-                <Button variant="secondary" onClick={() => setConfirmFresh(true)}>
-                  Start fresh (all missing)
-                </Button>
-              </div>
-            </div>
-          </CollapsibleSection>
+                  )}
+                </p>
+                <Textarea
+                  label={addMode === 'have' ? 'Stickers to add' : 'Stickers still missing'}
+                  value={addInput}
+                  onChange={(e) => setAddInput(e.target.value)}
+                  placeholder="Paste or type sticker codes…"
+                  rows={3}
+                />
+                <div className={styles.actions}>
+                  <Button onClick={handleQuickAdd}>
+                    {addMode === 'have' ? 'Add to collection' : 'Apply missing list'}
+                  </Button>
+                  <Button variant="secondary" onClick={() => setConfirmFresh(true)}>
+                    Start fresh (all missing)
+                  </Button>
+                </div>
+              </>
+            )}
 
-          <CollapsibleSection
-            title="Share list"
-            hint="Anonymous match link or plain text for chat"
-            defaultOpen={false}
-          >
-            <SharePanel albumId={albumId} state={state} bare />
-          </CollapsibleSection>
+            {tab === 'share' && <SharePanel albumId={albumId} state={state} bare />}
 
-          <CollapsibleSection
-            title="Cloud sync"
-            hint="Backup this profile to your account"
-            defaultOpen={false}
-          >
-            <CloudSyncPanel
-              bare
-              refreshKey={syncEpoch}
-              onApplied={() => {
-                reloadFromStorage()
-                setMessage('Collection loaded from cloud.')
-              }}
-            />
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            title="Browse album"
-            hint="Search, filter needs/spares, tap to update"
-            defaultOpen
-          >
-            <div className={collectionStyles.browseToolbar}>
-              <div
-                className={collectionStyles.filters}
-                role="group"
-                aria-label="Filter stickers"
-              >
-                {(['all', 'needs', 'spares', 'incoming'] as const).map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    aria-pressed={filter === f}
-                    className={[
-                      collectionStyles.filterBtn,
-                      filter === f ? collectionStyles.filterActive : '',
-                    ].join(' ')}
-                    onClick={() => setFilter(f)}
+            {tab === 'album' && (
+              <>
+                <div className={collectionStyles.browseToolbar}>
+                  <div
+                    className={collectionStyles.filters}
+                    role="group"
+                    aria-label="Filter stickers"
                   >
-                    {f === 'all'
-                      ? 'All'
-                      : f === 'needs'
-                        ? 'Needs'
-                        : f === 'spares'
-                          ? 'Spares'
-                          : 'Incoming'}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <label className={collectionStyles.searchLabel} htmlFor="album-sticker-search">
-              Search stickers
-            </label>
-            <input
-              id="album-sticker-search"
-              type="search"
-              className={collectionStyles.search}
-              placeholder={
-                albumId === 'pl2526'
-                  ? 'Find sticker — Liverpool 5, LIV7, Salah…'
-                  : 'Find sticker — Mexico 5, ENG7, Messi…'
-              }
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <AlbumBrowse
-              albumId={albumId}
-              state={state}
-              onChange={persist}
-              filter={filter}
-              search={search}
-              incoming={incoming}
-              onMarkArrived={markArrived}
-            />
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            title="Backup & reset"
-            hint="Export, import, or clear this album"
-            defaultOpen={false}
-          >
-            <p className={collectionStyles.advancedHint}>
-              Export for a file copy on this device. Import accepts One More Swap backups or a World
-              Cup 2026 sticker tracker JSON export (collection + postal swaps).
-            </p>
-            <div className={styles.actions}>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  downloadJson('onemoreswap-collection.json', exportCollectionJson(loadCollection()))
-                  setAlertModal({
-                    title: 'Backup downloaded',
-                    body: 'Keep the JSON file safe — you can import it later on this or another device.',
-                  })
-                }}
-              >
-                Export backup
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  const input = document.createElement('input')
-                  input.type = 'file'
-                  input.accept = 'application/json'
-                  input.onchange = async () => {
-                    const file = input.files?.[0]
-                    if (!file) return
-                    try {
-                      setPendingImport(importAnyBackup(await file.text()))
-                    } catch {
-                      setAlertModal({
-                        title: 'Could not import backup',
-                        body: 'That file is not a recognised One More Swap or World Cup tracker backup.',
-                      })
-                    }
+                    {(['all', 'needs', 'spares', 'incoming'] as const).map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        aria-pressed={filter === f}
+                        className={[
+                          collectionStyles.filterBtn,
+                          filter === f ? collectionStyles.filterActive : '',
+                        ].join(' ')}
+                        onClick={() => setFilter(f)}
+                      >
+                        {f === 'all'
+                          ? 'All'
+                          : f === 'needs'
+                            ? 'Needs'
+                            : f === 'spares'
+                              ? 'Spares'
+                              : 'Incoming'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className={collectionStyles.searchLabel} htmlFor="album-sticker-search">
+                  Search stickers
+                </label>
+                <input
+                  id="album-sticker-search"
+                  type="search"
+                  className={collectionStyles.search}
+                  placeholder={
+                    albumId === 'pl2526'
+                      ? 'Find sticker — Liverpool 5, LIV7, Salah…'
+                      : 'Find sticker — Mexico 5, ENG7, Messi…'
                   }
-                  input.click()
-                }}
-              >
-                Import backup
-              </Button>
-              <Button variant="ghost" onClick={() => setConfirmClear(true)}>
-                Clear album
-              </Button>
-            </div>
-          </CollapsibleSection>
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                <AlbumBrowse
+                  albumId={albumId}
+                  state={state}
+                  onChange={persist}
+                  filter={filter}
+                  search={search}
+                  incoming={incoming}
+                  onMarkArrived={markArrived}
+                />
+              </>
+            )}
+
+            {tab === 'backup' && (
+              <>
+                <p className={collectionStyles.advancedHint}>
+                  Export or import a JSON file. Signed-in changes also auto-save to the cloud in the
+                  background.
+                </p>
+                <div className={styles.actions}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      downloadJson(
+                        'onemoreswap-collection.json',
+                        exportCollectionJson(loadCollection()),
+                      )
+                      setAlertModal({
+                        title: 'Backup downloaded',
+                        body: 'Keep the JSON file safe — you can import it later on this or another device.',
+                      })
+                    }}
+                  >
+                    Export backup
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      const input = document.createElement('input')
+                      input.type = 'file'
+                      input.accept = 'application/json'
+                      input.onchange = async () => {
+                        const file = input.files?.[0]
+                        if (!file) return
+                        try {
+                          setPendingImport(importAnyBackup(await file.text()))
+                        } catch {
+                          setAlertModal({
+                            title: 'Could not import backup',
+                            body: 'That file is not a recognised One More Swap or World Cup tracker backup.',
+                          })
+                        }
+                      }
+                      input.click()
+                    }}
+                  >
+                    Import backup
+                  </Button>
+                  <Button variant="ghost" onClick={() => setConfirmClear(true)}>
+                    Clear album
+                  </Button>
+                  {user && activeProfile && (
+                    <Button
+                      variant="secondary"
+                      disabled={cloudBusy}
+                      onClick={() => setConfirmCloudLoad(true)}
+                    >
+                      {cloudBusy ? 'Loading…' : 'Load from cloud'}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </>
       )}
 
@@ -563,12 +621,26 @@ export function Collection() {
       <ConfirmDialog
         open={confirmClear}
         title="Clear this album?"
-        body="Remove tracking for this album on this device. Cloud data is unchanged until you save."
+        body="Remove tracking for this album on this device. Cloud data is unchanged until the next auto-save."
         confirmLabel="Clear album"
         cancelLabel="Cancel"
         danger
         onConfirm={doClearAlbum}
         onCancel={() => setConfirmClear(false)}
+      />
+      <ConfirmDialog
+        open={confirmCloudLoad}
+        title={
+          activeProfile
+            ? `Replace “${activeProfile.displayName}” on this device?`
+            : 'Replace data on this device?'
+        }
+        body="Collection, postal swaps, and custom sources will be overwritten with the cloud copy."
+        confirmLabel="Load from cloud"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={loadFromCloud}
+        onCancel={() => setConfirmCloudLoad(false)}
       />
     </main>
   )

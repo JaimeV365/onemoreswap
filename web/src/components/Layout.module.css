@@ -16,3 +16,21 @@
   outline: none;
   box-shadow: var(--focus-ring);
 }
+
+.syncBar {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0.35rem var(--space-lg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.syncOk {
+  color: var(--green);
+}
+
+.syncError {
+  color: var(--red);
+}
