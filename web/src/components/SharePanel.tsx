@@ -69,16 +69,25 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
       setLinkError(res.error || 'Could not create link')
       return
     }
-    setShareUrl(res.data.url)
     const listTab: ShareTab = linkMode === 'needs' ? 'missing' : linkMode
-    setPostText(socialPostBlurb(albumId, linkMode, res.data.url, buildShareText(albumId, state, listTab)))
+    const blurb = socialPostBlurb(
+      albumId,
+      linkMode,
+      res.data.url,
+      buildShareText(albumId, state, listTab),
+    )
+    setShareUrl(res.data.url)
+    setPostText(blurb)
+    await copyToClipboard(blurb)
+    setPostCopied(true)
+    setTimeout(() => setPostCopied(false), 2500)
   }
 
   const copyPost = async () => {
     if (!postText) return
     await copyToClipboard(postText)
     setPostCopied(true)
-    setTimeout(() => setPostCopied(false), 2000)
+    setTimeout(() => setPostCopied(false), 2500)
   }
 
   return (
@@ -92,6 +101,7 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
       <h3 className={styles.subTitle}>Anonymous match link</h3>
       <p className={styles.hint}>
         Others open the link, paste their list, see overlaps, and copy matches to reply — no login.
+        Creating a link also copies the post text for you.
       </p>
       <div className={styles.tabs}>
         {linkModes.map((t) => (
@@ -107,7 +117,7 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
       </div>
       <div className={styles.linkActions}>
         <Button type="button" disabled={linkBusy || !album} onClick={createLink}>
-          {linkBusy ? 'Creating…' : 'Create match link'}
+          {linkBusy ? 'Creating…' : 'Create & copy match link'}
         </Button>
       </div>
       {linkError && (
@@ -117,10 +127,15 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
       )}
       {shareUrl && postText && (
         <div className={styles.linkBox}>
+          {postCopied && (
+            <p className={styles.copiedBanner} role="status">
+              Copied to clipboard — paste into your post
+            </p>
+          )}
           <p className={styles.linkUrl}>{shareUrl}</p>
           <pre className={styles.output}>{postText}</pre>
           <Button type="button" variant="secondary" onClick={copyPost}>
-            {postCopied ? 'Copied!' : 'Copy post text + link'}
+            {postCopied ? 'Copied!' : 'Copy again'}
           </Button>
         </div>
       )}

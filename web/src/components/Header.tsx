@@ -19,7 +19,6 @@ export function Header() {
           <Wordmark size="sm" />
         </Link>
         <div className={styles.right}>
-          <ProfileSwitcher />
           <nav className={styles.nav} aria-label="Main">
             {nav.map((item) => (
               <NavLink
@@ -32,6 +31,7 @@ export function Header() {
               </NavLink>
             ))}
           </nav>
+          <ProfileSwitcher />
         </div>
       </div>
     </header>

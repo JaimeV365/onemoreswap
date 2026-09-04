@@ -1,0 +1,14 @@
+---
+description: Always commit and push after making code changes
+alwaysApply: true
+---
+
+# Deploy workflow
+
+After finishing any code change in this project:
+
+1. Commit with a clear message (why, not only what).
+2. Push to `origin` on the current branch (usually `main`).
+3. Do this without waiting to be asked — Cloudflare Pages deploys from the push.
+
+Do not amend unless the usual amend safety rules allow it. Do not force-push.

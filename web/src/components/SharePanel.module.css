@@ -38,6 +38,17 @@
   margin-bottom: var(--space-lg);
 }
 
+.copiedBanner {
+  margin: 0 0 var(--space-sm);
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--green-wash);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-md);
+}
+
 .linkUrl {
   font-family: ui-monospace, monospace;
   font-size: 0.8125rem;
