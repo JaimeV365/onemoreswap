@@ -1,11 +1,11 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { Button } from './Button'
 import styles from './ConfirmDialog.module.css'
 
 type ConfirmDialogProps = {
   open: boolean
   title: string
-  body: string
+  body: ReactNode
   confirmLabel?: string
   cancelLabel?: string
   danger?: boolean
@@ -24,6 +24,7 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const titleId = useId()
+  const bodyId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -46,12 +47,15 @@ export function ConfirmDialog({
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={bodyId}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id={titleId} className={styles.title}>
           {title}
         </h2>
-        <p className={styles.body}>{body}</p>
+        <div id={bodyId} className={styles.body}>
+          {typeof body === 'string' ? <p className={styles.bodyText}>{body}</p> : body}
+        </div>
         <div className={styles.actions}>
           <Button type="button" variant="ghost" onClick={onCancel}>
             {cancelLabel}
@@ -67,5 +71,24 @@ export function ConfirmDialog({
         </div>
       </div>
     </div>
+  )
+}
+
+/** Key/value rows for confirm summaries (backup preview, etc.). */
+export function ConfirmStatList({
+  rows,
+}: {
+  rows: Array<{ label: string; value: string }>
+}) {
+  if (!rows.length) return null
+  return (
+    <dl className={styles.statList}>
+      {rows.map((row) => (
+        <div key={row.label} className={styles.statRow}>
+          <dt className={styles.statLabel}>{row.label}</dt>
+          <dd className={styles.statValue}>{row.value}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }

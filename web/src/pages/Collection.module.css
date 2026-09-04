@@ -85,3 +85,10 @@
   color: var(--ink-faint);
   margin: var(--space-md) 0;
 }
+
+.confirmLead {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}

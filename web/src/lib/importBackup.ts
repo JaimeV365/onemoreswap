@@ -123,6 +123,88 @@ export type ImportResult = {
   message: string
 }
 
+export type BackupPreviewStats = {
+  missing: number
+  spareTypes: number
+  spareExtras: number
+  postalTotal: number
+  postalOpen: number
+  postalCompleted: number
+  postalPending: number
+}
+
+function albumSpareStats(album: CollectionAlbumState): { types: number; extras: number } {
+  let types = 0
+  let extras = 0
+  for (const qty of Object.values(album.counts || {})) {
+    const n = Math.floor(Number(qty))
+    if (n >= 2) {
+      types += 1
+      extras += n - 1
+    }
+  }
+  return { types, extras }
+}
+
+function postalStats(swaps: PostalSwap[] | undefined): Pick<
+  BackupPreviewStats,
+  'postalTotal' | 'postalOpen' | 'postalCompleted' | 'postalPending'
+> {
+  const list = swaps || []
+  let postalPending = 0
+  for (const s of list) {
+    for (const line of s.expected || []) {
+      if (line.status === 'pending') postalPending += Math.max(1, line.qty || 1)
+    }
+  }
+  return {
+    postalTotal: list.length,
+    postalOpen: list.filter((s) => s.status === 'open').length,
+    postalCompleted: list.filter((s) => s.status === 'completed').length,
+    postalPending,
+  }
+}
+
+/** Summarise a parsed backup for the import confirm dialog. */
+export function summarizeImport(result: ImportResult): BackupPreviewStats {
+  let missing = 0
+  let spareTypes = 0
+  let spareExtras = 0
+  for (const album of Object.values(result.store.albums)) {
+    missing += album.missing?.length || 0
+    const spare = albumSpareStats(album)
+    spareTypes += spare.types
+    spareExtras += spare.extras
+  }
+  return {
+    missing,
+    spareTypes,
+    spareExtras,
+    ...postalStats(result.postal),
+  }
+}
+
+export function importPreviewRows(stats: BackupPreviewStats): Array<{ label: string; value: string }> {
+  const rows = [
+    { label: 'Missing', value: String(stats.missing) },
+    {
+      label: 'Spares',
+      value: `${stats.spareTypes} types (${stats.spareExtras} extras)`,
+    },
+  ]
+  if (stats.postalTotal > 0) {
+    const parts = [`${stats.postalOpen} open`, `${stats.postalCompleted} completed`]
+    if (stats.postalPending > 0) parts.push(`${stats.postalPending} still in post`)
+    rows.push({
+      label: 'Postal swaps',
+      value: `${stats.postalTotal} (${parts.join(', ')})`,
+    })
+  } else {
+    rows.push({ label: 'Postal swaps', value: 'none' })
+  }
+  return rows
+}
+
 export function importAnyBackup(raw: string): ImportResult {
   const data = JSON.parse(raw) as unknown
 

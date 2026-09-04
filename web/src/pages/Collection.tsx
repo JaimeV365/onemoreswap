@@ -6,14 +6,19 @@ import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { CloudSyncBanner } from '../components/CloudSyncBanner'
 import { CloudSyncPanel } from '../components/CloudSyncPanel'
-import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ConfirmDialog, ConfirmStatList } from '../components/ConfirmDialog'
 import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
 import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { enableAlbum, loadEnabledAlbums } from '../lib/enabledAlbums'
-import { importAnyBackup } from '../lib/importBackup'
+import {
+  importAnyBackup,
+  importPreviewRows,
+  summarizeImport,
+  type ImportResult,
+} from '../lib/importBackup'
 import { parseStickerInput } from '../lib/parseStickers'
 import {
   pendingIncomingMap,
@@ -58,6 +63,7 @@ export function Collection() {
   const [syncEpoch, setSyncEpoch] = useState(0)
   const [confirmFresh, setConfirmFresh] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [pendingImport, setPendingImport] = useState<ImportResult | null>(null)
 
   const album = getAlbum(albumId)
   const indexes = getAlbumIndexes(albumId)
@@ -138,6 +144,29 @@ export function Collection() {
     setConfirmClear(false)
     persist(emptyAlbumState())
     setMessage('Album cleared.')
+  }
+
+  const applyPendingImport = () => {
+    if (!pendingImport) return
+    const result = pendingImport
+    setPendingImport(null)
+    saveCollection(result.store)
+    if (result.postal?.length) {
+      upsertPostalSwaps(result.postal, true)
+    }
+    const nextAlbum = result.kind === 'wc-tracker' ? 'wc2026' : albumId || 'wc2026'
+    enableAlbum(nextAlbum)
+    if (result.kind === 'onemoreswap') {
+      Object.keys(result.store.albums).forEach((id) => enableAlbum(id))
+    }
+    setAlbumId(nextAlbum)
+    setState(getAlbumState(loadCollection(), nextAlbum))
+    setSyncEpoch((n) => n + 1)
+    setMessage(
+      result.postal?.length
+        ? `${result.message} Open Postal swaps to review them.`
+        : result.message,
+    )
   }
 
   const markArrived = (seq: number) => {
@@ -324,25 +353,7 @@ export function Collection() {
                     const file = input.files?.[0]
                     if (!file) return
                     try {
-                      const result = importAnyBackup(await file.text())
-                      saveCollection(result.store)
-                      if (result.postal?.length) {
-                        upsertPostalSwaps(result.postal, true)
-                      }
-                      const nextAlbum =
-                        result.kind === 'wc-tracker' ? 'wc2026' : albumId || 'wc2026'
-                      enableAlbum(nextAlbum)
-                      if (result.kind === 'onemoreswap') {
-                        Object.keys(result.store.albums).forEach((id) => enableAlbum(id))
-                      }
-                      setAlbumId(nextAlbum)
-                      setState(getAlbumState(loadCollection(), nextAlbum))
-                      setSyncEpoch((n) => n + 1)
-                      setMessage(
-                        result.postal?.length
-                          ? `${result.message} Open Postal swaps to review them.`
-                          : result.message,
-                      )
+                      setPendingImport(importAnyBackup(await file.text()))
                     } catch {
                       setMessage('Invalid backup file.')
                     }
@@ -360,6 +371,26 @@ export function Collection() {
         </>
       )}
 
+      <ConfirmDialog
+        open={!!pendingImport}
+        title="Replace your current collection with this backup?"
+        body={
+          pendingImport ? (
+            <>
+              <p className={collectionStyles.confirmLead}>
+                This overwrites collection data on this device
+                {pendingImport.postal?.length ? ' and replaces postal swaps' : ''}.
+              </p>
+              <ConfirmStatList rows={importPreviewRows(summarizeImport(pendingImport))} />
+            </>
+          ) : null
+        }
+        confirmLabel="Import backup"
+        cancelLabel="Cancel"
+        danger
+        onConfirm={applyPendingImport}
+        onCancel={() => setPendingImport(null)}
+      />
       <ConfirmDialog
         open={confirmFresh}
         title="Start fresh?"
