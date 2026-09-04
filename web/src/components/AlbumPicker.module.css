@@ -1,25 +1,92 @@
 .wrap {
   margin-bottom: var(--space-lg);
+  position: relative;
 }
 
-.label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: var(--space-sm);
-  color: var(--ink);
-}
-
-.options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: var(--space-md);
 }
 
-.optionWrap {
+.titleBlock {
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.folderBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.folderBtn:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
+.folderBtnOpen {
+  background: var(--yellow);
+  border-color: var(--yellow-dark);
+  color: var(--ink-on-yellow);
+}
+
+.folderBtnOpen:hover {
+  color: var(--ink-on-yellow);
+  background: var(--yellow);
+}
+
+.panel {
+  margin-top: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-md);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.listRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .option {
@@ -27,15 +94,14 @@
   padding: var(--space-md);
   border-radius: var(--radius-md);
   border: 2px solid var(--border);
-  background: var(--bg-elevated);
+  background: var(--bg);
   color: var(--ink);
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: border-color 0.15s;
   width: 100%;
 }
 
 .option:hover {
-  transform: translateY(-1px);
   border-color: var(--border-strong);
 }
 
@@ -66,14 +132,33 @@
 }
 
 .empty {
-  margin: 0 0 var(--space-md);
+  margin: 0;
   color: var(--ink-soft);
   font-size: 0.95rem;
   line-height: 1.45;
 }
 
-.addRow {
-  margin-top: var(--space-md);
+.emptyPrompt {
+  margin-top: var(--space-sm);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.emptyPrompt:hover {
+  color: var(--ink);
+}
+
+.addSection {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-md);
 }
 
 .addBtn,
@@ -96,13 +181,13 @@
 .removeBtn {
   align-self: flex-start;
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   background: transparent;
   border: none;
   color: var(--ink-faint);
-  padding: 0.25rem 0;
+  padding: 0.15rem 0;
 }
 
 .removeBtn:hover {
@@ -113,15 +198,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  margin-top: var(--space-sm);
 }
 
 .addLabel {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--ink-soft);
-}
-
-.addOption {
-  max-width: 28rem;
 }

@@ -62,9 +62,9 @@ const collectionTabs: {
   label: string
   Icon: typeof CirclePlusIcon
 }[] = [
+  { id: 'album', label: 'Album', Icon: BookOpenTextIcon },
   { id: 'add', label: 'Add', Icon: CirclePlusIcon },
   { id: 'share', label: 'Share', Icon: Share2Icon },
-  { id: 'album', label: 'Album', Icon: BookOpenTextIcon },
   { id: 'backup', label: 'Backup', Icon: DatabaseIcon },
 ]
 
