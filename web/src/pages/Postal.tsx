@@ -450,8 +450,9 @@ export function Postal() {
       <Badge>Local · cloud backup when signed in</Badge>
       <h1 className={styles.title}>Postal swaps</h1>
       <p className={styles.lead}>
-        Keep a record of what you posted and what you&apos;re waiting for. Import from the World Cup
-        tracker via Collection → Backup, or start a new swap here.
+        Keep a record of what you posted and what you&apos;re waiting for. Use{' '}
+        <strong>Sort post</strong> (open envelope, pinned on the left) when stickers arrive today.
+        Import from the World Cup tracker via Collection → Backup, or start a new swap here.
       </p>
 
       <AlbumPicker
@@ -498,74 +499,78 @@ export function Postal() {
       </div>
 
       <div className={postalStyles.toolTabs} role="tablist" aria-label="Postal tools">
-        <button
-          type="button"
-          role="tab"
-          id="postal-tab-inbox"
-          aria-selected={tab === 'inbox'}
-          aria-controls="postal-panel"
-          tabIndex={tab === 'inbox' ? 0 : -1}
-          className={[
-            postalStyles.toolTab,
-            tab === 'inbox' ? postalStyles.toolTabActive : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          onClick={() => selectTab('inbox')}
-        >
-          <MailOpenIcon size={18} />
-          <span>Sort post</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="postal-tab-new"
-          aria-selected={tab === 'new'}
-          aria-controls="postal-panel"
-          tabIndex={tab === 'new' ? 0 : -1}
-          className={[postalStyles.toolTab, tab === 'new' ? postalStyles.toolTabActive : '']
-            .filter(Boolean)
-            .join(' ')}
-          onClick={() => selectTab('new')}
-        >
-          <CirclePlusIcon size={18} />
-          <span>New</span>
-        </button>
-        {visible.map((swap) => {
-          const prog = swapProgress(swap)
-          const days = daysWaiting(swap)
-          return (
-            <button
-              key={swap.id}
-              type="button"
-              role="tab"
-              id={`postal-tab-${swap.id}`}
-              aria-selected={tab === swap.id}
-              aria-controls="postal-panel"
-              tabIndex={tab === swap.id ? 0 : -1}
-              title={[
-                swap.person,
-                swap.status,
-                prog.total ? `${prog.done}/${prog.total} received` : null,
-                days !== null ? `${days}d waiting` : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-              className={[
-                postalStyles.toolTab,
-                postalStyles.swapTab,
-                tab === swap.id ? postalStyles.toolTabActive : '',
-                swap.status === 'completed' ? postalStyles.swapDone : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              onClick={() => selectTab(swap.id)}
-            >
-              <UserRoundIcon size={18} />
-              <span>{shortName(swap.person || 'Swap')}</span>
-            </button>
-          )
-        })}
+        <div className={postalStyles.toolTabsPinned}>
+          <button
+            type="button"
+            role="tab"
+            id="postal-tab-inbox"
+            aria-selected={tab === 'inbox'}
+            aria-controls="postal-panel"
+            tabIndex={tab === 'inbox' ? 0 : -1}
+            className={[
+              postalStyles.toolTab,
+              tab === 'inbox' ? postalStyles.toolTabActive : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            onClick={() => selectTab('inbox')}
+          >
+            <MailOpenIcon size={18} />
+            <span>Sort post</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="postal-tab-new"
+            aria-selected={tab === 'new'}
+            aria-controls="postal-panel"
+            tabIndex={tab === 'new' ? 0 : -1}
+            className={[postalStyles.toolTab, tab === 'new' ? postalStyles.toolTabActive : '']
+              .filter(Boolean)
+              .join(' ')}
+            onClick={() => selectTab('new')}
+          >
+            <CirclePlusIcon size={18} />
+            <span>New</span>
+          </button>
+        </div>
+        <div className={postalStyles.toolTabsScroll}>
+          {visible.map((swap) => {
+            const prog = swapProgress(swap)
+            const days = daysWaiting(swap)
+            return (
+              <button
+                key={swap.id}
+                type="button"
+                role="tab"
+                id={`postal-tab-${swap.id}`}
+                aria-selected={tab === swap.id}
+                aria-controls="postal-panel"
+                tabIndex={tab === swap.id ? 0 : -1}
+                title={[
+                  swap.person,
+                  swap.status,
+                  prog.total ? `${prog.done}/${prog.total} received` : null,
+                  days !== null ? `${days}d waiting` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                className={[
+                  postalStyles.toolTab,
+                  postalStyles.swapTab,
+                  tab === swap.id ? postalStyles.toolTabActive : '',
+                  swap.status === 'completed' ? postalStyles.swapDone : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => selectTab(swap.id)}
+              >
+                <UserRoundIcon size={18} />
+                <span>{shortName(swap.person || 'Swap')}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div

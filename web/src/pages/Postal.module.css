@@ -26,12 +26,26 @@
 .toolTabs {
   display: flex;
   flex-wrap: nowrap;
+  align-items: stretch;
   gap: var(--space-xs);
   margin: 0 0 var(--space-md);
   padding: var(--space-xs);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--bg-muted);
+}
+
+.toolTabsPinned {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-xs);
+}
+
+.toolTabsScroll {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: var(--space-xs);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }

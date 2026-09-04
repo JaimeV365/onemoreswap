@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlbumBrowse } from '../components/AlbumBrowse'
+import { AlbumBrowse, type SectionSort } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
@@ -16,7 +16,6 @@ import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
 import { Textarea } from '../components/Textarea'
 import { useAuth } from '../lib/AuthContext'
-import { applyCloudSyncLocally, pullCloudSync } from '../lib/cloudSync'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { enableAlbum, loadEnabledAlbums } from '../lib/enabledAlbums'
 import {
@@ -33,7 +32,6 @@ import {
   upsertPostalSwaps,
 } from '../lib/postal'
 import { pendingHitsFor } from '../lib/postalCollection'
-import { useProfiles } from '../lib/ProfileContext'
 import {
   addParsedCounts,
   albumProgress,
@@ -49,7 +47,6 @@ import {
   saveCollection,
   setAlbumState,
 } from '../lib/storage'
-import { recordLocalSynced } from '../lib/syncStatus'
 import type { CollectionAlbumState } from '../lib/types'
 import styles from './Page.module.css'
 import collectionStyles from './Collection.module.css'
@@ -75,7 +72,6 @@ function initialAlbumId(): string {
 
 export function Collection() {
   const { user } = useAuth()
-  const { activeProfile } = useProfiles()
   const [albumId, setAlbumId] = useState(initialAlbumId)
   const [state, setState] = useState(() =>
     albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState(),
@@ -84,6 +80,7 @@ export function Collection() {
   const [addMode, setAddMode] = useState<QuickAddMode>('have')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
+  const [sectionSort, setSectionSort] = useState<SectionSort>('album')
   const [message, setMessage] = useState<string | null>(null)
   const [tab, setTab] = useState<CollectionTab>(() =>
     isAlbumStarted(albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState())
@@ -93,10 +90,8 @@ export function Collection() {
   const [confirmFresh, setConfirmFresh] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [confirmMissing, setConfirmMissing] = useState(false)
-  const [confirmCloudLoad, setConfirmCloudLoad] = useState(false)
   const [pendingImport, setPendingImport] = useState<ImportResult | null>(null)
   const [alertModal, setAlertModal] = useState<{ title: string; body: string } | null>(null)
-  const [cloudBusy, setCloudBusy] = useState(false)
 
   const album = getAlbum(albumId)
   const indexes = getAlbumIndexes(albumId)
@@ -272,38 +267,6 @@ export function Collection() {
     )
   }
 
-  const loadFromCloud = async () => {
-    if (!activeProfile) return
-    setConfirmCloudLoad(false)
-    setCloudBusy(true)
-    const res = await pullCloudSync(activeProfile.id)
-    setCloudBusy(false)
-    if (res.error || !res.data) {
-      setAlertModal({
-        title: 'Could not load from cloud',
-        body: res.error || 'No cloud copy found.',
-      })
-      return
-    }
-    if (!res.data.exists) {
-      setAlertModal({
-        title: 'Nothing in the cloud yet',
-        body: 'This profile has no cloud backup. Edits auto-save when you are signed in.',
-      })
-      return
-    }
-    applyCloudSyncLocally(res.data)
-    recordLocalSynced({
-      updatedAt: res.data.updatedAt,
-      revision: res.data.revision,
-    })
-    reloadFromStorage()
-    setAlertModal({
-      title: 'Loaded from cloud',
-      body: `Replaced this device with the cloud copy for ${activeProfile.displayName}.`,
-    })
-  }
-
   const albumStarted = isAlbumStarted(state)
 
   return (
@@ -474,6 +437,22 @@ export function Collection() {
                       </button>
                     ))}
                   </div>
+                  <label className={collectionStyles.sortLabel}>
+                    <span>Sort teams</span>
+                    <select
+                      className={collectionStyles.sortSelect}
+                      value={sectionSort}
+                      onChange={(e) => setSectionSort(e.target.value as SectionSort)}
+                    >
+                      <option value="album">Album order</option>
+                      <option value="complete-asc">Least complete</option>
+                      <option value="complete-desc">Most complete</option>
+                      <option value="incoming-desc">Most incoming</option>
+                      <option value="incoming-asc">Least incoming</option>
+                      <option value="spares-desc">Most spares</option>
+                      <option value="spares-asc">Least spares</option>
+                    </select>
+                  </label>
                 </div>
                 <label className={collectionStyles.searchLabel} htmlFor="album-sticker-search">
                   Search stickers
@@ -496,6 +475,7 @@ export function Collection() {
                   onChange={persist}
                   filter={filter}
                   search={search}
+                  sectionSort={sectionSort}
                   incoming={incoming}
                   onMarkArrived={markArrived}
                 />
@@ -550,15 +530,6 @@ export function Collection() {
                   <Button variant="ghost" onClick={() => setConfirmClear(true)}>
                     Clear album
                   </Button>
-                  {user && activeProfile && (
-                    <Button
-                      variant="secondary"
-                      disabled={cloudBusy}
-                      onClick={() => setConfirmCloudLoad(true)}
-                    >
-                      {cloudBusy ? 'Loading…' : 'Load from cloud'}
-                    </Button>
-                  )}
                 </div>
               </>
             )}
@@ -627,20 +598,6 @@ export function Collection() {
         danger
         onConfirm={doClearAlbum}
         onCancel={() => setConfirmClear(false)}
-      />
-      <ConfirmDialog
-        open={confirmCloudLoad}
-        title={
-          activeProfile
-            ? `Replace “${activeProfile.displayName}” on this device?`
-            : 'Replace data on this device?'
-        }
-        body="Collection, postal swaps, and custom sources will be overwritten with the cloud copy."
-        confirmLabel="Load from cloud"
-        cancelLabel="Cancel"
-        danger
-        onConfirm={loadFromCloud}
-        onCancel={() => setConfirmCloudLoad(false)}
       />
     </main>
   )
