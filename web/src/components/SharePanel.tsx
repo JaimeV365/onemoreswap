@@ -38,6 +38,8 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [postText, setPostText] = useState<string | null>(null)
   const [postCopied, setPostCopied] = useState(false)
+  /** Show Copy only after the user edits the auto-copied post text. */
+  const [postDirty, setPostDirty] = useState(false)
 
   const text = buildShareText(albumId, state, tab)
   const album = getAlbum(albumId)
@@ -78,6 +80,7 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
     )
     setShareUrl(res.data.url)
     setPostText(blurb)
+    setPostDirty(false)
     await copyToClipboard(blurb)
     setPostCopied(true)
     setTimeout(() => setPostCopied(false), 2500)
@@ -86,6 +89,7 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
   const copyPost = async () => {
     if (!postText) return
     await copyToClipboard(postText)
+    setPostDirty(false)
     setPostCopied(true)
     setTimeout(() => setPostCopied(false), 2500)
   }
@@ -101,7 +105,7 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
       <h3 className={styles.subTitle}>Anonymous match link</h3>
       <p className={styles.hint}>
         Others open the link, paste their list, see overlaps, and copy matches to reply — no login.
-        Creating a link also copies the post text for you.
+        Creating a link copies the post for you; edit the text below if you want to tweak it first.
       </p>
       <div className={styles.tabs}>
         {linkModes.map((t) => (
@@ -125,18 +129,33 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
           {linkError}
         </p>
       )}
-      {shareUrl && postText && (
+      {shareUrl && postText !== null && (
         <div className={styles.linkBox}>
-          {postCopied && (
+          {postCopied && !postDirty && (
             <p className={styles.copiedBanner} role="status">
               Copied to clipboard — paste into your post
             </p>
           )}
-          <p className={styles.linkUrl}>{shareUrl}</p>
-          <pre className={styles.output}>{postText}</pre>
-          <Button type="button" variant="secondary" onClick={copyPost}>
-            {postCopied ? 'Copied!' : 'Copy again'}
-          </Button>
+          <label className={styles.postLabel} htmlFor="share-post-text">
+            Post text
+          </label>
+          <textarea
+            id="share-post-text"
+            className={styles.postEdit}
+            value={postText}
+            rows={10}
+            spellCheck={false}
+            onChange={(e) => {
+              setPostText(e.target.value)
+              setPostDirty(true)
+              setPostCopied(false)
+            }}
+          />
+          {postDirty && (
+            <Button type="button" variant="secondary" onClick={copyPost}>
+              Copy to clipboard
+            </Button>
+          )}
         </div>
       )}
 
