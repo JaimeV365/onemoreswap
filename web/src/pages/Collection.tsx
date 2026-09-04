@@ -69,6 +69,7 @@ export function Collection() {
   const [confirmClear, setConfirmClear] = useState(false)
   const [confirmMissing, setConfirmMissing] = useState(false)
   const [pendingImport, setPendingImport] = useState<ImportResult | null>(null)
+  const [alertModal, setAlertModal] = useState<{ title: string; body: string } | null>(null)
 
   const album = getAlbum(albumId)
   const indexes = getAlbumIndexes(albumId)
@@ -211,11 +212,11 @@ export function Collection() {
     setAlbumId(nextAlbum)
     setState(getAlbumState(loadCollection(), nextAlbum))
     setSyncEpoch((n) => n + 1)
-    setMessage(
-      result.postal?.length
-        ? `${result.message} Open Postal swaps to review them.`
-        : result.message,
-    )
+    const detail = result.postal?.length
+      ? `${result.message} Open Postal swaps to review them.`
+      : result.message
+    setMessage(detail)
+    setAlertModal({ title: 'Backup imported', body: detail })
   }
 
   const markArrived = (seq: number) => {
@@ -442,7 +443,10 @@ export function Collection() {
                     try {
                       setPendingImport(importAnyBackup(await file.text()))
                     } catch {
-                      setMessage('Invalid backup file.')
+                      setAlertModal({
+                        title: 'Could not import backup',
+                        body: 'That file is not a recognised One More Swap or World Cup tracker backup.',
+                      })
                     }
                   }
                   input.click()
@@ -477,6 +481,14 @@ export function Collection() {
         danger
         onConfirm={applyPendingImport}
         onCancel={() => setPendingImport(null)}
+      />
+      <ConfirmDialog
+        open={!!alertModal}
+        title={alertModal?.title || ''}
+        body={alertModal?.body || ''}
+        alertOnly
+        onConfirm={() => setAlertModal(null)}
+        onCancel={() => setAlertModal(null)}
       />
       <ConfirmDialog
         open={confirmMissing}

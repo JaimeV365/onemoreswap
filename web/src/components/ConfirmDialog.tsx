@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from './Button'
 import styles from './ConfirmDialog.module.css'
 
@@ -8,6 +9,8 @@ type ConfirmDialogProps = {
   body: ReactNode
   confirmLabel?: string
   cancelLabel?: string
+  /** Single OK button — for errors / notices after an action. */
+  alertOnly?: boolean
   danger?: boolean
   onConfirm: () => void
   onCancel: () => void
@@ -17,8 +20,9 @@ export function ConfirmDialog({
   open,
   title,
   body,
-  confirmLabel = 'Confirm',
+  confirmLabel,
   cancelLabel = 'Cancel',
+  alertOnly = false,
   danger = false,
   onConfirm,
   onCancel,
@@ -26,21 +30,31 @@ export function ConfirmDialog({
   const titleId = useId()
   const bodyId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
+  const primaryLabel = confirmLabel || (alertOnly ? 'OK' : 'Confirm')
 
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel()
     }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKey)
     panelRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onCancel])
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open, onCancel, alertOnly])
 
-  if (!open) return null
+  if (!open || typeof document === 'undefined') return null
 
-  return (
-    <div className={styles.backdrop} role="presentation" onClick={onCancel}>
+  return createPortal(
+    <div
+      className={styles.backdrop}
+      role="presentation"
+      onClick={alertOnly ? onConfirm : onCancel}
+    >
       <div
         ref={panelRef}
         className={styles.panel}
@@ -57,20 +71,23 @@ export function ConfirmDialog({
           {typeof body === 'string' ? <p className={styles.bodyText}>{body}</p> : body}
         </div>
         <div className={styles.actions}>
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            {cancelLabel}
-          </Button>
+          {!alertOnly && (
+            <Button type="button" variant="ghost" onClick={onCancel}>
+              {cancelLabel}
+            </Button>
+          )}
           <Button
             type="button"
-            variant={danger ? 'secondary' : 'primary'}
-            className={danger ? styles.danger : undefined}
+            variant={danger && !alertOnly ? 'secondary' : 'primary'}
+            className={danger && !alertOnly ? styles.danger : undefined}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {primaryLabel}
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
