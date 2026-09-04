@@ -4,7 +4,7 @@ import { AlbumPicker } from '../components/AlbumPicker'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
-import { CirclePlusIcon, MailIcon, UserRoundIcon } from '../components/icons'
+import { CirclePlusIcon, MailOpenIcon, UserRoundIcon } from '../components/icons'
 import { SourcePicker } from '../components/SourcePicker'
 import { StickerList } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
@@ -489,7 +489,7 @@ export function Postal() {
             .join(' ')}
           onClick={() => selectTab('inbox')}
         >
-          <MailIcon size={18} />
+          <MailOpenIcon size={18} />
           <span>Sort post</span>
         </button>
         <button
