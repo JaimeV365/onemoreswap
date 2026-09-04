@@ -6,6 +6,7 @@ import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { CloudSyncBanner } from '../components/CloudSyncBanner'
 import { CloudSyncPanel } from '../components/CloudSyncPanel'
+import { CollapsibleSection } from '../components/CollapsibleSection'
 import { ConfirmDialog, ConfirmStatList } from '../components/ConfirmDialog'
 import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
@@ -63,7 +64,6 @@ export function Collection() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
   const [message, setMessage] = useState<string | null>(null)
-  const [showAdvanced, setShowAdvanced] = useState(false)
   const [syncEpoch, setSyncEpoch] = useState(0)
   const [confirmFresh, setConfirmFresh] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
@@ -248,8 +248,10 @@ export function Collection() {
     )
   }
 
+  const albumStarted = isAlbumStarted(state)
+
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <Badge>Saved on this device</Badge>
       <h1 className={styles.title}>My collection</h1>
       <p className={styles.lead}>
@@ -261,7 +263,7 @@ export function Collection() {
 
       <CloudSyncBanner refreshKey={syncEpoch} />
 
-      <OnboardingBanner show={!isAlbumStarted(state)} />
+      <OnboardingBanner show={!albumStarted} />
 
       <AlbumPicker
         value={albumId}
@@ -284,8 +286,17 @@ export function Collection() {
             }
           />
 
-          <section className={styles.panel}>
-            <h2 className={styles.panelTitle}>Quick add</h2>
+          {message && (
+            <p className={[styles.notice, styles.noticeOk].join(' ')} role="status">
+              {message}
+            </p>
+          )}
+
+          <CollapsibleSection
+            title="Quick add"
+            hint="Paste stickers you have — or only what’s missing"
+            defaultOpen={!albumStarted}
+          >
             <div className={collectionStyles.modeTabs} role="tablist" aria-label="Quick add mode">
               {(
                 [
@@ -297,7 +308,10 @@ export function Collection() {
                   key={tab.id}
                   type="button"
                   role="tab"
+                  id={`quick-add-tab-${tab.id}`}
                   aria-selected={addMode === tab.id}
+                  aria-controls="quick-add-panel"
+                  tabIndex={addMode === tab.id ? 0 : -1}
                   className={[
                     collectionStyles.modeTab,
                     addMode === tab.id ? collectionStyles.modeTabActive : '',
@@ -305,73 +319,99 @@ export function Collection() {
                     .filter(Boolean)
                     .join(' ')}
                   onClick={() => setAddMode(tab.id)}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+                    e.preventDefault()
+                    setAddMode(addMode === 'have' ? 'missing' : 'have')
+                  }}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
-            <p className={collectionStyles.addHint}>
-              {addMode === 'have' ? (
-                albumId === 'pl2526' ? (
-                  <>
-                    Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
-                    <code>353 354</code>. First copy goes in the album; extras become spares.
-                  </>
+            <div id="quick-add-panel" role="tabpanel" aria-labelledby={`quick-add-tab-${addMode}`}>
+              <p className={collectionStyles.addHint}>
+                {addMode === 'have' ? (
+                  albumId === 'pl2526' ? (
+                    <>
+                      Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
+                      <code>353 354</code>. First copy goes in the album; extras become spares.
+                    </>
+                  ) : (
+                    <>
+                      Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
+                      <code>570 571</code>. First copy goes in the album; extras become spares.
+                    </>
+                  )
                 ) : (
                   <>
-                    Paste stickers you just got — e.g. <code>ENG 5 7 12</code>, <code>MEX1 MEX2</code>, or{' '}
-                    <code>570 571</code>. First copy goes in the album; extras become spares.
+                    Paste only what you still need — e.g.{' '}
+                    {albumId === 'pl2526' ? (
+                      <code>LIV: 1, 4, 9</code>
+                    ) : (
+                      <code>MEX: 1, 2, 14</code>
+                    )}
+                    . Everything else in the album is treated as owned. Handy when you’re nearly complete.
                   </>
-                )
-              ) : (
-                <>
-                  Paste only what you still need — e.g.{' '}
-                  {albumId === 'pl2526' ? (
-                    <code>LIV: 1, 4, 9</code>
-                  ) : (
-                    <code>MEX: 1, 2, 14</code>
-                  )}
-                  . Everything else in the album is treated as owned. Handy when you’re nearly complete.
-                </>
-              )}
-            </p>
-            <Textarea
-              label={addMode === 'have' ? 'Stickers to add' : 'Stickers still missing'}
-              value={addInput}
-              onChange={(e) => setAddInput(e.target.value)}
-              placeholder="Paste or type sticker codes…"
-              rows={3}
-            />
-            <div className={styles.actions}>
-              <Button onClick={handleQuickAdd}>
-                {addMode === 'have' ? 'Add to collection' : 'Apply missing list'}
-              </Button>
-              <Button variant="secondary" onClick={() => setConfirmFresh(true)}>
-                Start fresh (all missing)
-              </Button>
+                )}
+              </p>
+              <Textarea
+                label={addMode === 'have' ? 'Stickers to add' : 'Stickers still missing'}
+                value={addInput}
+                onChange={(e) => setAddInput(e.target.value)}
+                placeholder="Paste or type sticker codes…"
+                rows={3}
+              />
+              <div className={styles.actions}>
+                <Button onClick={handleQuickAdd}>
+                  {addMode === 'have' ? 'Add to collection' : 'Apply missing list'}
+                </Button>
+                <Button variant="secondary" onClick={() => setConfirmFresh(true)}>
+                  Start fresh (all missing)
+                </Button>
+              </div>
             </div>
-          </section>
+          </CollapsibleSection>
 
-          {message && <p className={[styles.notice, styles.noticeOk].join(' ')}>{message}</p>}
+          <CollapsibleSection
+            title="Share list"
+            hint="Anonymous match link or plain text for chat"
+            defaultOpen={false}
+          >
+            <SharePanel albumId={albumId} state={state} bare />
+          </CollapsibleSection>
 
-          <SharePanel albumId={albumId} state={state} />
+          <CollapsibleSection
+            title="Cloud sync"
+            hint="Backup this profile to your account"
+            defaultOpen={false}
+          >
+            <CloudSyncPanel
+              bare
+              refreshKey={syncEpoch}
+              onApplied={() => {
+                reloadFromStorage()
+                setMessage('Collection loaded from cloud.')
+              }}
+            />
+          </CollapsibleSection>
 
-          <CloudSyncPanel
-            refreshKey={syncEpoch}
-            onApplied={() => {
-              reloadFromStorage()
-              setMessage('Collection loaded from cloud.')
-            }}
-          />
-
-          <section className={collectionStyles.browseSection}>
+          <CollapsibleSection
+            title="Browse album"
+            hint="Search, filter needs/spares, tap to update"
+            defaultOpen
+          >
             <div className={collectionStyles.browseToolbar}>
-              <h2 className={styles.panelTitle}>Browse album</h2>
-              <div className={collectionStyles.filters}>
+              <div
+                className={collectionStyles.filters}
+                role="group"
+                aria-label="Filter stickers"
+              >
                 {(['all', 'needs', 'spares', 'incoming'] as const).map((f) => (
                   <button
                     key={f}
                     type="button"
+                    aria-pressed={filter === f}
                     className={[
                       collectionStyles.filterBtn,
                       filter === f ? collectionStyles.filterActive : '',
@@ -389,7 +429,11 @@ export function Collection() {
                 ))}
               </div>
             </div>
+            <label className={collectionStyles.searchLabel} htmlFor="album-sticker-search">
+              Search stickers
+            </label>
             <input
+              id="album-sticker-search"
               type="search"
               className={collectionStyles.search}
               placeholder={
@@ -409,14 +453,13 @@ export function Collection() {
               incoming={incoming}
               onMarkArrived={markArrived}
             />
-          </section>
+          </CollapsibleSection>
 
-          <details
-            className={collectionStyles.advanced}
-            open={showAdvanced}
-            onToggle={(e) => setShowAdvanced((e.target as HTMLDetailsElement).open)}
+          <CollapsibleSection
+            title="Backup & reset"
+            hint="Export, import, or clear this album"
+            defaultOpen={false}
           >
-            <summary>Advanced — backup &amp; reset</summary>
             <p className={collectionStyles.advancedHint}>
               Export for a file copy on this device. Import accepts One More Swap backups or a World
               Cup 2026 sticker tracker JSON export (collection + postal swaps).
@@ -426,7 +469,10 @@ export function Collection() {
                 variant="ghost"
                 onClick={() => {
                   downloadJson('onemoreswap-collection.json', exportCollectionJson(loadCollection()))
-                  setMessage('Backup downloaded.')
+                  setAlertModal({
+                    title: 'Backup downloaded',
+                    body: 'Keep the JSON file safe — you can import it later on this or another device.',
+                  })
                 }}
               >
                 Export backup
@@ -458,7 +504,7 @@ export function Collection() {
                 Clear album
               </Button>
             </div>
-          </details>
+          </CollapsibleSection>
         </>
       )}
 

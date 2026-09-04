@@ -34,6 +34,8 @@
   --yellow:        #FFD700;
   --yellow-dark:   #C9A800;   /* focus rings, spares — not wordmark */
   --yellow-wash:   #FFF6CC;
+  --ink-on-yellow: #1A1520;   /* always dark text on solid yellow */
+  --ink-on-yellow-wash: #6B5A00;
   /* Platform red: borders + text only — deeper crimson, not Panini primary */
   --red:           #B42338;
   --red-dark:      #8B1A2C;
@@ -96,6 +98,7 @@
   --yellow-wash:   #3D3000;
   --green-wash:    #002A18;
   --album-pl-wash: #2D1040;
+  --ink-on-yellow-wash: #FFD700;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -307,7 +310,7 @@ h4, .h4 {
 
 .btn-primary {
   background: var(--yellow);
-  color: #1A1520;
+  color: var(--ink-on-yellow);
 }
 .btn-primary:hover { background: #FFE033; }
 
@@ -395,8 +398,7 @@ textarea.input { min-height: 100px; resize: vertical; line-height: 1.6; }
   border-radius: var(--radius-pill);
   line-height: 1.4;
 }
-.badge-yellow { background: var(--yellow-wash); color: #8A7000; }
-[data-theme="dark"] .badge-yellow { color: var(--yellow); }
+.badge-yellow { background: var(--yellow-wash); color: var(--ink-on-yellow-wash); }
 .badge-red    { background: var(--bg-elevated); color: var(--red-dark); box-shadow: inset 0 0 0 1.5px var(--red); }
 .badge-green  { background: var(--green-wash); color: var(--green); }
 .badge-pl     { background: var(--album-pl-wash); color: var(--album-pl); }

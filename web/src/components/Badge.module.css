@@ -8,7 +8,7 @@
 
 .default {
   background: var(--yellow-wash);
-  color: #8a7000;
+  color: var(--ink-on-yellow-wash);
 }
 
 .need {
@@ -19,7 +19,7 @@
 
 .spare {
   background: var(--yellow-wash);
-  color: #8a7000;
+  color: var(--ink-on-yellow-wash);
 }
 
 .match {
@@ -27,9 +27,12 @@
   color: var(--green);
 }
 
+:root[data-theme='dark'] .need {
+  color: #ffb4bc;
+}
+
 @media (prefers-color-scheme: dark) {
-  .default,
-  .spare {
-    color: var(--yellow);
+  :root:not([data-theme='light']) .need {
+    color: #ffb4bc;
   }
 }

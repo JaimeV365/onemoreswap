@@ -15,6 +15,8 @@ import styles from './SharePanel.module.css'
 type SharePanelProps = {
   albumId: string
   state: CollectionAlbumState
+  /** Skip outer panel chrome when nested in a collapsible section */
+  bare?: boolean
 }
 
 const tabs: { id: ShareTab; label: string }[] = [
@@ -29,7 +31,7 @@ const linkModes: { id: ShareLinkMode; label: string }[] = [
   { id: 'both', label: 'Both link' },
 ]
 
-export function SharePanel({ albumId, state }: SharePanelProps) {
+export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
   const [tab, setTab] = useState<ShareTab>('both')
   const [linkMode, setLinkMode] = useState<ShareLinkMode>('spares')
   const [copied, setCopied] = useState(false)
@@ -95,8 +97,8 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
   }
 
   return (
-    <section className={styles.panel}>
-      <h2 className={styles.title}>Share list</h2>
+    <div className={bare ? styles.bare : styles.panel}>
+      {!bare && <h2 className={styles.title}>Share list</h2>}
       <p className={styles.hint}>
         Copy a formatted list for chat, or create an <strong>anonymous match link</strong> for social
         media. The link only includes sticker numbers — never your name, email, or profile.
@@ -176,6 +178,6 @@ export function SharePanel({ albumId, state }: SharePanelProps) {
       <Button type="button" variant="secondary" onClick={handleCopy}>
         {copied ? 'Copied!' : 'Copy to clipboard'}
       </Button>
-    </section>
+    </div>
   )
 }

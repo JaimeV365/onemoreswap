@@ -13,6 +13,8 @@
   --yellow-wash: #fff6cc;
   /* Always dark — solid yellow stays bright in light and dark themes */
   --ink-on-yellow: #1a1520;
+  /* Text on yellow-wash: dark brown on pale wash; light gold on dark wash */
+  --ink-on-yellow-wash: #6b5a00;
   --red: #b42338;
   --red-dark: #8b1a2c;
   --green: #00a85a;
@@ -49,6 +51,7 @@
     --yellow-wash: #3d3000;
     --green-wash: #002a18;
     --album-pl-wash: #2d1040;
+    --ink-on-yellow-wash: #ffd700;
   }
 }
 
@@ -64,6 +67,7 @@
   --yellow-wash: #3d3000;
   --green-wash: #002a18;
   --album-pl-wash: #2d1040;
+  --ink-on-yellow-wash: #ffd700;
 }
 
 *,
@@ -113,4 +117,18 @@ a {
 img {
   max-width: 100%;
   height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -3,7 +3,7 @@ import styles from './Page.module.css'
 
 export function About() {
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <h1 className={styles.title}>About One More Swap</h1>
       <div className={styles.prose}>
         <p>

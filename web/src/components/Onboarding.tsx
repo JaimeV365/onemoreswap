@@ -40,7 +40,8 @@ export function OnboardingBanner({ show }: OnboardingProps) {
         <ol className={styles.steps}>
           <li>
             <strong>Quick add</strong> what you have — or paste what’s missing so the rest counts as
-            owned. Import a World Cup tracker backup under Advanced if you already have one.
+            owned. Use Share for chat lists or anonymous match links. Import a backup under Backup
+            &amp; reset if you already have one.
           </li>
           <li>
             <strong>Share list</strong> copy needs/spares for WhatsApp.

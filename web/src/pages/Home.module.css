@@ -100,14 +100,23 @@
   padding: 3px 10px;
   border-radius: var(--radius-pill);
   background: var(--yellow-wash);
-  color: #8a7000;
+  color: var(--ink-on-yellow-wash);
   margin-bottom: var(--space-md);
 }
 
-@media (prefers-color-scheme: dark) {
-  .badge {
-    color: var(--yellow);
-  }
+.badgeSoon {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
+  color: var(--ink-soft);
+  margin-bottom: var(--space-md);
+}
+
+.cardSoon {
+  opacity: 0.92;
 }
 
 .albumGrid {

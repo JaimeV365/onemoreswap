@@ -124,7 +124,7 @@ export function ShareMatch() {
 
   if (loading) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} id="main-content">
         <h1 className={styles.title}>Shared list</h1>
         <p className={styles.lead}>Loading…</p>
       </main>
@@ -133,7 +133,7 @@ export function ShareMatch() {
 
   if (error || !payload) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} id="main-content">
         <h1 className={styles.title}>Shared list</h1>
         <p className={[styles.notice, styles.noticeError].join(' ')}>{error || 'Not found'}</p>
         <p className={styles.lead}>
@@ -144,7 +144,7 @@ export function ShareMatch() {
   }
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <p className={matchStyles.anon}>Anonymous swap list — no names or accounts shown</p>
       <h1 className={styles.title}>{album?.name || 'Sticker'} share</h1>
       <p className={styles.lead}>

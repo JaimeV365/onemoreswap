@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Contrast rule
 
-- **Light / bright backgrounds** (including solid `--yellow` `#ffd700`): use dark text via `--ink-on-yellow` (or dark `--ink` in light theme). Never put light-grey / `--ink-soft` / dark-theme `--ink` on yellow.
-- **Dark backgrounds** (page `--bg`, dark `--yellow-wash`): use light text (`--ink` in dark theme).
+- **Light / bright backgrounds** (including solid `--yellow` `#ffd700`): use dark text via `--ink-on-yellow`. Never put light-grey / `--ink-soft` / dark-theme `--ink` on yellow.
+- **Dark backgrounds** (page `--bg`, dark `--yellow-wash`): use light text (`--ink` in dark theme, or `--ink-on-yellow-wash` on wash).
 - Solid yellow accents stay bright in both themes — always pair with `--ink-on-yellow`, not theme `--ink`.
-- Soft wash (`--yellow-wash`) follows the theme (pale in light, deep in dark) — pair with theme `--ink`, not a fixed light grey.
+- Soft wash (`--yellow-wash`) follows the theme — pair with `--ink-on-yellow-wash` (dark brown in light, gold in dark).

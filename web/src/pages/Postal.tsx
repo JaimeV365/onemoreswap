@@ -362,7 +362,7 @@ export function Postal() {
 
   if (view === 'inbox') {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} id="main-content">
         <Button variant="ghost" onClick={() => setView('list')}>
           ← Back to swaps
         </Button>
@@ -473,7 +473,7 @@ export function Postal() {
 
   if (view === 'edit' && draft) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} id="main-content">
         <Button variant="ghost" onClick={() => setView('list')}>
           ← Back to swaps
         </Button>
@@ -645,7 +645,7 @@ export function Postal() {
   }
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <Badge>Local · No account</Badge>
       <h1 className={styles.title}>Postal swaps</h1>
       <p className={styles.lead}>

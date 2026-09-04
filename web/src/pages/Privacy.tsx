@@ -2,7 +2,7 @@ import styles from './Page.module.css'
 
 export function Privacy() {
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <h1 className={styles.title}>Privacy policy</h1>
       <p className={styles.lead}>
         Plain-English summary. Full legal text will be reviewed before public launch. Last updated:

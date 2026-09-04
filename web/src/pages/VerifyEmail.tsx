@@ -59,7 +59,7 @@ export function VerifyEmail() {
   }, [status, user?.emailVerified])
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <h1 className={styles.title}>Confirm email</h1>
       <p
         className={[

@@ -16,7 +16,7 @@ export function Settings() {
   const { user, loading } = useAuth()
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <h1 className={styles.title}>Settings</h1>
       <p className={styles.lead}>Preferences stay on this device. Account is optional.</p>
 

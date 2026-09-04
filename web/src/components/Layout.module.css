@@ -1,0 +1,18 @@
+.skip {
+  position: absolute;
+  left: var(--space-md);
+  top: -100px;
+  z-index: 10001;
+  padding: 0.65rem 1rem;
+  background: var(--yellow);
+  color: var(--ink-on-yellow);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+}
+
+.skip:focus {
+  top: var(--space-md);
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

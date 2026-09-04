@@ -9,7 +9,6 @@ const nav = [
   { to: '/paste', label: 'Paste tool' },
   { to: '/postal', label: 'Postal' },
   { to: '/account', label: 'Account' },
-  { to: '/settings', label: 'Settings' },
 ]
 
 export function Header() {

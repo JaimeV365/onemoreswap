@@ -21,9 +21,11 @@ type CloudSyncPanelProps = {
   onApplied?: () => void
   /** Bump when local data may have changed */
   refreshKey?: number | string
+  /** Skip outer panel chrome when nested in a collapsible section */
+  bare?: boolean
 }
 
-export function CloudSyncPanel({ onApplied, refreshKey = 0 }: CloudSyncPanelProps) {
+export function CloudSyncPanel({ onApplied, refreshKey = 0, bare = false }: CloudSyncPanelProps) {
   const { user } = useAuth()
   const { activeProfile } = useProfiles()
   const [busy, setBusy] = useState(false)
@@ -43,26 +45,29 @@ export function CloudSyncPanel({ onApplied, refreshKey = 0 }: CloudSyncPanelProp
     }
   }, [refreshKey, activeProfile?.id])
 
+  const shellClass = bare ? syncStyles.bare : styles.panel
+  const shellStyle = bare ? undefined : { marginTop: 'var(--space-lg)' }
+
   if (!user) {
     return (
-      <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
-        <h2 className={styles.panelTitle}>Cloud sync</h2>
+      <div className={shellClass} style={shellStyle}>
+        {!bare && <h2 className={styles.panelTitle}>Cloud sync</h2>}
         <p className={syncStyles.hint}>
           <Link to="/account">Sign in</Link> and add a collector profile to back up this collection
           to the cloud.
         </p>
-      </section>
+      </div>
     )
   }
 
   if (!activeProfile) {
     return (
-      <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
-        <h2 className={styles.panelTitle}>Cloud sync</h2>
+      <div className={shellClass} style={shellStyle}>
+        {!bare && <h2 className={styles.panelTitle}>Cloud sync</h2>}
         <p className={syncStyles.hint}>
           <Link to="/account">Add a collector profile</Link> first — sync is per profile.
         </p>
-      </section>
+      </div>
     )
   }
 
@@ -138,8 +143,8 @@ export function CloudSyncPanel({ onApplied, refreshKey = 0 }: CloudSyncPanelProp
   }
 
   return (
-    <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }} id="cloud-sync">
-      <h2 className={styles.panelTitle}>Cloud sync</h2>
+    <div className={shellClass} style={shellStyle} id="cloud-sync">
+      {!bare && <h2 className={styles.panelTitle}>Cloud sync</h2>}
       <p className={syncStyles.hint}>
         Back up <strong>{activeProfile.displayName}</strong>’s collection and postal swaps to your
         One More Swap account. Does not merge — save uploads this device; load replaces this device.
@@ -188,6 +193,6 @@ export function CloudSyncPanel({ onApplied, refreshKey = 0 }: CloudSyncPanelProp
         onConfirm={loadFromCloud}
         onCancel={() => setConfirmLoad(false)}
       />
-    </section>
+    </div>
   )
 }

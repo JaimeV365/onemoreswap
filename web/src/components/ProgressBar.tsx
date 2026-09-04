@@ -12,7 +12,7 @@ export function ProgressBar({ pct, label }: ProgressBarProps) {
         <span className={styles.label}>{label}</span>
         <span className={styles.pct}>{pct}%</span>
       </div>
-      <div className={styles.track} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+      <div className={styles.track} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
         <div className={styles.fill} style={{ width: `${pct}%` }} />
       </div>
     </div>

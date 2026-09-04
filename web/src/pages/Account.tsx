@@ -111,7 +111,7 @@ export function Account() {
 
   if (loading) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} id="main-content">
         <p className={styles.lead}>Loading account…</p>
       </main>
     )
@@ -119,11 +119,13 @@ export function Account() {
 
   if (user) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} id="main-content">
         <h1 className={styles.title}>Account</h1>
         <p className={styles.lead}>
           Signed in as <strong>{user.email}</strong> (parent / guardian)
           {user.emailVerified ? ' · email confirmed' : ' · email not confirmed yet'}
+          {' · '}
+          <Link to="/settings">Settings</Link>
         </p>
 
         {justSignedUp && (
@@ -214,7 +216,7 @@ export function Account() {
 
   if (config && !config.authConfigured) {
     return (
-      <main className={styles.page}>
+      <main className={styles.page} id="main-content">
         <h1 className={styles.title}>Account</h1>
         <p className={styles.lead}>
           Sign-in is being set up. Collection, paste, and postal still work on this device.
@@ -227,7 +229,7 @@ export function Account() {
   }
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <h1 className={styles.title}>Account</h1>
       <p className={styles.lead}>
         {mode === 'signup'

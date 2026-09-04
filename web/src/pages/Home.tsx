@@ -3,22 +3,38 @@ import { Button } from '../components/Button'
 import { Wordmark } from '../components/Wordmark'
 import styles from './Home.module.css'
 
-const tiers = [
+const available = [
   {
-    title: 'Contacts',
-    badge: 'Always free',
-    body: 'Swap with people you already know — mates from school, family, your WhatsApp group.',
+    title: 'Track your collection',
+    badge: 'Ready now',
+    body: 'World Cup 2026 and Premier League albums. Quick-add what you have — or paste what’s missing. Spares, needs, and postal swaps stay on this device (or sync to your account).',
+    link: '/',
+    linkLabel: 'Open my collection →',
   },
   {
     title: 'Paste & match',
-    badge: 'Always free',
-    body: 'Paste a list of spares or needs. See overlaps instantly. No account required.',
+    badge: 'Ready now',
+    body: 'Paste a list from WhatsApp or social media. See overlaps with your needs and spares instantly. No account required.',
     link: '/paste',
+    linkLabel: 'Open paste tool →',
+  },
+  {
+    title: 'Anonymous share links',
+    badge: 'Ready now',
+    body: 'Post a match link that only shows sticker numbers. Others paste their list, see overlaps, and reply on social — without seeing your name.',
+    link: '/',
+    linkLabel: 'Create a link from Collection →',
+  },
+]
+
+const coming = [
+  {
+    title: 'Contacts',
+    body: 'Swap with people you already know — school mates, family, WhatsApp groups — with shared needs/spares only.',
   },
   {
     title: 'Platform matching',
-    badge: 'Free at launch',
-    body: 'We match you with collectors near you who need what you have — post only, reputation built in.',
+    body: 'Match with collectors near you who need what you have. Post-only introductions, reputation built in. Free at launch when it ships.',
   },
 ]
 
@@ -37,13 +53,13 @@ const albums = [
 
 export function Home() {
   return (
-    <main>
+    <main id="main-content">
       <section className={styles.hero}>
         <Wordmark />
         <h1 className={styles.heroTitle}>Just need one more?</h1>
         <p className={styles.heroLead}>
-          One More Swap matches you with collectors who have your spares and need your duplicates.
-          Track your album, find fair swaps, finish the book.
+          Track your album, share spares and needs, and match lists from chat. Finish the book —
+          without giving strangers your name.
         </p>
         <div className={styles.heroActions}>
           <Link to="/">
@@ -54,21 +70,38 @@ export function Home() {
           </Link>
         </div>
         <p className={styles.heroNote}>
-          No account needed — collection, paste matching, and postal tracking save in your browser.
+          No account needed for collection, paste matching, and postal tracking on this device.
         </p>
       </section>
 
       <section id="how-it-works" className={styles.section}>
-        <h2 className={styles.sectionTitle}>Three ways to swap</h2>
+        <h2 className={styles.sectionTitle}>What you can do today</h2>
         <div className={styles.cardGrid}>
-          {tiers.map((tier) => (
-            <article key={tier.title} className={styles.card}>
-              <span className={styles.badge}>{tier.badge}</span>
-              <h3>{tier.title}</h3>
-              <p>{tier.body}</p>
-              {tier.link && (
-                <Link to={tier.link} className={styles.cardLink}>Open paste tool →</Link>
-              )}
+          {available.map((item) => (
+            <article key={item.title} className={styles.card}>
+              <span className={styles.badge}>{item.badge}</span>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+              <Link to={item.link} className={styles.cardLink}>
+                {item.linkLabel}
+              </Link>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Coming next</h2>
+        <p className={styles.sectionLead}>
+          Contact networks and stranger matching are on the roadmap — we won’t pretend they’re live
+          until they are.
+        </p>
+        <div className={styles.cardGrid}>
+          {coming.map((item) => (
+            <article key={item.title} className={[styles.card, styles.cardSoon].join(' ')}>
+              <span className={styles.badgeSoon}>Coming soon</span>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
             </article>
           ))}
         </div>

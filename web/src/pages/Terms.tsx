@@ -2,7 +2,7 @@ import styles from './Page.module.css'
 
 export function Terms() {
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <h1 className={styles.title}>Terms of use</h1>
       <p className={styles.lead}>
         Summary for early access. Full terms will be legally reviewed before launch. Last updated:

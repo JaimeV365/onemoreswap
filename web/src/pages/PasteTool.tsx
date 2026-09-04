@@ -108,7 +108,7 @@ export function PasteTool() {
     !isAlbumStarted(getAlbumState(loadCollection(), albumId))
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="main-content">
       <Badge>Always free · No account</Badge>
       <h1 className={styles.title}>Paste &amp; match</h1>
       <p className={styles.lead}>

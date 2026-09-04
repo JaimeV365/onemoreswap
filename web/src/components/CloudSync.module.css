@@ -5,6 +5,10 @@
   line-height: 1.5;
 }
 
+.bare {
+  /* Nested inside CollapsibleSection */
+}
+
 .hint a {
   color: var(--red);
 }
