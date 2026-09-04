@@ -303,6 +303,11 @@ export function Account() {
               maxLength={128}
               spellCheck={false}
             />
+            {mode === 'login' && (
+              <span className={authStyles.fieldHint}>
+                <Link to="/forgot-password">Forgot password?</Link>
+              </span>
+            )}
           </label>
 
           {mode === 'signup' && (

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
-import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { StickerList } from '../components/StickerList'
@@ -63,6 +62,7 @@ export function Contacts() {
   const [overlap, setOverlap] = useState<OverlapPayload | null>(null)
   const [removeTarget, setRemoveTarget] = useState<ContactRow | null>(null)
   const [inviteLink, setInviteLink] = useState<string | null>(null)
+  const [latestCode, setLatestCode] = useState<string | null>(null)
 
   const selected = useMemo(
     () => contacts.find((c) => c.userId === selectedId) || null,
@@ -126,6 +126,15 @@ export function Contacts() {
     if (selectedId) void loadOverlap()
   }, [selectedId, loadOverlap])
 
+  const copyText = async (text: string, okMsg: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setMessage(okMsg)
+    } catch {
+      setError('Could not copy — select the text manually.')
+    }
+  }
+
   const createInvite = async () => {
     setBusy(true)
     setMessage(null)
@@ -139,14 +148,15 @@ export function Contacts() {
       setError(res.error)
       return
     }
-    const link = `${window.location.origin}${res.data?.path || `/contacts?code=${res.data?.code}`}`
+    const code = res.data?.code || ''
+    const link = `${window.location.origin}${res.data?.path || `/contacts?code=${code}`}`
+    setLatestCode(code)
     setInviteLink(link)
-    setMessage(`Invite code ${res.data?.code}`)
     try {
-      await navigator.clipboard.writeText(link)
-      setMessage(`Invite link copied — code ${res.data?.code}`)
+      await navigator.clipboard.writeText(code)
+      setMessage(`Invite code ${code} copied`)
     } catch {
-      /* ignore */
+      setMessage(`Invite ready — code ${code}`)
     }
     await load()
   }
@@ -201,18 +211,17 @@ export function Contacts() {
   if (!user) {
     return (
       <main className={styles.page} id="main-content">
-        <Badge>Tier 1 · free</Badge>
         <h1 className={styles.title}>Contacts</h1>
         <p className={styles.lead}>
-          Connect with people you already know — school mates, family, WhatsApp groups — and compare
-          needs and spares from cloud backups. Face-to-face is fine at your discretion.
+          Connect with people you already know and compare needs and spares. Sign in to invite or
+          accept a code
+          {acceptCode ? ` (${acceptCode})` : ''}.
         </p>
-        <p className={styles.notice}>
-          <Link to="/account">Sign in</Link> to create or accept an invite
-          {acceptCode ? ` (code ${acceptCode} will be ready after you sign in)` : ''}.
-        </p>
-        <div className={styles.actions}>
-          <Button onClick={() => navigate('/account')}>Go to account</Button>
+        <div className={contactStyles.empty}>
+          <p>You need an account to use Contacts.</p>
+          <div className={styles.actions}>
+            <Button onClick={() => navigate('/account')}>Sign in</Button>
+          </div>
         </div>
       </main>
     )
@@ -220,27 +229,47 @@ export function Contacts() {
 
   return (
     <main className={styles.page} id="main-content">
-      <Badge>Tier 1 · contacts · free</Badge>
       <h1 className={styles.title}>Contacts</h1>
       <p className={styles.lead}>
-        Invite someone you know. Once connected, compare needs and spares for an album — not full
-        collections. Mutual overlaps only.
+        Invite someone you know, then compare needs and spares for an album — mutual overlaps only.
       </p>
 
       <section className={styles.panel}>
         <h2 className={styles.panelTitle}>Invite someone</h2>
         <p className={contactStyles.hint}>
-          Create a link they open while signed in. Codes expire after 14 days and work once.
+          Share a code or link. They sign in, enter the code, and you&apos;re connected. Codes expire
+          in 14 days and work once.
         </p>
         <div className={styles.actions}>
           <Button type="button" disabled={busy} onClick={() => void createInvite()}>
-            {busy ? 'Working…' : 'Create invite link'}
+            {busy ? 'Working…' : 'Create invite'}
           </Button>
         </div>
-        {inviteLink && (
-          <p className={contactStyles.linkBox}>
-            <code>{inviteLink}</code>
-          </p>
+        {inviteLink && latestCode && (
+          <div className={contactStyles.inviteReady}>
+            <p className={contactStyles.inviteCodeBig}>
+              Code: <strong>{latestCode}</strong>
+            </p>
+            <div className={styles.actions}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => void copyText(latestCode, 'Invite code copied')}
+              >
+                Copy code
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => void copyText(inviteLink, 'Invite link copied')}
+              >
+                Copy link
+              </Button>
+            </div>
+            <p className={contactStyles.linkBox}>
+              <code>{inviteLink}</code>
+            </p>
+          </div>
         )}
         {invites.length > 0 && (
           <ul className={contactStyles.inviteList}>
@@ -248,6 +277,13 @@ export function Contacts() {
               <li key={inv.code}>
                 <strong>{inv.code}</strong>
                 <span>expires {new Date(inv.expiresAt).toLocaleDateString()}</span>
+                <button
+                  type="button"
+                  className={contactStyles.copyInline}
+                  onClick={() => void copyText(inv.code, `Copied ${inv.code}`)}
+                >
+                  Copy
+                </button>
               </li>
             ))}
           </ul>
@@ -290,7 +326,7 @@ export function Contacts() {
         {!contacts.length ? (
           <div className={contactStyles.empty}>
             <p>No contacts yet.</p>
-            <p>Create an invite above, or ask a friend for their code.</p>
+            <p>Create an invite and send the code, or paste a code someone sent you.</p>
           </div>
         ) : (
           <ul className={contactStyles.list}>
@@ -314,11 +350,7 @@ export function Contacts() {
                       {c.emailMasked} · since {new Date(c.since).toLocaleDateString()}
                     </span>
                   </button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setRemoveTarget(c)}
-                  >
+                  <Button type="button" variant="ghost" onClick={() => setRemoveTarget(c)}>
                     Remove
                   </Button>
                 </li>
