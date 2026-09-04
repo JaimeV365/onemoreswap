@@ -14,13 +14,11 @@ import {
   type SharePayload,
 } from '../lib/shareLinks'
 import { copyToClipboard } from '../lib/storage'
-import { useTheme } from '../lib/ThemeContext'
 import styles from './Page.module.css'
 import matchStyles from './ShareMatch.module.css'
 
 export function ShareMatch() {
   const { token = '' } = useParams()
-  const { resolved, setPref } = useTheme()
   const resultsRef = useRef<HTMLElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -124,24 +122,10 @@ export function ShareMatch() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const themeToggle = (
-    <button
-      type="button"
-      className={matchStyles.themeToggle}
-      onClick={() => setPref(resolved === 'dark' ? 'light' : 'dark')}
-      aria-label={resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-    >
-      {resolved === 'dark' ? 'Light mode' : 'Dark mode'}
-    </button>
-  )
-
   if (loading) {
     return (
       <main className={styles.page}>
-        <div className={matchStyles.topRow}>
-          <h1 className={styles.title}>Shared list</h1>
-          {themeToggle}
-        </div>
+        <h1 className={styles.title}>Shared list</h1>
         <p className={styles.lead}>Loading…</p>
       </main>
     )
@@ -150,10 +134,7 @@ export function ShareMatch() {
   if (error || !payload) {
     return (
       <main className={styles.page}>
-        <div className={matchStyles.topRow}>
-          <h1 className={styles.title}>Shared list</h1>
-          {themeToggle}
-        </div>
+        <h1 className={styles.title}>Shared list</h1>
         <p className={[styles.notice, styles.noticeError].join(' ')}>{error || 'Not found'}</p>
         <p className={styles.lead}>
           <Link to="/">Open my collection</Link> · <Link to="/paste">Paste tool</Link>
@@ -164,10 +145,7 @@ export function ShareMatch() {
 
   return (
     <main className={styles.page}>
-      <div className={matchStyles.topRow}>
-        <p className={matchStyles.anon}>Anonymous swap list — no names or accounts shown</p>
-        {themeToggle}
-      </div>
+      <p className={matchStyles.anon}>Anonymous swap list — no names or accounts shown</p>
       <h1 className={styles.title}>{album?.name || 'Sticker'} share</h1>
       <p className={styles.lead}>
         Check overlaps with this list, copy the matches, and reply on social media. Nothing here

@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router-dom'
 import { ProfileSwitcher } from './ProfileSwitcher'
+import { ThemeToggle } from './ThemeToggle'
 import { Wordmark } from './Wordmark'
 import styles from './Header.module.css'
 
@@ -31,6 +32,7 @@ export function Header() {
               </NavLink>
             ))}
           </nav>
+          <ThemeToggle />
           <ProfileSwitcher />
         </div>
       </div>
