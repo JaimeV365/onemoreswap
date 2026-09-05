@@ -18,7 +18,6 @@ export function Layout() {
   const backgroundBusy =
     !hydrating && (status === 'saving' || status === 'syncing' || status === 'pending')
   const syncPhase = useDelayedBusy(backgroundBusy)
-  // Login / profile open: surface sooner so the page doesn’t look stuck
   const hydratePhase = useDelayedBusy(hydrating, 150, 2000)
 
   let busyLabel: string | null = null
@@ -45,10 +44,20 @@ export function Layout() {
   }
 
   const showBusy = Boolean(busyLabel)
+  const multiDevice = otherDevices > 0
+
+  const multiDeviceLabel =
+    otherDevices === 1
+      ? 'Open on 2 devices — editing on both risks losing changes (last save wins). Use one device at a time.'
+      : otherDevices > 1
+        ? `Open on ${otherDevices + 1} devices — editing on more than one risks losing changes (last save wins). Use one device at a time.`
+        : null
 
   let steadyLabel: string | null = null
   if (!showBusy) {
-    if (status === 'saved') {
+    if (multiDeviceLabel) {
+      steadyLabel = multiDeviceLabel
+    } else if (status === 'saved') {
       steadyLabel = savedLabel ? `Synced · ${savedLabel}` : 'Synced'
     } else if (status === 'updated') {
       steadyLabel = savedLabel
@@ -63,13 +72,6 @@ export function Layout() {
     }
   }
 
-  const multiDeviceLabel =
-    otherDevices === 1
-      ? 'Also open on 1 other device — edit on one device at a time (last save wins).'
-      : otherDevices > 1
-        ? `Also open on ${otherDevices} other devices — edit on one device at a time (last save wins).`
-        : null
-
   return (
     <>
       <a className={styles.skip} href="#main-content">
@@ -77,32 +79,30 @@ export function Layout() {
       </a>
       <Header />
       {user && activeProfile && (
-        <>
-          {multiDeviceLabel && (
-            <div className={styles.multiDevice} role="status">
-              {multiDeviceLabel}
-            </div>
-          )}
-          <div
-            className={[
-              styles.syncBar,
-              status === 'error' && !showBusy ? styles.syncError : '',
-              (status === 'saved' || status === 'updated') && !showBusy ? styles.syncOk : '',
-              showBusy ? styles.syncBusy : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            role="status"
-            aria-live="polite"
-            title={
-              savedLabel
+        <div
+          className={[
+            styles.syncBar,
+            multiDevice && !showBusy ? styles.syncWarn : '',
+            status === 'error' && !showBusy && !multiDevice ? styles.syncError : '',
+            (status === 'saved' || status === 'updated') && !showBusy && !multiDevice
+              ? styles.syncOk
+              : '',
+            showBusy ? styles.syncBusy : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          role="status"
+          aria-live="polite"
+          title={
+            multiDevice
+              ? 'This collector profile is open on more than one device'
+              : savedLabel
                 ? `Last successful sync: ${savedLabel}`
                 : 'Keeps this device in sync with your other devices'
-            }
-          >
-            {showBusy ? busyLabel : steadyLabel}
-          </div>
-        </>
+          }
+        >
+          {showBusy ? busyLabel : steadyLabel}
+        </div>
       )}
       {/* Remount when profile changes or cloud data is applied */}
       <Outlet key={`${storageKey}:${dataEpoch}`} />

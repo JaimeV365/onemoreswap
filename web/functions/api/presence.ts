@@ -14,6 +14,23 @@ async function ownedProfile(env: Env, userId: string, profileId: string) {
     .first<{ id: string }>()
 }
 
+/** Create the presence table if the one-time migrate was never run. */
+async function ensurePresenceTable(env: Env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS sync_presence (
+      device_id TEXT NOT NULL,
+      profile_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      last_seen TEXT NOT NULL,
+      PRIMARY KEY (device_id, profile_id)
+    )`,
+  ).run()
+  await env.DB.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_sync_presence_profile_seen
+     ON sync_presence (profile_id, last_seen)`,
+  ).run()
+}
+
 /**
  * POST /api/presence
  * Body: { profileId, deviceId }
@@ -43,7 +60,7 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
   const nowIso = now.toISOString()
   const staleBefore = new Date(now.getTime() - STALE_MS).toISOString()
 
-  try {
+  const runPresence = async () => {
     await env.DB.prepare(
       `INSERT INTO sync_presence (device_id, profile_id, user_id, last_seen)
        VALUES (?, ?, ?, ?)
@@ -54,7 +71,6 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
       .bind(deviceId, profileId, auth.id, nowIso)
       .run()
 
-    // Drop stale rows for this profile (and this user) so counts stay honest
     await env.DB.prepare(
       `DELETE FROM sync_presence
        WHERE profile_id = ? AND user_id = ? AND last_seen < ?`,
@@ -69,7 +85,19 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
       .bind(profileId, auth.id, deviceId, staleBefore)
       .first<{ n: number }>()
 
-    const otherDevices = Number(row?.n ?? 0)
+    return Number(row?.n ?? 0)
+  }
+
+  try {
+    let otherDevices: number
+    try {
+      otherDevices = await runPresence()
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (!/no such table/i.test(msg)) throw e
+      await ensurePresenceTable(env)
+      otherDevices = await runPresence()
+    }
 
     return json({
       ok: true,
@@ -78,10 +106,6 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
-    if (/no such table/i.test(msg)) {
-      // Migrate not applied yet — don't break the app
-      return json({ ok: true, otherDevices: 0, migrateRequired: true })
-    }
     return error(msg, 500)
   }
 }

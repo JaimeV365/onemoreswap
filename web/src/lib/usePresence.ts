@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext'
 import { useProfiles } from './ProfileContext'
 
 const DEVICE_KEY = 'onemoreswap-device-id-v1'
-const HEARTBEAT_MS = 30_000
+const HEARTBEAT_MS = 20_000
 
 function getOrCreateDeviceId(): string {
   try {
