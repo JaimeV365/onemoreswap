@@ -93,7 +93,7 @@ export function StickerChip({
                 : `Mark ${sticker.code}${sticker.cardNum} as priority need`
             }
             aria-pressed={favorite}
-            title={favorite ? 'Priority need — click to unstar' : 'Mark as priority (want soon)'}
+            title={favorite ? 'Want soon — click to unstar' : 'Mark as want soon'}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()

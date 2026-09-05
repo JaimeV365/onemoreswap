@@ -8,7 +8,7 @@ import styles from './Header.module.css'
 
 const nav = [
   { to: '/', label: 'Collection', end: true },
-  { to: '/match', label: 'Match' },
+  { to: '/swap', label: 'Swap' },
   { to: '/postal', label: 'Postal' },
   { to: '/contacts', label: 'Contacts' },
   { to: '/account', label: 'Account' },

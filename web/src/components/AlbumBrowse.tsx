@@ -10,7 +10,7 @@ import styles from './AlbumBrowse.module.css'
 export type BrowseFilter = 'all' | 'needs' | 'favorites' | 'spares' | 'incoming'
 
 /** What to sort teams/clubs by — direction is separate (standard table pattern). */
-export type SectionSortBy = 'album' | 'progress' | 'incoming' | 'spares'
+export type SectionSortBy = 'album' | 'progress' | 'incoming' | 'spares' | 'favorites'
 export type SectionSortDir = 'asc' | 'desc'
 
 type AlbumBrowseProps = {
@@ -36,6 +36,7 @@ type SectionView = {
   total: number
   incomingCount: number
   spareCopies: number
+  favoriteCount: number
 }
 
 function sectionMetrics(
@@ -46,13 +47,15 @@ function sectionMetrics(
   let owned = 0
   let incomingCount = 0
   let spareCopies = 0
+  let favoriteCount = 0
   for (const s of stickers) {
     const seq = Number(s.seq)
     if (copiesOf(state, seq) >= 1) owned += 1
     if (incoming.has(seq)) incomingCount += incoming.get(seq) || 1
     spareCopies += sparesOf(state, seq)
+    if (isFavorite(state, seq) && !incoming.has(seq)) favoriteCount += 1
   }
-  return { owned, total: stickers.length, incomingCount, spareCopies }
+  return { owned, total: stickers.length, incomingCount, spareCopies, favoriteCount }
 }
 
 export function AlbumBrowse({
@@ -89,7 +92,7 @@ export function AlbumBrowse({
           if (filter === 'incoming' && !isIncoming) return false
           return stickerMatchesSearch(s, q)
         })
-        // Priority needs float to the front within a team/club
+        // Want-soon stickers float to the front within a team/club
         if (filter === 'needs' || filter === 'all' || filter === 'favorites') {
           stickers.sort((a, b) => {
             const fa = isFavorite(state, a.seq) ? 0 : 1
@@ -114,6 +117,8 @@ export function AlbumBrowse({
         d = a.incomingCount - b.incomingCount
       } else if (sortBy === 'spares') {
         d = a.spareCopies - b.spareCopies
+      } else if (sortBy === 'favorites') {
+        d = a.favoriteCount - b.favoriteCount
       } else {
         d = a.albumIndex - b.albumIndex
       }
@@ -169,7 +174,7 @@ export function AlbumBrowse({
         {filter === 'incoming'
           ? 'No stickers currently expected in the post. Add expected stickers on a postal swap.'
           : filter === 'favorites'
-            ? 'No priority needs yet — star missing stickers you want soon (Harry Kane before Qatar filler, etc.).'
+            ? 'No want-soon stickers yet — star missing stickers you want first.'
             : filter === 'needs'
               ? 'No needs right now — incoming stickers are under Incoming until you own a copy or write them off.'
               : 'No stickers match your filter.'}

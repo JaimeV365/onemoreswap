@@ -8,7 +8,7 @@ export function Footer() {
         <p className={styles.tagline}>One more swap. Finish the album.</p>
         <nav className={styles.links} aria-label="Footer">
           <Link to="/">Collection</Link>
-          <Link to="/match">Match</Link>
+          <Link to="/swap">Swap</Link>
           <Link to="/postal">Postal</Link>
           <Link to="/contacts">Contacts</Link>
           <Link to="/account">Account</Link>

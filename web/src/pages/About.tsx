@@ -19,13 +19,13 @@ export function About() {
             (always free).
           </li>
           <li>
-            <strong>Match</strong> — paste lists from WhatsApp or forums; see overlaps instantly
+            <strong>Swap</strong> — paste lists from WhatsApp or forums; see overlaps instantly
             (always free, no account).{' '}
-            <Link to="/match">Open Match</Link>.
+            <Link to="/swap">Open Swap</Link>.
           </li>
           <li>
-            <strong>Platform matching</strong> — stranger introductions later (
-            <Link to="/match?tab=strangers">what’s planned</Link>); free at launch when it ships.
+            <strong>Find swaps</strong> — help finding stickers you need from other collectors (
+            <Link to="/swap?tab=find">what’s planned</Link>); free at launch when it ships.
           </li>
         </ul>
         <h2>Albums</h2>
@@ -46,7 +46,7 @@ export function About() {
           studio name stays behind the scenes for legal and operations.
         </p>
         <p>
-          <Link to="/match">Open Match</Link> or{' '}
+          <Link to="/swap">Open Swap</Link> or{' '}
           <Link to="/">track your collection</Link> — both work without an account today.
         </p>
       </div>

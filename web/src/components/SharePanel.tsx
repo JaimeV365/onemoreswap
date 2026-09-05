@@ -115,7 +115,7 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
         with you — no account, no name on the link.
       </p>
 
-      <h3 className={styles.subTitle}>Match link</h3>
+      <h3 className={styles.subTitle}>Swap link</h3>
       <p className={styles.hint}>
         For WhatsApp, Facebook, forums. Creates post text + link; edit below if you like.
       </p>
@@ -140,7 +140,7 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
           />
           <StarIcon size={14} filled />
           <span>
-            Priority needs only
+            Want soon only
             {favoriteCount ? ` (${favoriteCount} starred)` : ''}
           </span>
         </label>
@@ -207,7 +207,7 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
           />
           <StarIcon size={14} filled />
           <span>
-            Priority needs only
+            Want soon only
             {favoriteCount ? ` (${favoriteCount} starred)` : ''}
           </span>
         </label>

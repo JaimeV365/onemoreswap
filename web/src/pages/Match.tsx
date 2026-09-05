@@ -5,71 +5,58 @@ import { PasteListsPanel } from './PasteTool'
 import styles from './Page.module.css'
 import matchStyles from './Match.module.css'
 
-export type MatchHub = 'paste' | 'strangers'
+export type SwapHub = 'paste' | 'find'
 
-type MatchProps = {
-  initialHub?: MatchHub
+type SwapProps = {
+  initialHub?: SwapHub
 }
 
-function FindStrangersPanel() {
+/** @deprecated use SwapHub */
+export type MatchHub = SwapHub
+
+function FindSwapsPanel() {
   return (
     <div>
       <p className={styles.lead} style={{ marginTop: 0 }}>
-        Algorithm matching with collectors you do not already know — post only, reputation-weighted,
-        free at launch when liquidity exists. Not live yet on purpose: matching products die when
-        they charge (or promise strangers) before there are enough people.
+        Coming soon: help finding swaps for the stickers you still need.
       </p>
-
-      <section className={styles.panel}>
-        <h2 className={styles.panelTitle}>What will ship here</h2>
-        <ul className={styles.bulletList}>
-          <li>Distance as approximate miles — no early address or name exchange</li>
-          <li>Post-only introductions between strangers</li>
-          <li>Reputation and payment preference when fees exist later</li>
-          <li>Free allowance / fully free while the network is thin</li>
-        </ul>
-      </section>
-
-      <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
-        <h2 className={styles.panelTitle}>What to use today</h2>
-        <p className={styles.lead} style={{ marginBottom: 'var(--space-md)' }}>
-          Build your collection, paste lists here under <strong>Paste lists</strong>, track postal
-          swaps, and connect people you already know.
-        </p>
-        <div className={styles.actions}>
-          <Link to="/contacts">
-            <Button>Open contacts</Button>
-          </Link>
-          <Link to="/">
-            <Button variant="ghost">My collection</Button>
-          </Link>
-        </div>
-      </section>
+      <p className={matchStyles.hubLead}>
+        When enough collectors are on One More Swap, you&apos;ll be able to find fair postal swaps
+        here. Until then, paste a list or swap with your contacts.
+      </p>
+      <div className={styles.actions}>
+        <Link to="/contacts">
+          <Button>Open contacts</Button>
+        </Link>
+        <Link to="/">
+          <Button variant="ghost">My collection</Button>
+        </Link>
+      </div>
     </div>
   )
 }
 
-export function Match({ initialHub = 'paste' }: MatchProps) {
-  const [hub, setHub] = useState<MatchHub>(initialHub)
+export function Match({ initialHub = 'paste' }: SwapProps) {
+  const [hub, setHub] = useState<SwapHub>(initialHub === 'find' ? 'find' : 'paste')
   const navigate = useNavigate()
 
   useEffect(() => {
-    setHub(initialHub)
+    setHub(initialHub === 'find' ? 'find' : 'paste')
   }, [initialHub])
 
-  const selectHub = (next: MatchHub) => {
+  const selectHub = (next: SwapHub) => {
     setHub(next)
-    navigate(next === 'strangers' ? '/match?tab=strangers' : '/match', { replace: true })
+    navigate(next === 'find' ? '/swap?tab=find' : '/swap', { replace: true })
   }
 
   return (
     <main className={styles.page} id="main-content">
-      <h1 className={styles.title}>Match</h1>
+      <h1 className={styles.title}>Swap</h1>
       <p className={styles.lead}>
-        Compare lists with another collector, or (later) find strangers when the network is ready.
+        See what you can trade — paste someone&apos;s list, or find new swaps when that launches.
       </p>
 
-      <div className={matchStyles.hubTabs} role="tablist" aria-label="Match modes">
+      <div className={matchStyles.hubTabs} role="tablist" aria-label="Swap modes">
         <button
           type="button"
           role="tab"
@@ -84,13 +71,13 @@ export function Match({ initialHub = 'paste' }: MatchProps) {
         <button
           type="button"
           role="tab"
-          aria-selected={hub === 'strangers'}
-          className={[matchStyles.hubTab, hub === 'strangers' ? matchStyles.hubTabActive : '']
+          aria-selected={hub === 'find'}
+          className={[matchStyles.hubTab, hub === 'find' ? matchStyles.hubTabActive : '']
             .filter(Boolean)
             .join(' ')}
-          onClick={() => selectHub('strangers')}
+          onClick={() => selectHub('find')}
         >
-          Find strangers
+          Find swaps
         </button>
       </div>
 
@@ -98,15 +85,18 @@ export function Match({ initialHub = 'paste' }: MatchProps) {
         {hub === 'paste' ? (
           <>
             <p className={matchStyles.hubLead}>
-              Paste their needs and/or spares. We compare with your collection and show what matches
-              — ready to copy into a reply.
+              Paste their needs and/or spares. We compare with your collection and show what you can
+              swap — ready to copy into a reply.
             </p>
             <PasteListsPanel />
           </>
         ) : (
-          <FindStrangersPanel />
+          <FindSwapsPanel />
         )}
       </div>
     </main>
   )
 }
+
+/** Alias for clarity in new code */
+export const Swap = Match

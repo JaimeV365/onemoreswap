@@ -31,7 +31,7 @@ export function Terms() {
         </p>
         <h2>Fees</h2>
         <p>
-          Tier 1 (contacts) and Tier 2 (Match / paste lists) are always free. Tier 3 platform matching is free
+          Tier 1 (contacts) and Tier 2 (Swap / paste lists) are always free. Tier 3 find-swaps is free
           at launch. If fees are introduced later, they cover the introduction — not guaranteed
           delivery.
         </p>

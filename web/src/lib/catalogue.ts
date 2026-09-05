@@ -161,7 +161,7 @@ export function buildShareText(
   }
   const header =
     favoritesOnly && (tab === 'missing' || tab === 'both')
-      ? `Priority needs${tab === 'both' ? ' + spares' : ''}\n`
+      ? `Want soon${tab === 'both' ? ' + spares' : ''}\n`
       : ''
   return `${header}${lines.join('\n')}\n\n— via ${SITE_URL}`
 }

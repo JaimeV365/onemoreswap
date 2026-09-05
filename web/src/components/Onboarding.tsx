@@ -46,7 +46,7 @@ export function OnboardingBanner({ show }: OnboardingProps) {
             <strong>Share list</strong> copy needs/spares for WhatsApp.
           </li>
           <li>
-            Use <Link to="/match">Match</Link> to compare someone else&apos;s list.
+            Use <Link to="/swap">Swap</Link> to compare someone else&apos;s list.
           </li>
         </ol>
       </div>

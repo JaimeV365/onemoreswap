@@ -12,11 +12,11 @@ const available = [
     linkLabel: 'Open my collection →',
   },
   {
-    title: 'Match lists',
+    title: 'Paste & swap',
     badge: 'Ready now',
     body: 'Paste a list from WhatsApp or social media. See overlaps with your needs and spares instantly. No account required.',
-    link: '/match',
-    linkLabel: 'Open Match →',
+    link: '/swap',
+    linkLabel: 'Open Swap →',
   },
   {
     title: 'Anonymous share links',
@@ -36,9 +36,9 @@ const available = [
 
 const coming = [
   {
-    title: 'Platform matching',
-    body: 'Match with collectors you don’t know yet. Post-only introductions, reputation built in. Free at launch when it ships.',
-    link: '/match?tab=strangers',
+    title: 'Find swaps',
+    body: 'Coming soon: help finding fair postal swaps for stickers you still need.',
+    link: '/swap?tab=find',
     linkLabel: 'See what’s planned →',
   },
 ]
@@ -63,19 +63,19 @@ export function Home() {
         <Wordmark />
         <h1 className={styles.heroTitle}>Just need one more?</h1>
         <p className={styles.heroLead}>
-          Track your album, share spares and needs, and match lists from chat. Finish the book —
-          without giving strangers your name.
+          Track your album, share spares and needs, and paste lists from chat. Finish the book —
+          without sharing your name.
         </p>
         <div className={styles.heroActions}>
           <Link to="/">
             <Button>Open my collection</Button>
           </Link>
-          <Link to="/match">
-            <Button variant="secondary">Try Match</Button>
+          <Link to="/swap">
+            <Button variant="secondary">Try Swap</Button>
           </Link>
         </div>
         <p className={styles.heroNote}>
-          No account needed for collection, matching lists, and postal tracking on this device.
+          No account needed for collection, paste swaps, and postal tracking on this device.
         </p>
       </section>
 

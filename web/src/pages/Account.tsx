@@ -227,7 +227,7 @@ export function Account() {
       <main className={styles.page} id="main-content">
         <h1 className={styles.title}>Account</h1>
         <p className={styles.lead}>
-          Sign-in is being set up. Collection, Match, and postal still work on this device.
+          Sign-in is being set up. Collection, Swap, and postal still work on this device.
         </p>
         <p className={styles.notice}>
           <Link to="/">Back to collection</Link>

@@ -297,7 +297,7 @@ export function Collection() {
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to
         remove. Then{' '}
-        <Link to="/match">match against someone else&apos;s list</Link> or track a{' '}
+        <Link to="/swap">paste someone else&apos;s list</Link> or track a{' '}
         <Link to="/postal">postal swap</Link>.
       </p>
 
@@ -454,7 +454,7 @@ export function Collection() {
                           : f === 'needs'
                             ? 'Needs'
                             : f === 'favorites'
-                              ? 'Priority'
+                              ? 'Want soon'
                               : f === 'spares'
                                 ? 'Spares'
                                 : 'Incoming'}
@@ -478,6 +478,7 @@ export function Collection() {
                       >
                         <option value="album">Album order</option>
                         <option value="progress">Progress</option>
+                        <option value="favorites">Want soon</option>
                         <option value="incoming">Incoming</option>
                         <option value="spares">Spares</option>
                       </select>

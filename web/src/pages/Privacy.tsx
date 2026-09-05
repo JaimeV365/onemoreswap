@@ -17,7 +17,7 @@ export function Privacy() {
         <h2>What we collect</h2>
         <ul>
           <li>
-            <strong>Without an account:</strong> Match and collection data stay in your browser
+            <strong>Without an account:</strong> Swap and collection data stay in your browser
             (localStorage). We do not receive it.
           </li>
           <li>
