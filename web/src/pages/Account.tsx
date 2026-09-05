@@ -13,7 +13,7 @@ import authStyles from './Account.module.css'
 type Mode = 'login' | 'signup'
 
 export function Account() {
-  const { user, loading, config, refresh, logout } = useAuth()
+  const { user, loading, config, refresh } = useAuth()
   const { resolved } = useTheme()
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>('login')
@@ -129,12 +129,6 @@ export function Account() {
           <Link to="/settings">Settings</Link>
         </p>
 
-        {justSignedUp && (
-          <p className={[styles.notice, styles.noticeOk].join(' ')}>
-            Account created. Add a collector profile below, then head to your collection.
-          </p>
-        )}
-
         {!user.emailVerified && (
           <section className={styles.panel}>
             <h2 className={styles.panelTitle}>Confirm your email</h2>
@@ -184,37 +178,33 @@ export function Account() {
           </section>
         )}
 
-        <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
-          <h2 className={styles.panelTitle}>What&apos;s next</h2>
-          <ul className={authStyles.nextSteps}>
-            <li>Confirm the adult email (above).</li>
-            <li>Add collector profiles — each has its own collection (switch in the header).</li>
-            <li>
-              Open <Link to="/">My collection</Link> — signed-in changes auto-save to the cloud.
-            </li>
-            <li>
-              Invite family or friends under <Link to="/contacts">Contacts</Link> to compare needs
-              and spares.
-            </li>
-          </ul>
-          <div className={styles.actions}>
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                await logout()
-                setJustSignedUp(false)
-              }}
-            >
-              Sign out
-            </Button>
-            <Button variant="ghost" onClick={() => navigate('/')}>
-              Go to collection
-            </Button>
-            <Button variant="ghost" onClick={() => navigate('/contacts')}>
-              Contacts
-            </Button>
-          </div>
-        </section>
+        {justSignedUp && (
+          <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
+            <h2 className={styles.panelTitle}>What&apos;s next</h2>
+            <p className={[styles.notice, styles.noticeOk].join(' ')} style={{ marginTop: 0 }}>
+              Account created — you&apos;re signed in as the parent / guardian.
+            </p>
+            <ul className={authStyles.nextSteps}>
+              <li>Confirm the adult email{user.emailVerified ? ' (done)' : ' (above)'}.</li>
+              <li>Add collector profiles — each has its own collection (switch in the header).</li>
+              <li>
+                Open <Link to="/">My collection</Link> — signed-in changes auto-save to the cloud.
+              </li>
+              <li>
+                Invite family or friends under <Link to="/contacts">Contacts</Link> to compare needs
+                and spares.
+              </li>
+            </ul>
+            <div className={styles.actions}>
+              <Button type="button" onClick={() => navigate('/')}>
+                Go to collection
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => setJustSignedUp(false)}>
+                Dismiss
+              </Button>
+            </div>
+          </section>
+        )}
 
         <ProfilesPanel />
         <AccountSecurityPanel />
