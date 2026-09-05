@@ -20,11 +20,11 @@ function FindSwapsPanel() {
   return (
     <div>
       <p className={styles.lead} style={{ marginTop: 0 }}>
-        Coming soon: help finding swaps for the stickers you still need.
+        Find fair swaps for stickers you still need — coming soon.
       </p>
       <p className={matchStyles.hubLead}>
-        When enough collectors are on One More Swap, you&apos;ll be able to find fair postal swaps
-        here. Until then, share your list, paste someone else&apos;s, or track the post.
+        For now, share your list or paste someone else&apos;s to see what you can trade. Postal
+        tracking is under Postal when you&apos;ve already agreed a swap.
       </p>
       <div className={styles.actions}>
         <Link to="/contacts">

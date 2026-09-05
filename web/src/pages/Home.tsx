@@ -98,8 +98,7 @@ export function Home() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Coming next</h2>
         <p className={styles.sectionLead}>
-          Stranger matching waits until there are enough collectors — we won’t pretend it’s live
-          until it is.
+          More ways to finish the book — including help finding swaps for stickers you still need.
         </p>
         <div className={styles.cardGrid}>
           {coming.map((item) => (

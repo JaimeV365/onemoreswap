@@ -25,7 +25,7 @@ export function About() {
           </li>
           <li>
             <strong>Find swaps</strong> — help finding stickers you need from other collectors (
-            <Link to="/?tab=swap&swap=find">what’s planned</Link>); free at launch when it ships.
+            <Link to="/?tab=swap&swap=find">coming soon</Link>).
           </li>
         </ul>
         <h2>Albums</h2>
