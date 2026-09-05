@@ -422,8 +422,9 @@ export function Collection() {
                   {addMode === 'have' ? (
                     albumId === 'pl2526' ? (
                       <>
-                        Paste stickers you just got — e.g. <code>LIV 5 7 12</code>, <code>ARS1 ARS2</code>, or{' '}
-                        <code>353 354</code>. First copy goes in the album; extras become spares.
+                        Paste stickers you just got — album numbers work best, e.g.{' '}
+                        <code>319 335 336</code> or <code>LIV319 ARS18</code>. First copy goes in the
+                        album; extras become spares.
                       </>
                     ) : (
                       <>
@@ -435,7 +436,7 @@ export function Collection() {
                     <>
                       Paste only what you still need — e.g.{' '}
                       {albumId === 'pl2526' ? (
-                        <code>LIV: 1, 4, 9</code>
+                        <code>319, 335, 341</code>
                       ) : (
                         <code>MEX: 1, 2, 14</code>
                       )}
@@ -543,7 +544,7 @@ export function Collection() {
                   className={collectionStyles.search}
                   placeholder={
                     albumId === 'pl2526'
-                      ? 'Find sticker — Liverpool 5, LIV7, Salah…'
+                      ? 'Find sticker — Salah, LIV335, 319…'
                       : 'Find sticker — Mexico 5, ENG7, Messi…'
                   }
                   value={search}

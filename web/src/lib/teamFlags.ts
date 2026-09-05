@@ -116,18 +116,18 @@ export const PL_CREST_ESPN_ID: Record<string, number> = {
   BOU: 349,
   BRE: 337,
   BHA: 331,
+  BUR: 379,
   CHE: 363,
   CRY: 384,
   EVE: 368,
   FUL: 370,
-  IPS: 372,
-  LEI: 375,
+  LEE: 357,
   LIV: 364,
   MCI: 382,
   MUN: 360,
   NEW: 361,
   NFO: 393,
-  SOU: 376,
+  SUN: 366,
   TOT: 367,
   WHU: 371,
   WOL: 380,
@@ -141,7 +141,7 @@ export function hasSectionMarks(albumId: string, codes: Iterable<string>): boole
   }
   if (albumId === 'pl2526') {
     for (const code of codes) {
-      if (PL_CREST_ESPN_ID[code] || code === 'PL') return true
+      if (PL_CREST_ESPN_ID[code] || code === 'PL' || code === 'INT' || code === 'HOF') return true
     }
   }
   return false
@@ -152,7 +152,8 @@ export function sectionGlyph(code: string): string | null {
   if (code === '00') return '★'
   if (code === 'FWC' || code === 'HIS') return '✦'
   if (code === 'CC') return 'CC'
-  if (code === 'PL') return 'PL'
+  if (code === 'PL' || code === 'INT') return 'PL'
+  if (code === 'HOF' || code === 'TBL' || code === 'DUO' || code === 'DIV') return '★'
   return null
 }
 
@@ -182,7 +183,9 @@ export function sectionImageUrl(albumId: string, code: string, width = 40): stri
     return `https://flagcdn.com/w${width}/${iso}.png`
   }
   if (albumId === 'pl2526') {
-    if (code === 'PL') return 'https://a.espncdn.com/i/leaguelogos/soccer/500/23.png'
+    if (code === 'PL' || code === 'INT' || code === 'HOF' || code === 'TBL' || code === 'DUO' || code === 'DIV') {
+      return 'https://a.espncdn.com/i/leaguelogos/soccer/500/23.png'
+    }
     const id = PL_CREST_ESPN_ID[code]
     if (!id) return null
     return `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png`
