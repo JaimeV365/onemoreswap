@@ -39,11 +39,12 @@ function MeetPanel() {
   return (
     <div>
       <p className={styles.lead} style={{ marginTop: 0 }}>
-        Coming soon: arrange face-to-face swaps with your contacts only.
+        Coming soon: face-to-face swaps with people you already know — never strangers.
       </p>
       <p className={matchStyles.hubLead}>
-        Meet-ups will need the adult account holder&apos;s email approval first — so parents always
-        know. Until then, use Contacts to compare lists and arrange in person yourselves.
+        When this launches, every meet-up will need the adult account holder&apos;s email approval
+        first. Until then, One More Swap does not arrange or encourage meet-ups. Use Contacts only
+        to compare sticker lists with people you trust.
       </p>
       <div className={styles.actions}>
         <Link to="/contacts">
