@@ -34,3 +34,19 @@
 .syncError {
   color: var(--red);
 }
+
+@keyframes syncPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.syncBusy {
+  color: var(--ink);
+  animation: syncPulse 1.2s ease-in-out infinite;
+}
+

@@ -26,6 +26,24 @@
   color: var(--ink);
 }
 
+.busy {
+  margin: var(--space-md) 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+  animation: cloudBusyPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes cloudBusyPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
 .banner {
   display: flex;
   flex-wrap: wrap;

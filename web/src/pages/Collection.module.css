@@ -214,6 +214,24 @@
   line-height: 1.45;
 }
 
+.backupBusy {
+  margin: var(--space-md) 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+  animation: backupPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes backupPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
 .confirmLead {
   margin: 0;
   font-size: 0.9375rem;

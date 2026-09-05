@@ -12,6 +12,7 @@ import {
   loadSyncMeta,
   recordLocalSynced,
 } from '../lib/syncStatus'
+import { delayedBusyLabel, useDelayedBusy } from '../lib/useDelayedBusy'
 import { Button } from './Button'
 import { ConfirmDialog } from './ConfirmDialog'
 import styles from '../pages/Page.module.css'
@@ -25,10 +26,12 @@ type CloudSyncPanelProps = {
   bare?: boolean
 }
 
+type BusyAction = 'save' | 'load' | 'check' | null
+
 export function CloudSyncPanel({ onApplied, refreshKey = 0, bare = false }: CloudSyncPanelProps) {
   const { user } = useAuth()
   const { activeProfile } = useProfiles()
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState<BusyAction>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [cloudMeta, setCloudMeta] = useState<{ updatedAt: string | null; revision: number } | null>(
@@ -36,6 +39,25 @@ export function CloudSyncPanel({ onApplied, refreshKey = 0, bare = false }: Clou
   )
   const [confirmLoad, setConfirmLoad] = useState(false)
   const [tick, setTick] = useState(0)
+  const busyPhase = useDelayedBusy(busy !== null)
+  const busyLabel = delayedBusyLabel(busyPhase, {
+    show:
+      busy === 'save'
+        ? 'Saving to cloud…'
+        : busy === 'load'
+          ? 'Loading from cloud…'
+          : busy === 'check'
+            ? 'Checking cloud…'
+            : 'Working…',
+    slow:
+      busy === 'save'
+        ? 'Still saving to cloud — check your connection if this continues…'
+        : busy === 'load'
+          ? 'Still loading from cloud — this is taking longer than usual…'
+          : busy === 'check'
+            ? 'Still checking the cloud…'
+            : 'Still working…',
+  })
 
   useEffect(() => {
     setTick((t) => t + 1)
@@ -73,73 +95,83 @@ export function CloudSyncPanel({ onApplied, refreshKey = 0, bare = false }: Clou
 
   void tick
   const dirty = getSyncDirtyState()
+  const isBusy = busy !== null
 
   const checkCloud = async () => {
-    setBusy(true)
+    setBusy('check')
     setError(null)
     setMessage(null)
-    const res = await pullCloudSync(activeProfile.id)
-    setBusy(false)
-    if (res.error) {
-      setError(res.error)
-      return
+    try {
+      const res = await pullCloudSync(activeProfile.id)
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      setCloudMeta({
+        updatedAt: res.data?.updatedAt ?? null,
+        revision: res.data?.revision ?? 0,
+      })
+      setMessage(
+        res.data?.exists
+          ? `Cloud copy found (revision ${res.data.revision}).`
+          : 'No cloud copy yet — use Save to cloud.',
+      )
+    } finally {
+      setBusy(null)
     }
-    setCloudMeta({
-      updatedAt: res.data?.updatedAt ?? null,
-      revision: res.data?.revision ?? 0,
-    })
-    setMessage(
-      res.data?.exists
-        ? `Cloud copy found (revision ${res.data.revision}).`
-        : 'No cloud copy yet — use Save to cloud.',
-    )
   }
 
   const saveToCloud = async () => {
-    setBusy(true)
+    setBusy('save')
     setError(null)
     setMessage(null)
-    const res = await pushCloudSync(activeProfile.id)
-    setBusy(false)
-    if (res.error) {
-      setError(res.error)
-      return
+    try {
+      const res = await pushCloudSync(activeProfile.id)
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      const updatedAt = res.data?.updatedAt ?? null
+      const revision = res.data?.revision ?? 0
+      recordLocalSynced({ updatedAt, revision })
+      setCloudMeta({ updatedAt, revision })
+      setTick((t) => t + 1)
+      setMessage(`Saved to cloud for ${activeProfile.displayName}.`)
+    } finally {
+      setBusy(null)
     }
-    const updatedAt = res.data?.updatedAt ?? null
-    const revision = res.data?.revision ?? 0
-    recordLocalSynced({ updatedAt, revision })
-    setCloudMeta({ updatedAt, revision })
-    setTick((t) => t + 1)
-    setMessage(`Saved to cloud for ${activeProfile.displayName}.`)
   }
 
   const loadFromCloud = async () => {
     setConfirmLoad(false)
-    setBusy(true)
+    setBusy('load')
     setError(null)
     setMessage(null)
-    const res = await pullCloudSync(activeProfile.id)
-    setBusy(false)
-    if (res.error) {
-      setError(res.error)
-      return
+    try {
+      const res = await pullCloudSync(activeProfile.id)
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      if (!res.data?.exists) {
+        setMessage('No cloud copy to load yet.')
+        return
+      }
+      applyCloudSyncLocally(res.data)
+      recordLocalSynced({
+        updatedAt: res.data.updatedAt,
+        revision: res.data.revision,
+      })
+      setCloudMeta({
+        updatedAt: res.data.updatedAt,
+        revision: res.data.revision,
+      })
+      setTick((t) => t + 1)
+      setMessage('Loaded from cloud.')
+      onApplied?.()
+    } finally {
+      setBusy(null)
     }
-    if (!res.data?.exists) {
-      setMessage('No cloud copy to load yet.')
-      return
-    }
-    applyCloudSyncLocally(res.data)
-    recordLocalSynced({
-      updatedAt: res.data.updatedAt,
-      revision: res.data.revision,
-    })
-    setCloudMeta({
-      updatedAt: res.data.updatedAt,
-      revision: res.data.revision,
-    })
-    setTick((t) => t + 1)
-    setMessage('Loaded from cloud.')
-    onApplied?.()
   }
 
   return (
@@ -166,16 +198,26 @@ export function CloudSyncPanel({ onApplied, refreshKey = 0, bare = false }: Clou
         </p>
       )}
       <div className={styles.actions}>
-        <Button type="button" disabled={busy} onClick={saveToCloud}>
+        <Button type="button" disabled={isBusy} onClick={saveToCloud}>
           Save to cloud
         </Button>
-        <Button type="button" variant="secondary" disabled={busy} onClick={() => setConfirmLoad(true)}>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={isBusy}
+          onClick={() => setConfirmLoad(true)}
+        >
           Load from cloud
         </Button>
-        <Button type="button" variant="ghost" disabled={busy} onClick={checkCloud}>
+        <Button type="button" variant="ghost" disabled={isBusy} onClick={checkCloud}>
           Check cloud
         </Button>
       </div>
+      {busyLabel && (
+        <p className={syncStyles.busy} role="status" aria-live="polite">
+          {busyLabel}
+        </p>
+      )}
       {error && (
         <p className={[styles.notice, styles.noticeError].join(' ')} role="alert">
           {error}

@@ -47,6 +47,7 @@ import {
   saveCollection,
   setAlbumState,
 } from '../lib/storage'
+import { delayedBusyLabel, useDelayedBusy } from '../lib/useDelayedBusy'
 import type { CollectionAlbumState } from '../lib/types'
 import styles from './Page.module.css'
 import collectionStyles from './Collection.module.css'
@@ -93,6 +94,22 @@ export function Collection() {
   const [confirmMissing, setConfirmMissing] = useState(false)
   const [pendingImport, setPendingImport] = useState<ImportResult | null>(null)
   const [alertModal, setAlertModal] = useState<{ title: string; body: string } | null>(null)
+  const [backupBusy, setBackupBusy] = useState<'export' | 'import' | null>(null)
+  const backupPhase = useDelayedBusy(backupBusy !== null)
+  const backupBusyLabel = delayedBusyLabel(backupPhase, {
+    show:
+      backupBusy === 'export'
+        ? 'Preparing backup…'
+        : backupBusy === 'import'
+          ? 'Reading backup…'
+          : 'Working…',
+    slow:
+      backupBusy === 'export'
+        ? 'Still preparing your backup — large collections can take a moment…'
+        : backupBusy === 'import'
+          ? 'Still importing — large backups can take a moment…'
+          : 'Still working…',
+  })
 
   const album = getAlbum(albumId)
   const indexes = getAlbumIndexes(albumId)
@@ -221,22 +238,29 @@ export function Collection() {
     if (!pendingImport) return
     const result = pendingImport
     setPendingImport(null)
-    saveCollection(result.store)
-    if (result.postal?.length) {
-      upsertPostalSwaps(result.postal, true)
-    }
-    const nextAlbum = result.kind === 'wc-tracker' ? 'wc2026' : albumId || 'wc2026'
-    enableAlbum(nextAlbum)
-    if (result.kind === 'onemoreswap') {
-      Object.keys(result.store.albums).forEach((id) => enableAlbum(id))
-    }
-    setAlbumId(nextAlbum)
-    setState(getAlbumState(loadCollection(), nextAlbum))
-    const detail = result.postal?.length
-      ? `${result.message} Open Postal swaps to review them.`
-      : result.message
-    setMessage(detail)
-    setAlertModal({ title: 'Backup imported', body: detail })
+    setBackupBusy('import')
+    window.setTimeout(() => {
+      try {
+        saveCollection(result.store)
+        if (result.postal?.length) {
+          upsertPostalSwaps(result.postal, true)
+        }
+        const nextAlbum = result.kind === 'wc-tracker' ? 'wc2026' : albumId || 'wc2026'
+        enableAlbum(nextAlbum)
+        if (result.kind === 'onemoreswap') {
+          Object.keys(result.store.albums).forEach((id) => enableAlbum(id))
+        }
+        setAlbumId(nextAlbum)
+        setState(getAlbumState(loadCollection(), nextAlbum))
+        const detail = result.postal?.length
+          ? `${result.message} Open Postal swaps to review them.`
+          : result.message
+        setMessage(detail)
+        setAlertModal({ title: 'Backup imported', body: detail })
+      } finally {
+        setBackupBusy(null)
+      }
+    }, 0)
   }
 
   const markArrived = (seq: number) => {
@@ -511,21 +535,30 @@ export function Collection() {
                 <div className={styles.actions}>
                   <Button
                     variant="ghost"
+                    disabled={backupBusy !== null}
                     onClick={() => {
-                      downloadJson(
-                        'onemoreswap-collection.json',
-                        exportCollectionJson(loadCollection()),
-                      )
-                      setAlertModal({
-                        title: 'Backup downloaded',
-                        body: 'Keep the JSON file safe — you can import it later on this or another device.',
-                      })
+                      setBackupBusy('export')
+                      window.setTimeout(() => {
+                        try {
+                          downloadJson(
+                            'onemoreswap-collection.json',
+                            exportCollectionJson(loadCollection()),
+                          )
+                          setAlertModal({
+                            title: 'Backup downloaded',
+                            body: 'Keep the JSON file safe — you can import it later on this or another device.',
+                          })
+                        } finally {
+                          setBackupBusy(null)
+                        }
+                      }, 0)
                     }}
                   >
                     Export backup
                   </Button>
                   <Button
                     variant="ghost"
+                    disabled={backupBusy !== null}
                     onClick={() => {
                       const input = document.createElement('input')
                       input.type = 'file'
@@ -533,13 +566,18 @@ export function Collection() {
                       input.onchange = async () => {
                         const file = input.files?.[0]
                         if (!file) return
+                        setBackupBusy('import')
                         try {
+                          // Yield so the loading state can paint before heavy parse work
+                          await new Promise<void>((r) => window.setTimeout(r, 0))
                           setPendingImport(importAnyBackup(await file.text()))
                         } catch {
                           setAlertModal({
                             title: 'Could not import backup',
                             body: 'That file is not a recognised One More Swap or World Cup tracker backup.',
                           })
+                        } finally {
+                          setBackupBusy(null)
                         }
                       }
                       input.click()
@@ -547,10 +585,19 @@ export function Collection() {
                   >
                     Import backup
                   </Button>
-                  <Button variant="ghost" onClick={() => setConfirmClear(true)}>
+                  <Button
+                    variant="ghost"
+                    disabled={backupBusy !== null}
+                    onClick={() => setConfirmClear(true)}
+                  >
                     Clear album
                   </Button>
                 </div>
+                {backupBusyLabel && (
+                  <p className={collectionStyles.backupBusy} role="status" aria-live="polite">
+                    {backupBusyLabel}
+                  </p>
+                )}
               </>
             )}
           </div>
