@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -30,7 +31,8 @@ type ProfileContextValue = {
   bumpDataEpoch: () => void
   hydrating: boolean
   setActiveProfileId: (id: string) => void
-  refreshProfiles: () => Promise<void>
+  /** Refresh profile list. Pass hydrate:false to avoid remounting the whole app. */
+  refreshProfiles: (opts?: { hydrate?: boolean }) => Promise<void>
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null)
@@ -71,6 +73,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [storageKey, setStorageKey] = useState(GUEST_PROFILE_KEY)
   const [dataEpoch, setDataEpoch] = useState(0)
   const [hydrating, setHydrating] = useState(false)
+  const activeIdRef = useRef(activeId)
+  activeIdRef.current = activeId
 
   const bumpDataEpoch = useCallback(() => {
     setDataEpoch((n) => n + 1)
@@ -90,7 +94,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, [bumpDataEpoch])
 
-  const refreshProfiles = useCallback(async () => {
+  const refreshProfiles = useCallback(async (_opts?: { hydrate?: boolean }) => {
     if (!user) {
       setProfiles([])
       setActiveId(null)
@@ -109,19 +113,30 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (stored && list.some((p) => p.id === stored)) nextId = stored
     else if (list.length) nextId = list[0]!.id
 
-    if (nextId) {
-      await activateProfile(nextId)
-    } else {
+    if (!nextId) {
       setActiveProfileKey(GUEST_PROFILE_KEY)
       setActiveId(null)
       setStorageKey(GUEST_PROFILE_KEY)
+      return
     }
+
+    // Already on this profile — refresh the list only (do not remount the app)
+    if (nextId === activeIdRef.current) {
+      setActiveId(nextId)
+      setActiveProfileKey(nextId)
+      setStorageKey(nextId)
+      return
+    }
+
+    await activateProfile(nextId)
   }, [user, activateProfile])
 
   useEffect(() => {
     if (authLoading) return
     void refreshProfiles()
-  }, [authLoading, refreshProfiles])
+    // Re-run when auth user identity changes, not on every refreshProfiles identity churn
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: user?.id
+  }, [authLoading, user?.id])
 
   const setActiveProfileId = useCallback(
     (id: string) => {

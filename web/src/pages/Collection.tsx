@@ -567,8 +567,9 @@ export function Collection() {
             {tab === 'backup' && (
               <>
                 <p className={collectionStyles.advancedHint}>
-                  Export or import a JSON file. Signed-in changes also auto-save to the cloud in the
-                  background.
+                  Export a JSON file anytime — useful for moving device or an extra copy. When
+                  you&apos;re signed in, collection changes also auto-save to the cloud, so a manual
+                  backup is optional, not required.
                 </p>
                 <div className={styles.actions}>
                   <Button

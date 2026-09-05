@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent } from 'react'
 import { Button } from './Button'
 import { ConfirmDialog } from './ConfirmDialog'
 import { useProfiles } from '../lib/ProfileContext'
@@ -27,9 +27,13 @@ function ageLabel(id: string | null) {
 }
 
 export function ProfilesPanel() {
-  const { refreshProfiles, setActiveProfileId, activeProfile } = useProfiles()
-  const [profiles, setProfiles] = useState<ChildProfile[]>([])
-  const [loading, setLoading] = useState(true)
+  const {
+    profiles,
+    profilesLoading,
+    refreshProfiles,
+    setActiveProfileId,
+    activeProfile,
+  } = useProfiles()
   const [name, setName] = useState('')
   const [ageBand, setAgeBand] = useState<AgeBandId | ''>('unspecified')
   const [busy, setBusy] = useState(false)
@@ -40,31 +44,9 @@ export function ProfilesPanel() {
   const [editAge, setEditAge] = useState<AgeBandId | ''>('')
   const [removeTarget, setRemoveTarget] = useState<{ id: string; label: string } | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const res = await api<{ profiles: ChildProfile[] }>('/api/profiles')
-    setLoading(false)
-    if (res.error) {
-      setError(res.error)
-      return
-    }
-    setError(null)
-    const raw = res.data?.profiles || []
-    setProfiles(
-      raw.map((p) => ({
-        ...p,
-        displayName:
-          p.displayName ||
-          (p as unknown as { display_name?: string }).display_name ||
-          'Profile',
-      })),
-    )
+  const reloadList = useCallback(async () => {
     await refreshProfiles()
   }, [refreshProfiles])
-
-  useEffect(() => {
-    load()
-  }, [load])
 
   const onAdd = async (e: FormEvent) => {
     e.preventDefault()
@@ -86,7 +68,7 @@ export function ProfilesPanel() {
     setName('')
     setAgeBand('unspecified')
     setMessage('Profile added')
-    await load()
+    await reloadList()
     if (res.data?.profile?.id) setActiveProfileId(res.data.profile.id)
   }
 
@@ -107,7 +89,7 @@ export function ProfilesPanel() {
     }
     setEditingId(null)
     setMessage('Profile updated')
-    await load()
+    await reloadList()
   }
 
   const onRemove = async (id: string) => {
@@ -120,8 +102,10 @@ export function ProfilesPanel() {
       return
     }
     setMessage('Profile removed')
-    await load()
+    await reloadList()
   }
+
+  const loading = profilesLoading && profiles.length === 0
 
   return (
     <section className={styles.panel} style={{ marginTop: 'var(--space-lg)' }}>
