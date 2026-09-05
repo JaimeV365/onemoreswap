@@ -76,15 +76,3 @@ export function hasLocalSyncableData(): boolean {
   const hasAlbums = (bundle.enabledAlbums?.length ?? 0) > 0
   return hasCollection || hasPostal || hasSources || hasAlbums
 }
-
-/** True when this device already has collection or postal content for the active profile. */
-export function hasLocalCollectionOrPostal(): boolean {
-  const bundle = readLocalSyncBundle()
-  const albums = Object.keys(bundle.collection?.albums || {})
-  const hasCollection = albums.some((id) => {
-    const a = bundle.collection!.albums[id]!
-    return a.missing.length > 0 || Object.keys(a.counts).length > 0
-  })
-  const hasPostal = (bundle.postal?.swaps.length ?? 0) > 0
-  return hasCollection || hasPostal
-}
