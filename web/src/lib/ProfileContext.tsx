@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useAuth } from './AuthContext'
+import { applyCloudSyncLocally, pullCloudSync } from './cloudSync'
 import type { ChildProfile } from './profiles'
 import {
   GUEST_PROFILE_KEY,
@@ -16,6 +17,10 @@ import {
   readStoredActiveProfileId,
   setActiveProfileKey,
 } from './profileScope'
+import {
+  hasLocalCollectionOrPostal,
+  recordLocalSynced,
+} from './syncStatus'
 
 type ProfileContextValue = {
   profiles: ChildProfile[]
@@ -23,6 +28,9 @@ type ProfileContextValue = {
   activeProfile: ChildProfile | null
   /** Key used for localStorage scoping (profile id or "local") */
   storageKey: string
+  /** Bumps when cloud data is applied so pages remount with fresh storage */
+  dataEpoch: number
+  hydrating: boolean
   setActiveProfileId: (id: string) => void
   refreshProfiles: () => Promise<void>
 }
@@ -36,12 +44,45 @@ async function fetchProfiles(): Promise<ChildProfile[]> {
   return body.profiles || []
 }
 
+/** If this device has no collection/postal yet, pull the cloud copy for the profile. */
+async function hydrateFromCloudIfEmpty(profileId: string): Promise<boolean> {
+  migrateLegacyDeviceDataToProfile(profileId)
+  setActiveProfileKey(profileId)
+  if (hasLocalCollectionOrPostal()) return false
+
+  const res = await pullCloudSync(profileId)
+  if (res.error || !res.data?.exists) return false
+
+  applyCloudSyncLocally(res.data)
+  recordLocalSynced({
+    updatedAt: res.data.updatedAt,
+    revision: res.data.revision,
+  })
+  return true
+}
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth()
   const [profiles, setProfiles] = useState<ChildProfile[]>([])
   const [profilesLoading, setProfilesLoading] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [storageKey, setStorageKey] = useState(GUEST_PROFILE_KEY)
+  const [dataEpoch, setDataEpoch] = useState(0)
+  const [hydrating, setHydrating] = useState(false)
+
+  const activateProfile = useCallback(async (profileId: string) => {
+    setHydrating(true)
+    migrateLegacyDeviceDataToProfile(profileId)
+    setActiveProfileKey(profileId)
+    setActiveId(profileId)
+    setStorageKey(profileId)
+    try {
+      const pulled = await hydrateFromCloudIfEmpty(profileId)
+      if (pulled) setDataEpoch((n) => n + 1)
+    } finally {
+      setHydrating(false)
+    }
+  }, [])
 
   const refreshProfiles = useCallback(async () => {
     if (!user) {
@@ -49,6 +90,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setActiveId(null)
       setActiveProfileKey(GUEST_PROFILE_KEY)
       setStorageKey(GUEST_PROFILE_KEY)
+      setHydrating(false)
       return
     }
     setProfilesLoading(true)
@@ -62,36 +104,31 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     else if (list.length) nextId = list[0]!.id
 
     if (nextId) {
-      migrateLegacyDeviceDataToProfile(nextId)
-      setActiveProfileKey(nextId)
-      setActiveId(nextId)
-      setStorageKey(nextId)
+      await activateProfile(nextId)
     } else {
-      // Signed in but no profiles yet — keep guest device data until first profile
       setActiveProfileKey(GUEST_PROFILE_KEY)
       setActiveId(null)
       setStorageKey(GUEST_PROFILE_KEY)
     }
-  }, [user])
+  }, [user, activateProfile])
 
   useEffect(() => {
     if (authLoading) return
-    refreshProfiles()
+    void refreshProfiles()
   }, [authLoading, refreshProfiles])
 
-  const setActiveProfileId = useCallback((id: string) => {
-    migrateLegacyDeviceDataToProfile(id)
-    setActiveProfileKey(id)
-    setActiveId(id)
-    setStorageKey(id)
-  }, [])
+  const setActiveProfileId = useCallback(
+    (id: string) => {
+      void activateProfile(id)
+    },
+    [activateProfile],
+  )
 
   const activeProfile = useMemo(
     () => profiles.find((p) => p.id === activeId) || null,
     [profiles, activeId],
   )
 
-  // Keep module key in sync for any code reading getActiveProfileKey()
   useEffect(() => {
     if (getActiveProfileKey() !== storageKey) setActiveProfileKey(storageKey)
   }, [storageKey])
@@ -102,10 +139,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       profilesLoading,
       activeProfile,
       storageKey,
+      dataEpoch,
+      hydrating,
       setActiveProfileId,
       refreshProfiles,
     }),
-    [profiles, profilesLoading, activeProfile, storageKey, setActiveProfileId, refreshProfiles],
+    [
+      profiles,
+      profilesLoading,
+      activeProfile,
+      storageKey,
+      dataEpoch,
+      hydrating,
+      setActiveProfileId,
+      refreshProfiles,
+    ],
   )
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

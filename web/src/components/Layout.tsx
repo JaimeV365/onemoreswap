@@ -7,7 +7,7 @@ import { formatSavedAt, useAutoCloudSync } from '../lib/useAutoCloudSync'
 import styles from './Layout.module.css'
 
 export function Layout() {
-  const { storageKey, activeProfile } = useProfiles()
+  const { storageKey, dataEpoch, activeProfile, hydrating } = useProfiles()
   const { user } = useAuth()
   const { status, error, lastSavedAt } = useAutoCloudSync()
   const savedLabel = formatSavedAt(lastSavedAt)
@@ -34,19 +34,22 @@ export function Layout() {
               : 'Cloud backup for the active collector profile'
           }
         >
-          {status === 'pending' && 'Cloud backup pending…'}
-          {status === 'saving' && 'Saving to cloud…'}
-          {status === 'saved' &&
+          {hydrating && 'Loading your collection from the cloud…'}
+          {!hydrating && status === 'pending' && 'Cloud backup pending…'}
+          {!hydrating && status === 'saving' && 'Saving to cloud…'}
+          {!hydrating &&
+            status === 'saved' &&
             (savedLabel ? `Saved to cloud · ${savedLabel}` : 'Saved to cloud')}
-          {status === 'error' && (error || 'Could not save to cloud')}
-          {status === 'idle' &&
+          {!hydrating && status === 'error' && (error || 'Could not save to cloud')}
+          {!hydrating &&
+            status === 'idle' &&
             (savedLabel
               ? `Last cloud save · ${savedLabel}`
               : 'Cloud backup on — waiting for your first save')}
         </div>
       )}
-      {/* Remount pages when collector profile changes so each gets its own data */}
-      <Outlet key={storageKey} />
+      {/* Remount when profile changes or cloud data is applied */}
+      <Outlet key={`${storageKey}:${dataEpoch}`} />
       <Footer />
     </>
   )

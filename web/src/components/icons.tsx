@@ -119,3 +119,22 @@ export function FolderOpenIcon({ size = 20, className }: IconProps) {
     </Svg>
   )
 }
+
+export function MenuIcon({ size = 20, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="M4 5h16" />
+      <path d="M4 12h16" />
+      <path d="M4 19h16" />
+    </Svg>
+  )
+}
+
+export function CloseIcon({ size = 20, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </Svg>
+  )
+}

@@ -4,7 +4,7 @@
  */
 
 const ACTIVE_KEY = 'onemoreswap-active-profile'
-const LEGACY_MIGRATED_KEY = 'onemoreswap-legacy-migrated-v1'
+const LEGACY_MIGRATED_PREFIX = 'onemoreswap-legacy-migrated-v2:'
 
 export const GUEST_PROFILE_KEY = 'local'
 
@@ -15,6 +15,7 @@ const SCOPED_BASES = [
   'onemoreswap-sources-v1',
   'onemoreswap-onboarding-v1',
   'onemoreswap-albums-v1',
+  'onemoreswap-sync-meta-v1',
 ] as const
 
 let activeKey: string = GUEST_PROFILE_KEY
@@ -50,28 +51,27 @@ export function scopedStorageKey(base: string): string {
 }
 
 /**
- * Copy unscoped legacy device data into a profile once.
- * Call when the user first gets / selects a real profile.
+ * Copy unscoped legacy keys and guest (`:local`) data into a profile once.
+ * Call when the user first gets / selects a real profile on this device.
  */
 export function migrateLegacyDeviceDataToProfile(profileId: string) {
   try {
-    if (localStorage.getItem(LEGACY_MIGRATED_KEY)) return
+    const flag = `${LEGACY_MIGRATED_PREFIX}${profileId}`
+    if (localStorage.getItem(flag)) return
 
     let copied = false
     for (const base of SCOPED_BASES) {
-      const legacy = localStorage.getItem(base)
       const target = `${base}:${profileId}`
-      if (legacy && !localStorage.getItem(target)) {
-        localStorage.setItem(target, legacy)
+      if (localStorage.getItem(target)) continue
+      const legacy = localStorage.getItem(base)
+      const guest = localStorage.getItem(`${base}:${GUEST_PROFILE_KEY}`)
+      const source = legacy || guest
+      if (source) {
+        localStorage.setItem(target, source)
         copied = true
       }
     }
-    // Always mark so we don't re-copy into a second profile later
-    localStorage.setItem(LEGACY_MIGRATED_KEY, profileId)
-    if (copied) {
-      // Leave legacy keys in place as backup until cloud sync; optional clear:
-      // for (const base of SCOPED_BASES) localStorage.removeItem(base)
-    }
+    localStorage.setItem(flag, copied ? 'copied' : 'none')
   } catch {
     /* ignore */
   }

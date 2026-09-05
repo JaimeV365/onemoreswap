@@ -37,7 +37,7 @@ function formatSavedAt(iso: string | null): string | null {
  */
 export function useAutoCloudSync(): AutoCloudSyncState {
   const { user } = useAuth()
-  const { activeProfile } = useProfiles()
+  const { activeProfile, hydrating } = useProfiles()
   const [status, setStatus] = useState<AutoSyncStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(
@@ -47,10 +47,13 @@ export function useAutoCloudSync(): AutoCloudSyncState {
   const profileId = activeProfile?.id
 
   useEffect(() => {
-    if (!user || !profileId) {
-      setStatus('idle')
-      setError(null)
-      setLastSavedAt(null)
+    if (!user || !profileId || hydrating) {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      if (!user || !profileId) {
+        setStatus('idle')
+        setError(null)
+        setLastSavedAt(null)
+      }
       return
     }
 
@@ -96,7 +99,7 @@ export function useAutoCloudSync(): AutoCloudSyncState {
       unsub()
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [user, profileId])
+  }, [user, profileId, hydrating])
 
   return { status, error, lastSavedAt }
 }
