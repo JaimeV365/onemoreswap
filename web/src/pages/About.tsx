@@ -19,12 +19,13 @@ export function About() {
             (always free).
           </li>
           <li>
-            <strong>Paste &amp; match</strong> — paste lists from WhatsApp or forums; see overlaps
-            instantly (always free, no account).
+            <strong>Match</strong> — paste lists from WhatsApp or forums; see overlaps instantly
+            (always free, no account).{' '}
+            <Link to="/match">Open Match</Link>.
           </li>
           <li>
             <strong>Platform matching</strong> — stranger introductions later (
-            <Link to="/matching">what’s planned</Link>); free at launch when it ships.
+            <Link to="/match?tab=strangers">what’s planned</Link>); free at launch when it ships.
           </li>
         </ul>
         <h2>Albums</h2>
@@ -45,7 +46,7 @@ export function About() {
           studio name stays behind the scenes for legal and operations.
         </p>
         <p>
-          <Link to="/paste">Try the paste tool</Link> or{' '}
+          <Link to="/match">Open Match</Link> or{' '}
           <Link to="/">track your collection</Link> — both work without an account today.
         </p>
       </div>

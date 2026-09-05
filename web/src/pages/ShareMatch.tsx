@@ -137,7 +137,7 @@ export function ShareMatch() {
         <h1 className={styles.title}>Shared list</h1>
         <p className={[styles.notice, styles.noticeError].join(' ')}>{error || 'Not found'}</p>
         <p className={styles.lead}>
-          <Link to="/">Open my collection</Link> · <Link to="/paste">Paste tool</Link>
+          <Link to="/">Open my collection</Link> · <Link to="/match">Match</Link>
         </p>
       </main>
     )
@@ -286,9 +286,9 @@ export function ShareMatch() {
               Create account
             </Button>
           </Link>
-          <Link to="/paste">
+          <Link to="/match">
             <Button type="button" variant="ghost">
-              Paste tool
+              Match
             </Button>
           </Link>
         </div>

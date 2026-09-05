@@ -12,11 +12,11 @@ const available = [
     linkLabel: 'Open my collection →',
   },
   {
-    title: 'Paste & match',
+    title: 'Match lists',
     badge: 'Ready now',
     body: 'Paste a list from WhatsApp or social media. See overlaps with your needs and spares instantly. No account required.',
-    link: '/paste',
-    linkLabel: 'Open paste tool →',
+    link: '/match',
+    linkLabel: 'Open Match →',
   },
   {
     title: 'Anonymous share links',
@@ -38,7 +38,7 @@ const coming = [
   {
     title: 'Platform matching',
     body: 'Match with collectors you don’t know yet. Post-only introductions, reputation built in. Free at launch when it ships.',
-    link: '/matching',
+    link: '/match?tab=strangers',
     linkLabel: 'See what’s planned →',
   },
 ]
@@ -70,12 +70,12 @@ export function Home() {
           <Link to="/">
             <Button>Open my collection</Button>
           </Link>
-          <Link to="/paste">
-            <Button variant="secondary">Try paste tool</Button>
+          <Link to="/match">
+            <Button variant="secondary">Try Match</Button>
           </Link>
         </div>
         <p className={styles.heroNote}>
-          No account needed for collection, paste matching, and postal tracking on this device.
+          No account needed for collection, matching lists, and postal tracking on this device.
         </p>
       </section>
 

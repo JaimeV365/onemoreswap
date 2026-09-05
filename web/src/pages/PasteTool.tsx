@@ -23,7 +23,8 @@ const DEFAULT_ALBUM = 'wc2026'
 
 type Mode = 'simple' | 'full'
 
-export function PasteTool() {
+/** Tier 2 paste matcher body (no page chrome — used inside Match hub). */
+export function PasteListsPanel() {
   const [albumId, setAlbumId] = useState(() => loadEnabledAlbums()[0] || DEFAULT_ALBUM)
   const [mode, setMode] = useState<Mode>('simple')
   const [yourNeeds, setYourNeeds] = useState('')
@@ -142,13 +143,7 @@ export function PasteTool() {
     useCollection && !isAlbumStarted(getAlbumState(loadCollection(), albumId))
 
   return (
-    <main className={styles.page} id="main-content">
-      <h1 className={styles.title}>Paste &amp; match</h1>
-      <p className={styles.lead}>
-        Paste their needs and/or spares. We compare with your collection and show what matches —
-        ready to copy into a reply.
-      </p>
-
+    <div>
       <AlbumPicker value={albumId} onChange={setAlbumId} />
 
       <div className={pasteStyles.modeTabs}>
@@ -391,6 +386,6 @@ export function PasteTool() {
           )}
         </>
       )}
-    </main>
+    </div>
   )
 }

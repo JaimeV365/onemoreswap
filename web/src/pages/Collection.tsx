@@ -297,7 +297,7 @@ export function Collection() {
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to
         remove. Then{' '}
-        <Link to="/paste">match against someone else&apos;s list</Link> or track a{' '}
+        <Link to="/match">match against someone else&apos;s list</Link> or track a{' '}
         <Link to="/postal">postal swap</Link>.
       </p>
 
@@ -306,7 +306,10 @@ export function Collection() {
       <AlbumPicker value={albumId} onChange={setAlbumId} />
 
       {!albumId ? (
-        <p className={styles.lead}>Add an album above to start tracking stickers for this profile.</p>
+        <p className={styles.lead}>
+          Add World Cup 2026 or Premier League 2025/26 above to start tracking stickers for this
+          profile.
+        </p>
       ) : (
         <>
           <ProgressBar

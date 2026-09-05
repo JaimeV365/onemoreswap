@@ -54,5 +54,10 @@ export function disableAlbum(albumId: string): string[] {
 
 export function albumsAvailableToAdd(enabled: string[]): string[] {
   const set = new Set(enabled)
-  return getAlbumIds().filter((id) => !set.has(id))
+  // Prefer Premier League next to World Cup in the add list (launch spine)
+  const ids = getAlbumIds().filter((id) => !set.has(id))
+  return ids.sort((a, b) => {
+    const rank = (id: string) => (id === 'wc2026' ? 0 : id === 'pl2526' ? 1 : 2)
+    return rank(a) - rank(b)
+  })
 }

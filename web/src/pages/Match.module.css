@@ -1,0 +1,52 @@
+.hubTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-muted);
+}
+
+.hubTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hubTab:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+}
+
+.hubTabActive {
+  background: var(--yellow);
+  color: var(--ink-on-yellow);
+}
+
+.hubTabActive:hover {
+  color: var(--ink-on-yellow);
+  background: var(--yellow);
+}
+
+.hubPanel {
+  /* content follows */
+}
+
+.hubLead {
+  margin: 0 0 var(--space-lg);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}

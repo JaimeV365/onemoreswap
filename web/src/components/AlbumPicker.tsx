@@ -84,7 +84,10 @@ export function AlbumPicker({
   const folderPanel = (
     <div className={styles.panel} role="dialog" aria-label="Albums">
       {!enabled.length ? (
-        <p className={styles.empty}>Add the albums you collect — only those will show here.</p>
+        <p className={styles.empty}>
+          Add the albums you collect — start with{' '}
+          <strong>World Cup 2026</strong> or <strong>Premier League 2025/26</strong>.
+        </p>
       ) : (
         <ul className={styles.list}>
           {enabled.map((id) => {
@@ -127,9 +130,31 @@ export function AlbumPicker({
       {available.length > 0 && (
         <div className={styles.addSection}>
           {!adding ? (
-            <button type="button" className={styles.addBtn} onClick={() => setAdding(true)}>
-              Add album
-            </button>
+            <>
+              <button type="button" className={styles.addBtn} onClick={() => setAdding(true)}>
+                Add album
+              </button>
+              {available.includes('pl2526') && (
+                <button
+                  type="button"
+                  className={[styles.suggestBtn, styles.pl].join(' ')}
+                  onClick={() => addAlbum('pl2526')}
+                >
+                  <span className={styles.name}>Add Premier League 2025/26</span>
+                  <span className={styles.meta}>Topps · launch album</span>
+                </button>
+              )}
+              {available.includes('wc2026') && !available.includes('pl2526') && (
+                <button
+                  type="button"
+                  className={[styles.suggestBtn, styles.wc].join(' ')}
+                  onClick={() => addAlbum('wc2026')}
+                >
+                  <span className={styles.name}>Add World Cup 2026</span>
+                  <span className={styles.meta}>Panini · launch album</span>
+                </button>
+              )}
+            </>
           ) : (
             <div className={styles.addMenu}>
               <span className={styles.addLabel}>Choose an album to track</span>
@@ -145,6 +170,7 @@ export function AlbumPicker({
                     <span className={styles.name}>{album.name}</span>
                     <span className={styles.meta}>
                       {album.manufacturer} · {album.total} stickers
+                      {id === 'pl2526' || id === 'wc2026' ? ' · launch spine' : ''}
                     </span>
                   </button>
                 )
@@ -181,7 +207,9 @@ export function AlbumPicker({
           ) : (
             <>
               <span className={styles.title}>No album selected</span>
-              <span className={styles.subtitle}>Open the folder to add one</span>
+              <span className={styles.subtitle}>
+                Open Albums to add World Cup or Premier League
+              </span>
             </>
           )}
         </div>
@@ -212,7 +240,21 @@ export function AlbumPicker({
           className={styles.emptyPrompt}
           onClick={() => setOpen(true)}
         >
-          Open albums folder to get started
+          Add World Cup 2026 or Premier League 2025/26 to get started
+        </button>
+      )}
+
+      {/* One launch album missing — nudge without opening the folder */}
+      {enabled.length > 0 && available.includes('pl2526') && !open && (
+        <button
+          type="button"
+          className={styles.spineHint}
+          onClick={() => {
+            setOpen(true)
+            setAdding(true)
+          }}
+        >
+          Also collect Premier League? Add Topps 2025/26
         </button>
       )}
 
