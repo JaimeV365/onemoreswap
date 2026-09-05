@@ -4,26 +4,24 @@ import { Header } from '../components/Header'
 import { useAuth } from '../lib/AuthContext'
 import { useProfiles } from '../lib/ProfileContext'
 import { delayedBusyLabel, useDelayedBusy } from '../lib/useDelayedBusy'
-import { formatSavedAt, useAutoCloudSync } from '../lib/useAutoCloudSync'
+import { useAutoCloudSync } from '../lib/useAutoCloudSync'
 import { usePresence } from '../lib/usePresence'
 import styles from './Layout.module.css'
 
 export function Layout() {
   const { storageKey, dataEpoch, activeProfile, hydrating } = useProfiles()
   const { user } = useAuth()
-  const { status, error, lastSavedAt } = useAutoCloudSync()
+  const { status, error } = useAutoCloudSync()
   const { otherDevices } = usePresence()
-  const savedLabel = formatSavedAt(lastSavedAt)
 
-  const backgroundBusy =
-    !hydrating && (status === 'saving' || status === 'syncing' || status === 'pending')
+  const backgroundBusy = !hydrating && status === 'saving'
   const syncPhase = useDelayedBusy(backgroundBusy)
   const hydratePhase = useDelayedBusy(hydrating, 150, 2000)
 
   let busyLabel: string | null = null
   if (hydrating) {
     busyLabel = delayedBusyLabel(hydratePhase, {
-      show: 'Loading your collection from the cloud…',
+      show: 'Loading your collection…',
       slow: 'Still loading your collection — this is taking longer than usual…',
     })
   } else if (status === 'saving') {
@@ -31,20 +29,9 @@ export function Layout() {
       show: 'Saving your changes…',
       slow: 'Still saving — check your connection if this continues…',
     })
-  } else if (status === 'syncing') {
-    busyLabel = delayedBusyLabel(syncPhase, {
-      show: 'Checking for updates…',
-      slow: 'Still checking for updates…',
-    })
-  } else if (status === 'pending') {
-    busyLabel = delayedBusyLabel(syncPhase, {
-      show: 'Sync pending…',
-      slow: 'Still waiting to sync…',
-    })
+  } else if (status === 'error') {
+    busyLabel = error || 'Could not save your changes'
   }
-
-  const showBusy = Boolean(busyLabel)
-  const multiDevice = otherDevices > 0
 
   const multiDeviceLabel =
     otherDevices === 1
@@ -53,24 +40,10 @@ export function Layout() {
         ? `Open on ${otherDevices + 1} devices — editing on more than one risks losing changes (last save wins). Use one device at a time.`
         : null
 
-  let steadyLabel: string | null = null
-  if (!showBusy) {
-    if (multiDeviceLabel) {
-      steadyLabel = multiDeviceLabel
-    } else if (status === 'saved') {
-      steadyLabel = savedLabel ? `Synced · ${savedLabel}` : 'Synced'
-    } else if (status === 'updated') {
-      steadyLabel = savedLabel
-        ? `Updated from another device · ${savedLabel}`
-        : 'Updated from another device'
-    } else if (status === 'error') {
-      steadyLabel = error || 'Could not sync'
-    } else {
-      steadyLabel = savedLabel
-        ? `In sync · ${savedLabel}`
-        : 'Cloud sync on — waiting for your first save'
-    }
-  }
+  const label = user && activeProfile ? multiDeviceLabel || busyLabel : null
+  const isWarn = Boolean(multiDeviceLabel)
+  const isError = Boolean(label) && !isWarn && status === 'error'
+  const isBusy = Boolean(label) && !isWarn && !isError
 
   return (
     <>
@@ -78,33 +51,22 @@ export function Layout() {
         Skip to main content
       </a>
       <Header />
-      {user && activeProfile && (
+      {label && (
         <div
           className={[
             styles.syncBar,
-            multiDevice && !showBusy ? styles.syncWarn : '',
-            status === 'error' && !showBusy && !multiDevice ? styles.syncError : '',
-            (status === 'saved' || status === 'updated') && !showBusy && !multiDevice
-              ? styles.syncOk
-              : '',
-            showBusy ? styles.syncBusy : '',
+            isWarn ? styles.syncWarn : '',
+            isError ? styles.syncError : '',
+            isBusy ? styles.syncBusy : '',
           ]
             .filter(Boolean)
             .join(' ')}
           role="status"
           aria-live="polite"
-          title={
-            multiDevice
-              ? 'This collector profile is open on more than one device'
-              : savedLabel
-                ? `Last successful sync: ${savedLabel}`
-                : 'Keeps this device in sync with your other devices'
-          }
         >
-          {showBusy ? busyLabel : steadyLabel}
+          {label}
         </div>
       )}
-      {/* Remount when profile changes or cloud data is applied */}
       <Outlet key={`${storageKey}:${dataEpoch}`} />
       <Footer />
     </>

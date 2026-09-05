@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlbumBrowse, type SectionSortBy, type SectionSortDir } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
-import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { ConfirmDialog, ConfirmStatList } from '../components/ConfirmDialog'
 import {
@@ -15,7 +14,6 @@ import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
 import { SharePanel } from '../components/SharePanel'
 import { Textarea } from '../components/Textarea'
-import { useAuth } from '../lib/AuthContext'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { enableAlbum, loadEnabledAlbums } from '../lib/enabledAlbums'
 import {
@@ -72,7 +70,6 @@ function initialAlbumId(): string {
 }
 
 export function Collection() {
-  const { user } = useAuth()
   const [albumId, setAlbumId] = useState(initialAlbumId)
   const [state, setState] = useState(() =>
     albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState(),
@@ -296,7 +293,6 @@ export function Collection() {
 
   return (
     <main className={styles.page} id="main-content">
-      <Badge>{user ? 'Cloud backup on' : 'Saved on this device'}</Badge>
       <h1 className={styles.title}>My collection</h1>
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to

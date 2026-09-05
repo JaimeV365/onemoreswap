@@ -5,8 +5,8 @@ type PagesContext = {
   env: Env
 }
 
-/** Consider a device offline if it has not heartbeated within this window. */
-const STALE_MS = 90_000
+/** Offline if no heartbeat within this window (fallback when leave beacon is missed). */
+const STALE_MS = 45_000
 
 async function ownedProfile(env: Env, userId: string, profileId: string) {
   return env.DB.prepare(`SELECT id FROM profiles WHERE id = ? AND user_id = ?`)
@@ -14,7 +14,6 @@ async function ownedProfile(env: Env, userId: string, profileId: string) {
     .first<{ id: string }>()
 }
 
-/** Create the presence table if the one-time migrate was never run. */
 async function ensurePresenceTable(env: Env) {
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS sync_presence (
@@ -31,25 +30,46 @@ async function ensurePresenceTable(env: Env) {
   ).run()
 }
 
+async function countOthers(
+  env: Env,
+  userId: string,
+  profileId: string,
+  deviceId: string,
+  staleBefore: string,
+) {
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM sync_presence
+     WHERE profile_id = ? AND user_id = ? AND device_id != ? AND last_seen >= ?`,
+  )
+    .bind(profileId, userId, deviceId, staleBefore)
+    .first<{ n: number }>()
+  return Number(row?.n ?? 0)
+}
+
 /**
  * POST /api/presence
- * Body: { profileId, deviceId }
- * Upserts this device's heartbeat and returns how many *other* devices are online for the profile.
+ * Body: { profileId, deviceId, leave?: boolean }
+ * Heartbeat (or leave) and return how many *other* devices are online for the profile.
  */
 export const onRequestPost = async (context: PagesContext): Promise<Response> => {
   const { request, env } = context
   const auth = await requireUser(request, env)
   if (auth instanceof Response) return auth
 
-  let body: { profileId?: string; deviceId?: string }
+  let body: { profileId?: string; deviceId?: string; leave?: boolean }
   try {
-    body = (await request.json()) as { profileId?: string; deviceId?: string }
+    body = (await request.json()) as {
+      profileId?: string
+      deviceId?: string
+      leave?: boolean
+    }
   } catch {
     return error('Invalid JSON')
   }
 
   const profileId = (body.profileId || '').trim()
   const deviceId = (body.deviceId || '').trim()
+  const leave = Boolean(body.leave)
   if (!profileId) return error('Missing profileId')
   if (!deviceId || deviceId.length > 80) return error('Missing or invalid deviceId')
 
@@ -60,16 +80,24 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
   const nowIso = now.toISOString()
   const staleBefore = new Date(now.getTime() - STALE_MS).toISOString()
 
-  const runPresence = async () => {
-    await env.DB.prepare(
-      `INSERT INTO sync_presence (device_id, profile_id, user_id, last_seen)
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT(device_id, profile_id) DO UPDATE SET
-         last_seen = excluded.last_seen,
-         user_id = excluded.user_id`,
-    )
-      .bind(deviceId, profileId, auth.id, nowIso)
-      .run()
+  const run = async () => {
+    if (leave) {
+      await env.DB.prepare(
+        `DELETE FROM sync_presence WHERE device_id = ? AND profile_id = ? AND user_id = ?`,
+      )
+        .bind(deviceId, profileId, auth.id)
+        .run()
+    } else {
+      await env.DB.prepare(
+        `INSERT INTO sync_presence (device_id, profile_id, user_id, last_seen)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(device_id, profile_id) DO UPDATE SET
+           last_seen = excluded.last_seen,
+           user_id = excluded.user_id`,
+      )
+        .bind(deviceId, profileId, auth.id, nowIso)
+        .run()
+    }
 
     await env.DB.prepare(
       `DELETE FROM sync_presence
@@ -78,25 +106,18 @@ export const onRequestPost = async (context: PagesContext): Promise<Response> =>
       .bind(profileId, auth.id, staleBefore)
       .run()
 
-    const row = await env.DB.prepare(
-      `SELECT COUNT(*) AS n FROM sync_presence
-       WHERE profile_id = ? AND user_id = ? AND device_id != ? AND last_seen >= ?`,
-    )
-      .bind(profileId, auth.id, deviceId, staleBefore)
-      .first<{ n: number }>()
-
-    return Number(row?.n ?? 0)
+    return countOthers(env, auth.id, profileId, deviceId, staleBefore)
   }
 
   try {
     let otherDevices: number
     try {
-      otherDevices = await runPresence()
+      otherDevices = await run()
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       if (!/no such table/i.test(msg)) throw e
       await ensurePresenceTable(env)
-      otherDevices = await runPresence()
+      otherDevices = await run()
     }
 
     return json({

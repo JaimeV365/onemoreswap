@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlbumPicker } from '../components/AlbumPicker'
-import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { CirclePlusIcon, MailOpenIcon, UserRoundIcon } from '../components/icons'
 import { SourcePicker } from '../components/SourcePicker'
 import { StickerList } from '../components/StickerList'
 import { Textarea } from '../components/Textarea'
-import { useAuth } from '../lib/AuthContext'
 import { getAlbum, getAlbumIndexes, stickerDisplayLabel } from '../lib/catalogue'
 import { loadEnabledAlbums } from '../lib/enabledAlbums'
 import { parseStickerInput } from '../lib/parseStickers'
@@ -97,7 +95,6 @@ function shortName(name: string): string {
 }
 
 export function Postal() {
-  const { user } = useAuth()
   const [albumId, setAlbumId] = useState(() => loadEnabledAlbums()[0] || '')
   const [swaps, setSwaps] = useState(() => loadPostal().swaps)
   const [tab, setTab] = useState<PostalTab>('inbox')
@@ -449,7 +446,6 @@ export function Postal() {
 
   return (
     <main className={styles.page} id="main-content">
-      <Badge>{user ? 'Cloud backup on' : 'Saved on this device'}</Badge>
       <h1 className={styles.title}>Postal swaps</h1>
       <p className={styles.lead}>
         Keep a record of what you posted and what you&apos;re waiting for. Use{' '}
