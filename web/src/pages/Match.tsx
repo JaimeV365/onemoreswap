@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AlbumPicker } from '../components/AlbumPicker'
 import { Button } from '../components/Button'
+import { SharePanel } from '../components/SharePanel'
+import { loadEnabledAlbums } from '../lib/enabledAlbums'
+import { emptyAlbumState, getAlbumState, loadCollection } from '../lib/storage'
 import { PasteListsPanel } from './PasteTool'
 import styles from './Page.module.css'
 import matchStyles from './Match.module.css'
 
-export type SwapHub = 'paste' | 'find'
+export type SwapHub = 'list' | 'paste' | 'find'
 
 type SwapProps = {
   initialHub?: SwapHub
@@ -13,6 +17,36 @@ type SwapProps = {
 
 /** @deprecated use SwapHub */
 export type MatchHub = SwapHub
+
+const DEFAULT_ALBUM = 'wc2026'
+
+function hubPath(hub: SwapHub) {
+  if (hub === 'find') return '/swap?tab=find'
+  if (hub === 'list') return '/swap?tab=list'
+  return '/swap'
+}
+
+function MyListPanel() {
+  const [albumId, setAlbumId] = useState(() => loadEnabledAlbums()[0] || DEFAULT_ALBUM)
+  const [state, setState] = useState(() => getAlbumState(loadCollection(), albumId))
+
+  useEffect(() => {
+    setState(getAlbumState(loadCollection(), albumId))
+  }, [albumId])
+
+  useEffect(() => {
+    const refresh = () => setState(getAlbumState(loadCollection(), albumId))
+    window.addEventListener('focus', refresh)
+    return () => window.removeEventListener('focus', refresh)
+  }, [albumId])
+
+  return (
+    <div>
+      <AlbumPicker value={albumId} onChange={setAlbumId} />
+      <SharePanel albumId={albumId || DEFAULT_ALBUM} state={state || emptyAlbumState()} bare listsOnly />
+    </div>
+  )
+}
 
 function FindSwapsPanel() {
   return (
@@ -36,27 +70,43 @@ function FindSwapsPanel() {
   )
 }
 
+function normalizeHub(hub: SwapHub | undefined): SwapHub {
+  if (hub === 'find' || hub === 'list') return hub
+  return 'paste'
+}
+
 export function Match({ initialHub = 'paste' }: SwapProps) {
-  const [hub, setHub] = useState<SwapHub>(initialHub === 'find' ? 'find' : 'paste')
+  const [hub, setHub] = useState<SwapHub>(() => normalizeHub(initialHub))
   const navigate = useNavigate()
 
   useEffect(() => {
-    setHub(initialHub === 'find' ? 'find' : 'paste')
+    setHub(normalizeHub(initialHub))
   }, [initialHub])
 
   const selectHub = (next: SwapHub) => {
     setHub(next)
-    navigate(next === 'find' ? '/swap?tab=find' : '/swap', { replace: true })
+    navigate(hubPath(next), { replace: true })
   }
 
   return (
     <main className={styles.page} id="main-content">
       <h1 className={styles.title}>Swap</h1>
       <p className={styles.lead}>
-        See what you can trade — paste someone&apos;s list, or find new swaps when that launches.
+        Copy your list, paste theirs to compare, or find new swaps when that launches.
       </p>
 
       <div className={matchStyles.hubTabs} role="tablist" aria-label="Swap modes">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={hub === 'list'}
+          className={[matchStyles.hubTab, hub === 'list' ? matchStyles.hubTabActive : '']
+            .filter(Boolean)
+            .join(' ')}
+          onClick={() => selectHub('list')}
+        >
+          My list
+        </button>
         <button
           type="button"
           role="tab"
@@ -82,7 +132,14 @@ export function Match({ initialHub = 'paste' }: SwapProps) {
       </div>
 
       <div className={matchStyles.hubPanel} role="tabpanel">
-        {hub === 'paste' ? (
+        {hub === 'list' ? (
+          <>
+            <p className={matchStyles.hubLead}>
+              Your needs and spares as plain text — tick Want soon only for the starred shortlist.
+            </p>
+            <MyListPanel />
+          </>
+        ) : hub === 'paste' ? (
           <>
             <p className={matchStyles.hubLead}>
               Paste their needs and/or spares. We compare with your collection and show what you can

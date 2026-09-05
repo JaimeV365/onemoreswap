@@ -23,7 +23,11 @@ function SwapRoute() {
   const [params] = useSearchParams()
   const tab = params.get('tab')
   const initialHub: SwapHub =
-    tab === 'find' || tab === 'strangers' ? 'find' : 'paste'
+    tab === 'find' || tab === 'strangers'
+      ? 'find'
+      : tab === 'list' || tab === 'share'
+        ? 'list'
+        : 'paste'
   return <Match initialHub={initialHub} />
 }
 

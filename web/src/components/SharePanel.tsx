@@ -18,6 +18,8 @@ type SharePanelProps = {
   state: CollectionAlbumState
   /** Skip outer panel chrome when nested in a collapsible section */
   bare?: boolean
+  /** Plain-text copy only (no swap-link section) — used on Swap → My list */
+  listsOnly?: boolean
 }
 
 const tabs: { id: ShareTab; label: string }[] = [
@@ -32,8 +34,8 @@ const linkModes: { id: ShareLinkMode; label: string }[] = [
   { id: 'both', label: 'Both link' },
 ]
 
-export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
-  const [tab, setTab] = useState<ShareTab>('both')
+export function SharePanel({ albumId, state, bare = false, listsOnly = false }: SharePanelProps) {
+  const [tab, setTab] = useState<ShareTab>(listsOnly ? 'missing' : 'both')
   const [linkMode, setLinkMode] = useState<ShareLinkMode>('spares')
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -110,82 +112,94 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
   return (
     <div className={bare ? styles.bare : styles.panel}>
       {!bare && <h2 className={styles.title}>Share list</h2>}
-      <p className={styles.hint}>
-        Copy a list for chat, or post a match link so friends outside One More Swap can find swaps
-        with you — no account, no name on the link.
-      </p>
-
-      <h3 className={styles.subTitle}>Swap link</h3>
-      <p className={styles.hint}>
-        For WhatsApp, Facebook, forums. Creates post text + link; edit below if you like.
-      </p>
-      <div className={styles.tabs}>
-        {linkModes.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={[styles.tab, linkMode === t.id ? styles.tabActive : ''].join(' ')}
-            onClick={() => setLinkMode(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {needsInLink && (
-        <label className={styles.checkRow}>
-          <input
-            type="checkbox"
-            checked={favoritesOnly}
-            onChange={(e) => setFavoritesOnly(e.target.checked)}
-          />
-          <StarIcon size={14} filled />
-          <span>
-            Want soon only
-            {favoriteCount ? ` (${favoriteCount} starred)` : ''}
-          </span>
-        </label>
-      )}
-      <div className={styles.linkActions}>
-        <Button type="button" disabled={linkBusy || !album} onClick={createLink}>
-          {linkBusy ? 'Creating…' : 'Create & copy match link'}
-        </Button>
-      </div>
-      {linkError && (
-        <p className={styles.linkError} role="alert">
-          {linkError}
+      {!listsOnly && (
+        <p className={styles.hint}>
+          Copy a list for chat, or post a match link so friends outside One More Swap can find swaps
+          with you — no account, no name on the link.
         </p>
       )}
-      {shareUrl && postText !== null && (
-        <div className={styles.linkBox}>
-          {postCopied && !postDirty && (
-            <p className={styles.copiedBanner} role="status">
-              Copied to clipboard — paste into your post
-            </p>
-          )}
-          <label className={styles.postLabel} htmlFor="share-post-text">
-            Post text
-          </label>
-          <textarea
-            id="share-post-text"
-            className={styles.postEdit}
-            value={postText}
-            rows={10}
-            spellCheck={false}
-            onChange={(e) => {
-              setPostText(e.target.value)
-              setPostDirty(true)
-              setPostCopied(false)
-            }}
-          />
-          {postDirty && (
-            <Button type="button" variant="secondary" onClick={copyPost}>
-              Copy to clipboard
-            </Button>
-          )}
-        </div>
+      {listsOnly && (
+        <p className={styles.hint}>
+          Copy your needs, want-soons, or spares to paste into WhatsApp, forums, or anywhere else.
+        </p>
       )}
 
-      <h3 className={styles.subTitle}>Plain text</h3>
+      {!listsOnly && (
+        <>
+          <h3 className={styles.subTitle}>Swap link</h3>
+          <p className={styles.hint}>
+            For WhatsApp, Facebook, forums. Creates post text + link; edit below if you like.
+          </p>
+          <div className={styles.tabs}>
+            {linkModes.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={[styles.tab, linkMode === t.id ? styles.tabActive : ''].join(' ')}
+                onClick={() => setLinkMode(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {needsInLink && (
+            <label className={styles.checkRow}>
+              <input
+                type="checkbox"
+                checked={favoritesOnly}
+                onChange={(e) => setFavoritesOnly(e.target.checked)}
+              />
+              <StarIcon size={14} filled />
+              <span>
+                Want soon only
+                {favoriteCount ? ` (${favoriteCount} starred)` : ''}
+              </span>
+            </label>
+          )}
+          <div className={styles.linkActions}>
+            <Button type="button" disabled={linkBusy || !album} onClick={createLink}>
+              {linkBusy ? 'Creating…' : 'Create & copy match link'}
+            </Button>
+          </div>
+          {linkError && (
+            <p className={styles.linkError} role="alert">
+              {linkError}
+            </p>
+          )}
+          {shareUrl && postText !== null && (
+            <div className={styles.linkBox}>
+              {postCopied && !postDirty && (
+                <p className={styles.copiedBanner} role="status">
+                  Copied to clipboard — paste into your post
+                </p>
+              )}
+              <label className={styles.postLabel} htmlFor="share-post-text">
+                Post text
+              </label>
+              <textarea
+                id="share-post-text"
+                className={styles.postEdit}
+                value={postText}
+                rows={10}
+                spellCheck={false}
+                onChange={(e) => {
+                  setPostText(e.target.value)
+                  setPostDirty(true)
+                  setPostCopied(false)
+                }}
+              />
+              {postDirty && (
+                <Button type="button" variant="secondary" onClick={copyPost}>
+                  Copy to clipboard
+                </Button>
+              )}
+            </div>
+          )}
+
+          <h3 className={styles.subTitle}>Plain text</h3>
+        </>
+      )}
+
       <div className={styles.tabs}>
         {tabs.map((t) => (
           <button
