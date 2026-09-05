@@ -54,6 +54,17 @@ CREATE TABLE IF NOT EXISTS profile_sync (
 
 CREATE INDEX IF NOT EXISTS idx_profile_sync_user ON profile_sync (user_id);
 
+CREATE TABLE IF NOT EXISTS sync_presence (
+  device_id TEXT NOT NULL,
+  profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  last_seen TEXT NOT NULL,
+  PRIMARY KEY (device_id, profile_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_presence_profile_seen
+  ON sync_presence (profile_id, last_seen);
+
 CREATE TABLE IF NOT EXISTS email_tokens (
   token TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

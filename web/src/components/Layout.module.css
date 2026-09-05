@@ -50,3 +50,16 @@
   animation: syncPulse 1.2s ease-in-out infinite;
 }
 
+.multiDevice {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0.45rem var(--space-lg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  text-align: center;
+  background: color-mix(in srgb, var(--yellow) 28%, var(--bg-elevated));
+  border-bottom: 1px solid var(--border);
+}
+

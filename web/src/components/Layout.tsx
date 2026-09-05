@@ -5,12 +5,14 @@ import { useAuth } from '../lib/AuthContext'
 import { useProfiles } from '../lib/ProfileContext'
 import { delayedBusyLabel, useDelayedBusy } from '../lib/useDelayedBusy'
 import { formatSavedAt, useAutoCloudSync } from '../lib/useAutoCloudSync'
+import { usePresence } from '../lib/usePresence'
 import styles from './Layout.module.css'
 
 export function Layout() {
   const { storageKey, dataEpoch, activeProfile, hydrating } = useProfiles()
   const { user } = useAuth()
   const { status, error, lastSavedAt } = useAutoCloudSync()
+  const { otherDevices } = usePresence()
   const savedLabel = formatSavedAt(lastSavedAt)
 
   const backgroundBusy =
@@ -61,6 +63,13 @@ export function Layout() {
     }
   }
 
+  const multiDeviceLabel =
+    otherDevices === 1
+      ? 'Also open on 1 other device — edit on one device at a time (last save wins).'
+      : otherDevices > 1
+        ? `Also open on ${otherDevices} other devices — edit on one device at a time (last save wins).`
+        : null
+
   return (
     <>
       <a className={styles.skip} href="#main-content">
@@ -68,25 +77,32 @@ export function Layout() {
       </a>
       <Header />
       {user && activeProfile && (
-        <div
-          className={[
-            styles.syncBar,
-            status === 'error' && !showBusy ? styles.syncError : '',
-            (status === 'saved' || status === 'updated') && !showBusy ? styles.syncOk : '',
-            showBusy ? styles.syncBusy : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          role="status"
-          aria-live="polite"
-          title={
-            savedLabel
-              ? `Last successful sync: ${savedLabel}`
-              : 'Keeps this device in sync with your other devices'
-          }
-        >
-          {showBusy ? busyLabel : steadyLabel}
-        </div>
+        <>
+          {multiDeviceLabel && (
+            <div className={styles.multiDevice} role="status">
+              {multiDeviceLabel}
+            </div>
+          )}
+          <div
+            className={[
+              styles.syncBar,
+              status === 'error' && !showBusy ? styles.syncError : '',
+              (status === 'saved' || status === 'updated') && !showBusy ? styles.syncOk : '',
+              showBusy ? styles.syncBusy : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            role="status"
+            aria-live="polite"
+            title={
+              savedLabel
+                ? `Last successful sync: ${savedLabel}`
+                : 'Keeps this device in sync with your other devices'
+            }
+          >
+            {showBusy ? busyLabel : steadyLabel}
+          </div>
+        </>
       )}
       {/* Remount when profile changes or cloud data is applied */}
       <Outlet key={`${storageKey}:${dataEpoch}`} />
