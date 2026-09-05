@@ -94,8 +94,28 @@ function shortName(name: string): string {
   return t.length > 12 ? `${t.slice(0, 11)}…` : t
 }
 
-export function Postal() {
-  const [albumId, setAlbumId] = useState(() => loadEnabledAlbums()[0] || '')
+export function Postal({
+  albumId: lockedAlbumId,
+  hideAlbumPicker = false,
+  embedded = false,
+}: {
+  albumId?: string
+  hideAlbumPicker?: boolean
+  /** Nested under Collection → Swap (no page chrome) */
+  embedded?: boolean
+} = {}) {
+  const [localAlbumId, setLocalAlbumId] = useState(
+    () => lockedAlbumId || loadEnabledAlbums()[0] || '',
+  )
+  const albumId = lockedAlbumId || localAlbumId
+  const setAlbumId = (id: string) => {
+    if (!lockedAlbumId) setLocalAlbumId(id)
+  }
+
+  useEffect(() => {
+    if (lockedAlbumId) setLocalAlbumId(lockedAlbumId)
+  }, [lockedAlbumId])
+
   const [swaps, setSwaps] = useState(() => loadPostal().swaps)
   const [tab, setTab] = useState<PostalTab>('inbox')
   const [draft, setDraft] = useState<PostalSwap | null>(null)
@@ -444,24 +464,33 @@ export function Postal() {
   const pendingExpected = draft?.expected.filter((l) => l.status === 'pending') ?? []
   const editingExisting = Boolean(draft && tab !== 'new' && tab !== 'inbox')
 
-  return (
-    <main className={styles.page} id="main-content">
-      <h1 className={styles.title}>Postal swaps</h1>
-      <p className={styles.lead}>
-        Keep a record of what you posted and what you&apos;re waiting for. Use{' '}
-        <strong>Sort post</strong> (open envelope, pinned on the left) when stickers arrive today.
-        Import from the World Cup tracker via Collection → Backup, or start a new swap here.
-      </p>
+  const shell = embedded ? 'div' : 'main'
+  const Shell = shell
 
-      <AlbumPicker
-        value={albumId}
-        onChange={(id) => {
-          setAlbumId(id)
-          if (draft && (tab === 'new' || draft.id === tab)) {
-            setDraft({ ...draft, albumId: id })
-          }
-        }}
-      />
+  return (
+    <Shell className={embedded ? undefined : styles.page} id={embedded ? undefined : 'main-content'}>
+      {!embedded && (
+        <>
+          <h1 className={styles.title}>Postal swaps</h1>
+          <p className={styles.lead}>
+            Keep a record of what you posted and what you&apos;re waiting for. Use{' '}
+            <strong>Sort post</strong> (open envelope, pinned on the left) when stickers arrive today.
+            Import from the World Cup tracker via Collection → Backup, or start a new swap here.
+          </p>
+        </>
+      )}
+
+      {!hideAlbumPicker && (
+        <AlbumPicker
+          value={albumId}
+          onChange={(id) => {
+            setAlbumId(id)
+            if (draft && (tab === 'new' || draft.id === tab)) {
+              setDraft({ ...draft, albumId: id })
+            }
+          }}
+        />
+      )}
 
       <div className={postalStyles.filterRow} role="group" aria-label="Show swaps">
         <button
@@ -897,7 +926,7 @@ export function Postal() {
         onConfirm={() => persistDraft(true)}
         onCancel={() => setConfirmOwned(false)}
       />
-    </main>
+    </Shell>
   )
 }
 

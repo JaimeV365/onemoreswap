@@ -3,10 +3,11 @@ import { Button } from './Button'
 import { SharePanel } from './SharePanel'
 import type { CollectionAlbumState } from '../lib/types'
 import { PasteListsPanel } from '../pages/PasteTool'
+import { Postal } from '../pages/Postal'
 import styles from '../pages/Page.module.css'
 import matchStyles from '../pages/Match.module.css'
 
-export type SwapHub = 'share' | 'paste' | 'find'
+export type SwapHub = 'share' | 'paste' | 'postal' | 'meet' | 'find'
 
 type SwapPanelProps = {
   albumId: string
@@ -23,7 +24,26 @@ function FindSwapsPanel() {
       </p>
       <p className={matchStyles.hubLead}>
         When enough collectors are on One More Swap, you&apos;ll be able to find fair postal swaps
-        here. Until then, share your list or paste someone else&apos;s.
+        here. Until then, share your list, paste someone else&apos;s, or track the post.
+      </p>
+      <div className={styles.actions}>
+        <Link to="/contacts">
+          <Button>Open contacts</Button>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function MeetPanel() {
+  return (
+    <div>
+      <p className={styles.lead} style={{ marginTop: 0 }}>
+        Coming soon: arrange face-to-face swaps with your contacts only.
+      </p>
+      <p className={matchStyles.hubLead}>
+        Meet-ups will need the adult account holder&apos;s email approval first — so parents always
+        know. Until then, use Contacts to compare lists and arrange in person yourselves.
       </p>
       <div className={styles.actions}>
         <Link to="/contacts">
@@ -37,6 +57,8 @@ function FindSwapsPanel() {
 const hubs: { id: SwapHub; label: string }[] = [
   { id: 'share', label: 'Share' },
   { id: 'paste', label: 'Paste lists' },
+  { id: 'postal', label: 'Postal' },
+  { id: 'meet', label: 'Meet up' },
   { id: 'find', label: 'Find swaps' },
 ]
 
@@ -77,6 +99,16 @@ export function SwapPanel({ albumId, state, hub, onHubChange }: SwapPanelProps) 
             </p>
             <PasteListsPanel albumId={albumId} hideAlbumPicker />
           </>
+        ) : hub === 'postal' ? (
+          <>
+            <p className={matchStyles.hubLead}>
+              Track what you posted and what you&apos;re waiting for. Sort the post when stickers
+              arrive.
+            </p>
+            <Postal albumId={albumId} hideAlbumPicker embedded />
+          </>
+        ) : hub === 'meet' ? (
+          <MeetPanel />
         ) : (
           <FindSwapsPanel />
         )}
@@ -87,6 +119,8 @@ export function SwapPanel({ albumId, state, hub, onHubChange }: SwapPanelProps) 
 
 export function parseSwapHub(raw: string | null): SwapHub {
   if (raw === 'paste') return 'paste'
+  if (raw === 'postal' || raw === 'mail') return 'postal'
+  if (raw === 'meet' || raw === 'f2f' || raw === 'face') return 'meet'
   if (raw === 'find' || raw === 'strangers') return 'find'
   if (raw === 'list' || raw === 'share') return 'share'
   return 'share'

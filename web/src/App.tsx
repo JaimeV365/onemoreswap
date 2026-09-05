@@ -9,7 +9,6 @@ import { Collection } from './pages/Collection'
 import { Contacts } from './pages/Contacts'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Home } from './pages/Home'
-import { Postal } from './pages/Postal'
 import { Privacy } from './pages/Privacy'
 import { ResetPassword } from './pages/ResetPassword'
 import { Settings } from './pages/Settings'
@@ -48,7 +47,7 @@ export default function App() {
                 <Route path="match" element={<Navigate to="/?tab=swap&swap=paste" replace />} />
                 <Route path="paste" element={<Navigate to="/?tab=swap&swap=paste" replace />} />
                 <Route path="matching" element={<Navigate to="/?tab=swap&swap=find" replace />} />
-                <Route path="postal" element={<Postal />} />
+                <Route path="postal" element={<Navigate to="/?tab=swap&swap=postal" replace />} />
                 <Route path="contacts" element={<Contacts />} />
                 <Route path="s/:token" element={<ShareMatch />} />
                 <Route path="account" element={<Account />} />

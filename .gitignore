@@ -5,3 +5,8 @@ web/dist/
 *.local
 .env
 .env.*
+
+# Internal / offline-only (never publish or push)
+sticker-platform-spec.md
+terms-and-conditions.md
+onemoreswap-palette.html

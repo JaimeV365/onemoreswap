@@ -1,18 +1,12 @@
 .hubTabs {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
   gap: var(--space-xs);
   margin: 0 0 var(--space-lg);
   padding: var(--space-xs);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--bg-muted);
-}
-
-@media (max-width: 520px) {
-  .hubTabs {
-    grid-template-columns: 1fr;
-  }
 }
 
 .hubTab {

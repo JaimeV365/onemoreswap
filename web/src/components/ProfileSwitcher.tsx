@@ -11,9 +11,10 @@ function initialOf(name: string): string {
 }
 
 export function ProfileSwitcher() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { profiles, activeProfile, setActiveProfileId, profilesLoading } = useProfiles()
   const [open, setOpen] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
 
@@ -39,14 +40,52 @@ export function ProfileSwitcher() {
     return <span className={styles.hint} aria-hidden />
   }
 
+  const onSignOut = async () => {
+    setSigningOut(true)
+    await logout()
+    setSigningOut(false)
+    setOpen(false)
+  }
+
   if (!profiles.length) {
     return (
-      <Link to="/account" className={styles.addLink} title="Add a collector profile">
-        <span className={styles.avatar} aria-hidden>
-          +
-        </span>
-        <span className={styles.srOnly}>Add profile</span>
-      </Link>
+      <div className={styles.wrap} ref={rootRef}>
+        <button
+          type="button"
+          className={styles.avatarBtn}
+          aria-label="Account menu"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={menuId}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className={styles.avatar} aria-hidden>
+            {initialOf(user.email)}
+          </span>
+        </button>
+        {open && (
+          <div className={styles.menu} id={menuId} role="menu" aria-label="Account">
+            <p className={styles.menuHeading}>{user.email}</p>
+            <Link
+              to="/account"
+              className={styles.manage}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              Add a collector profile
+            </Link>
+            <button
+              type="button"
+              className={styles.signOut}
+              role="menuitem"
+              disabled={signingOut}
+              onClick={() => void onSignOut()}
+            >
+              {signingOut ? 'Signing out…' : 'Sign out'}
+            </button>
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -57,7 +96,7 @@ export function ProfileSwitcher() {
       <button
         type="button"
         className={styles.avatarBtn}
-        aria-label={`${label} — switch profile`}
+        aria-label={`${label} — account menu`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
@@ -80,7 +119,9 @@ export function ProfileSwitcher() {
                     type="button"
                     role="menuitemradio"
                     aria-checked={active}
-                    className={[styles.item, active ? styles.itemActive : ''].filter(Boolean).join(' ')}
+                    className={[styles.item, active ? styles.itemActive : '']
+                      .filter(Boolean)
+                      .join(' ')}
                     onClick={() => {
                       setActiveProfileId(p.id)
                       setOpen(false)
@@ -96,9 +137,24 @@ export function ProfileSwitcher() {
               )
             })}
           </ul>
-          <Link to="/account" className={styles.manage} role="menuitem" onClick={() => setOpen(false)}>
+          <Link
+            to="/account"
+            className={styles.manage}
+            role="menuitem"
+            onClick={() => setOpen(false)}
+          >
             Manage profiles
           </Link>
+          <p className={styles.accountEmail}>{user.email}</p>
+          <button
+            type="button"
+            className={styles.signOut}
+            role="menuitem"
+            disabled={signingOut}
+            onClick={() => void onSignOut()}
+          >
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
         </div>
       )}
     </div>

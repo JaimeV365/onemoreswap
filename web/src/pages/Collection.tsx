@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { AlbumBrowse, type SectionSortBy, type SectionSortDir } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Button } from '../components/Button'
@@ -330,8 +330,7 @@ export function Collection() {
       <h1 className={styles.title}>My collection</h1>
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to
-        remove. Use <strong>Swap</strong> to share your list or paste someone else&apos;s — or track
-        a <Link to="/postal">postal swap</Link>.
+        remove. Use <strong>Swap</strong> to share, paste lists, or track the post.
       </p>
 
       <OnboardingBanner show={!albumStarted} />

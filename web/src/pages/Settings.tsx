@@ -74,7 +74,8 @@ export function Settings() {
             <Link to="/">My collection</Link> — export / import
           </li>
           <li>
-            <Link to="/postal">Postal swaps</Link> — track posts and incoming stickers
+            <Link to="/?tab=swap&swap=postal">Postal swaps</Link> — track posts and incoming stickers
+            (under Collection → Swap)
           </li>
           <li>
             <Link to="/welcome">Product overview</Link> — how the three tiers work

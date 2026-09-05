@@ -13,7 +13,7 @@ type TeamFlagProps = {
   code: string
   /** Slightly larger mark in section headers */
   size?: 'sm' | 'md'
-  /** Prefer emoji flags (reliable; no CDN). WC defaults to emoji. */
+  /** Prefer emoji flags (jump bar). Section list uses CDN images by default. */
   preferEmoji?: boolean
   className?: string
 }
@@ -38,13 +38,11 @@ export function TeamFlag({
   albumId,
   code,
   size = 'sm',
-  preferEmoji,
+  preferEmoji = false,
   className,
 }: TeamFlagProps) {
   const known = knownMark(albumId, code)
   const emoji = albumId === 'wc2026' ? sectionFlagEmoji(code) : null
-  // World Cup: emoji first (flagcdn is often blocked / flaky). PL: club crests from ESPN.
-  const wantEmoji = preferEmoji ?? albumId === 'wc2026'
   const src = known ? sectionImageUrl(albumId, code, size === 'md' ? 40 : 32) : null
   const [imgFailed, setImgFailed] = useState(false)
 
@@ -53,7 +51,7 @@ export function TeamFlag({
   }, [src])
 
   const isCrest = albumId === 'pl2526'
-  const showImg = Boolean(src) && !imgFailed && !(wantEmoji && emoji)
+  const showImg = Boolean(src) && !imgFailed && !(preferEmoji && emoji)
 
   if (!known) return null
 
@@ -70,9 +68,8 @@ export function TeamFlag({
           alt=""
           width={size === 'md' ? 24 : 20}
           height={size === 'md' ? (isCrest ? 24 : 18) : isCrest ? 20 : 15}
-          loading="lazy"
+          loading={preferEmoji ? 'eager' : 'lazy'}
           decoding="async"
-          referrerPolicy="no-referrer"
           onError={() => setImgFailed(true)}
         />
       </span>
