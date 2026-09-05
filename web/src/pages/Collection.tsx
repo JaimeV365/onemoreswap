@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AlbumBrowse, type SectionSortBy, type SectionSortDir } from '../components/AlbumBrowse'
 import { AlbumPicker } from '../components/AlbumPicker'
 import { Button } from '../components/Button'
@@ -8,11 +8,11 @@ import {
   BookOpenTextIcon,
   CirclePlusIcon,
   DatabaseIcon,
-  Share2Icon,
+  RepeatIcon,
 } from '../components/icons'
 import { OnboardingBanner } from '../components/Onboarding'
 import { ProgressBar } from '../components/ProgressBar'
-import { SharePanel } from '../components/SharePanel'
+import { SwapPanel, parseSwapHub, type SwapHub } from '../components/SwapPanel'
 import { Textarea } from '../components/Textarea'
 import { getAlbum, getAlbumIndexes } from '../lib/catalogue'
 import { enableAlbum, loadEnabledAlbums } from '../lib/enabledAlbums'
@@ -51,7 +51,7 @@ import styles from './Page.module.css'
 import collectionStyles from './Collection.module.css'
 
 type QuickAddMode = 'have' | 'missing'
-type CollectionTab = 'add' | 'share' | 'album' | 'backup'
+type CollectionTab = 'add' | 'swap' | 'album' | 'backup'
 
 const collectionTabs: {
   id: CollectionTab
@@ -60,9 +60,15 @@ const collectionTabs: {
 }[] = [
   { id: 'album', label: 'Album', Icon: BookOpenTextIcon },
   { id: 'add', label: 'Add', Icon: CirclePlusIcon },
-  { id: 'share', label: 'Share', Icon: Share2Icon },
+  { id: 'swap', label: 'Swap', Icon: RepeatIcon },
   { id: 'backup', label: 'Backup', Icon: DatabaseIcon },
 ]
+
+function parseCollectionTab(raw: string | null, albumStarted: boolean): CollectionTab {
+  if (raw === 'add' || raw === 'swap' || raw === 'album' || raw === 'backup') return raw
+  if (raw === 'share') return 'swap'
+  return albumStarted ? 'album' : 'add'
+}
 
 function initialAlbumId(): string {
   const enabled = loadEnabledAlbums()
@@ -70,6 +76,7 @@ function initialAlbumId(): string {
 }
 
 export function Collection() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [albumId, setAlbumId] = useState(initialAlbumId)
   const [state, setState] = useState(() =>
     albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState(),
@@ -81,11 +88,38 @@ export function Collection() {
   const [sectionSortBy, setSectionSortBy] = useState<SectionSortBy>('album')
   const [sectionSortDir, setSectionSortDir] = useState<SectionSortDir>('asc')
   const [message, setMessage] = useState<string | null>(null)
-  const [tab, setTab] = useState<CollectionTab>(() =>
-    isAlbumStarted(albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState())
-      ? 'album'
-      : 'add',
+  const albumStartedForTab = isAlbumStarted(
+    albumId ? getAlbumState(loadCollection(), albumId) : emptyAlbumState(),
   )
+  const tab = parseCollectionTab(searchParams.get('tab'), albumStartedForTab)
+  const swapHub = parseSwapHub(searchParams.get('swap'))
+
+  const setTab = (next: CollectionTab) => {
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev)
+        if (next === 'album') n.delete('tab')
+        else n.set('tab', next)
+        if (next !== 'swap') n.delete('swap')
+        else if (!n.get('swap')) n.set('swap', 'share')
+        return n
+      },
+      { replace: true },
+    )
+  }
+
+  const setSwapHub = (hub: SwapHub) => {
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev)
+        n.set('tab', 'swap')
+        n.set('swap', hub)
+        return n
+      },
+      { replace: true },
+    )
+  }
+
   const [confirmFresh, setConfirmFresh] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
   const [confirmMissing, setConfirmMissing] = useState(false)
@@ -296,9 +330,8 @@ export function Collection() {
       <h1 className={styles.title}>My collection</h1>
       <p className={styles.lead}>
         Track what you need and what you can swap. Click a sticker to add a copy; shift-click to
-        remove. Then{' '}
-        <Link to="/swap">paste someone else&apos;s list</Link> or track a{' '}
-        <Link to="/postal">postal swap</Link>.
+        remove. Use <strong>Swap</strong> to share your list or paste someone else&apos;s — or track
+        a <Link to="/postal">postal swap</Link>.
       </p>
 
       <OnboardingBanner show={!albumStarted} />
@@ -428,7 +461,9 @@ export function Collection() {
               </>
             )}
 
-            {tab === 'share' && <SharePanel albumId={albumId} state={state} bare />}
+            {tab === 'swap' && albumId && (
+              <SwapPanel albumId={albumId} state={state} hub={swapHub} onHubChange={setSwapHub} />
+            )}
 
             {tab === 'album' && (
               <>

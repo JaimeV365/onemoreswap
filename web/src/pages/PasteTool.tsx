@@ -23,9 +23,25 @@ const DEFAULT_ALBUM = 'wc2026'
 
 type Mode = 'simple' | 'full'
 
-/** Tier 2 paste matcher body (no page chrome — used inside Match hub). */
-export function PasteListsPanel() {
-  const [albumId, setAlbumId] = useState(() => loadEnabledAlbums()[0] || DEFAULT_ALBUM)
+/** Tier 2 paste matcher body (no page chrome — used inside Swap). */
+export function PasteListsPanel({
+  albumId: lockedAlbumId,
+  hideAlbumPicker = false,
+}: {
+  /** When set, use this album (from Collection) instead of a local picker. */
+  albumId?: string
+  hideAlbumPicker?: boolean
+} = {}) {
+  const [localAlbumId, setLocalAlbumId] = useState(
+    () => lockedAlbumId || loadEnabledAlbums()[0] || DEFAULT_ALBUM,
+  )
+  const albumId = lockedAlbumId || localAlbumId
+  const setAlbumId = setLocalAlbumId
+
+  useEffect(() => {
+    if (lockedAlbumId) setLocalAlbumId(lockedAlbumId)
+  }, [lockedAlbumId])
+
   const [mode, setMode] = useState<Mode>('simple')
   const [yourNeeds, setYourNeeds] = useState('')
   const [yourSpares, setYourSpares] = useState('')
@@ -144,7 +160,7 @@ export function PasteListsPanel() {
 
   return (
     <div>
-      <AlbumPicker value={albumId} onChange={setAlbumId} />
+      {!hideAlbumPicker && <AlbumPicker value={albumId} onChange={setAlbumId} />}
 
       <div className={pasteStyles.modeTabs}>
         <button

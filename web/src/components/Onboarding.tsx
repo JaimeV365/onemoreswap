@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { scopedStorageKey } from '../lib/profileScope'
 import { Button } from './Button'
 import styles from './Onboarding.module.css'
@@ -39,14 +38,13 @@ export function OnboardingBanner({ show }: OnboardingProps) {
         <h2 className={styles.title}>Get started in 3 steps</h2>
         <ol className={styles.steps}>
           <li>
-            <strong>Quick add</strong> (Add tab) what you have — or paste what’s missing. Share for
-            chat lists or anonymous match links. Backup for export/import.
+            <strong>Quick add</strong> (Add tab) what you have — or paste what’s missing.
           </li>
           <li>
-            <strong>Share list</strong> copy needs/spares for WhatsApp.
+            <strong>Swap → Share</strong> copy needs or want-soons for WhatsApp, or make a link.
           </li>
           <li>
-            Use <Link to="/swap">Swap</Link> to compare someone else&apos;s list.
+            <strong>Swap → Paste lists</strong> to compare someone else&apos;s list.
           </li>
         </ol>
       </div>

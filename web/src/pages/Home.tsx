@@ -15,15 +15,15 @@ const available = [
     title: 'Paste & swap',
     badge: 'Ready now',
     body: 'Paste a list from WhatsApp or social media. See overlaps with your needs and spares instantly. No account required.',
-    link: '/swap',
+    link: '/?tab=swap&swap=paste',
     linkLabel: 'Open Swap →',
   },
   {
     title: 'Anonymous share links',
     badge: 'Ready now',
     body: 'Post a match link that only shows sticker numbers. Others paste their list, see overlaps, and reply on social — without seeing your name.',
-    link: '/',
-    linkLabel: 'Create a link from Collection →',
+    link: '/?tab=swap&swap=share',
+    linkLabel: 'Share from Collection →',
   },
   {
     title: 'Contacts',
@@ -38,7 +38,7 @@ const coming = [
   {
     title: 'Find swaps',
     body: 'Coming soon: help finding fair postal swaps for stickers you still need.',
-    link: '/swap?tab=find',
+    link: '/?tab=swap&swap=find',
     linkLabel: 'See what’s planned →',
   },
 ]
@@ -70,7 +70,7 @@ export function Home() {
           <Link to="/">
             <Button>Open my collection</Button>
           </Link>
-          <Link to="/swap">
+          <Link to="/?tab=swap&swap=paste">
             <Button variant="secondary">Try Swap</Button>
           </Link>
         </div>
