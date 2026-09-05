@@ -10,6 +10,7 @@ import {
 import { copyToClipboard } from '../lib/storage'
 import type { CollectionAlbumState, ShareTab } from '../lib/types'
 import { Button } from './Button'
+import { StarIcon } from './icons'
 import styles from './SharePanel.module.css'
 
 type SharePanelProps = {
@@ -34,6 +35,7 @@ const linkModes: { id: ShareLinkMode; label: string }[] = [
 export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
   const [tab, setTab] = useState<ShareTab>('both')
   const [linkMode, setLinkMode] = useState<ShareLinkMode>('spares')
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [copied, setCopied] = useState(false)
   const [linkBusy, setLinkBusy] = useState(false)
   const [linkError, setLinkError] = useState<string | null>(null)
@@ -43,7 +45,13 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
   /** Show Copy only after the user edits the auto-copied post text. */
   const [postDirty, setPostDirty] = useState(false)
 
-  const text = buildShareText(albumId, state, tab)
+  const needsInShare = tab === 'missing' || tab === 'both'
+  const needsInLink = linkMode === 'needs' || linkMode === 'both'
+  const favoriteCount = (state.favorites || []).length
+
+  const text = buildShareText(albumId, state, tab, {
+    favoritesOnly: favoritesOnly && needsInShare,
+  })
   const album = getAlbum(albumId)
 
   const handleCopy = async () => {
@@ -55,15 +63,18 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
   const createLink = async () => {
     setLinkBusy(true)
     setLinkError(null)
-    const payload = buildSharePayload(albumId, state, linkMode)
+    const useFav = favoritesOnly && needsInLink
+    const payload = buildSharePayload(albumId, state, linkMode, { favoritesOnly: useFav })
     if (!sharePayloadHasContent(payload, linkMode)) {
       setLinkBusy(false)
       setLinkError(
-        linkMode === 'needs'
-          ? 'No needs to share yet.'
-          : linkMode === 'spares'
-            ? 'No spares to share yet — mark duplicates first.'
-            : 'No needs or spares to share yet.',
+        useFav && (linkMode === 'needs' || linkMode === 'both')
+          ? 'No priority needs starred yet — star missing stickers you want soon.'
+          : linkMode === 'needs'
+            ? 'No needs to share yet.'
+            : linkMode === 'spares'
+              ? 'No spares to share yet — mark duplicates first.'
+              : 'No needs or spares to share yet.',
       )
       return
     }
@@ -78,7 +89,7 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
       albumId,
       linkMode,
       res.data.url,
-      buildShareText(albumId, state, listTab),
+      buildShareText(albumId, state, listTab, { favoritesOnly: useFav }),
     )
     setShareUrl(res.data.url)
     setPostText(blurb)
@@ -120,6 +131,20 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
           </button>
         ))}
       </div>
+      {needsInLink && (
+        <label className={styles.checkRow}>
+          <input
+            type="checkbox"
+            checked={favoritesOnly}
+            onChange={(e) => setFavoritesOnly(e.target.checked)}
+          />
+          <StarIcon size={14} filled />
+          <span>
+            Priority needs only
+            {favoriteCount ? ` (${favoriteCount} starred)` : ''}
+          </span>
+        </label>
+      )}
       <div className={styles.linkActions}>
         <Button type="button" disabled={linkBusy || !album} onClick={createLink}>
           {linkBusy ? 'Creating…' : 'Create & copy match link'}
@@ -173,6 +198,20 @@ export function SharePanel({ albumId, state, bare = false }: SharePanelProps) {
           </button>
         ))}
       </div>
+      {needsInShare && (
+        <label className={styles.checkRow}>
+          <input
+            type="checkbox"
+            checked={favoritesOnly}
+            onChange={(e) => setFavoritesOnly(e.target.checked)}
+          />
+          <StarIcon size={14} filled />
+          <span>
+            Priority needs only
+            {favoriteCount ? ` (${favoriteCount} starred)` : ''}
+          </span>
+        </label>
+      )}
       <pre className={styles.output}>{text}</pre>
       <Button type="button" variant="secondary" onClick={handleCopy}>
         {copied ? 'Copied!' : 'Copy to clipboard'}

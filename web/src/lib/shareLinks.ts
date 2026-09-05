@@ -18,6 +18,7 @@ export function buildSharePayload(
   albumId: string,
   state: CollectionAlbumState,
   mode: ShareLinkMode,
+  options?: { favoritesOnly?: boolean },
 ): SharePayload {
   const indexes = getAlbumIndexes(albumId)
   const spares: Record<string, number> = {}
@@ -26,6 +27,8 @@ export function buildSharePayload(
 
   const incoming = pendingIncomingMap(albumId)
   const missing = new Set(state.missing.map(Number))
+  const favorites = new Set((state.favorites || []).map(Number))
+  const favoritesOnly = Boolean(options?.favoritesOnly)
 
   for (const s of indexes.catalogue.stickers) {
     const seq = Number(s.seq)
@@ -34,7 +37,9 @@ export function buildSharePayload(
       if (spare > 0) spares[String(seq)] = spare
     }
     if (mode === 'needs' || mode === 'both') {
-      if (missing.has(seq) && !incoming.has(seq)) needs.push(seq)
+      if (missing.has(seq) && !incoming.has(seq)) {
+        if (!favoritesOnly || favorites.has(seq)) needs.push(seq)
+      }
     }
   }
   needs.sort((a, b) => a - b)

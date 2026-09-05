@@ -1,5 +1,5 @@
 import type { CollectionAlbumState } from './types'
-import { bumpCopies, copiesOf, getAlbumState, loadCollection, sparesOf } from './storage'
+import { bumpCopies, copiesOf, getAlbumState, loadCollection, normalizeAlbumState, sparesOf } from './storage'
 import { getAlbumIndexes, stickerDisplayLabel } from './catalogue'
 import type { PostalSwap } from './postalTypes'
 import { linesToMap, loadPostal, pendingIncomingMap } from './postal'
@@ -92,7 +92,7 @@ export function syncPendingExpected(
   }
 
   missing.sort((a, b) => a - b)
-  return { missing, counts }
+  return normalizeAlbumState({ ...state, missing, counts })
 }
 
 export function pendingMapFromSwap(swap: PostalSwap): Map<number, number> {

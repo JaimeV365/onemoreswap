@@ -1,3 +1,17 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chipRow {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 0;
+}
+
 .chip {
   display: flex;
   flex-direction: column;
@@ -12,15 +26,37 @@
   font: inherit;
   color: inherit;
   min-width: 0;
-  width: 100%;
+  flex: 1;
   transition: transform 0.1s, border-color 0.1s;
 }
 
-.wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.chipFavorite {
+  border-color: color-mix(in srgb, var(--yellow-dark) 70%, var(--red));
+}
+
+.starBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.starBtn:hover {
+  color: var(--yellow-dark);
+  border-color: var(--yellow-dark);
+}
+
+.starOn {
+  color: var(--yellow-dark);
+  background: var(--yellow-wash);
+  border-color: var(--yellow-dark);
 }
 
 .arriveBtn {

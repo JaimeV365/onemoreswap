@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { getAlbumIndexes } from '../lib/catalogue'
-import { copiesOf, bumpCopies, sparesOf } from '../lib/storage'
+import { bumpCopies, copiesOf, isFavorite, sparesOf, toggleFavorite } from '../lib/storage'
 import { hasSectionMarks, sectionDomId, stickerMatchesSearch } from '../lib/teamFlags'
 import type { CollectionAlbumState, StickerEntry } from '../lib/types'
 import { StickerChip } from './StickerChip'
 import { TeamFlag } from './TeamFlag'
 import styles from './AlbumBrowse.module.css'
 
-export type BrowseFilter = 'all' | 'needs' | 'spares' | 'incoming'
+export type BrowseFilter = 'all' | 'needs' | 'favorites' | 'spares' | 'incoming'
 
 /** What to sort teams/clubs by — direction is separate (standard table pattern). */
 export type SectionSortBy = 'album' | 'progress' | 'incoming' | 'spares'
@@ -82,10 +82,22 @@ export function AlbumBrowse({
           if (filter === 'needs') {
             if (!state.missing.map(Number).includes(Number(s.seq)) || isIncoming) return false
           }
+          if (filter === 'favorites') {
+            if (!isFavorite(state, s.seq) || isIncoming) return false
+          }
           if (filter === 'spares' && sparesOf(state, s.seq) < 1) return false
           if (filter === 'incoming' && !isIncoming) return false
           return stickerMatchesSearch(s, q)
         })
+        // Priority needs float to the front within a team/club
+        if (filter === 'needs' || filter === 'all' || filter === 'favorites') {
+          stickers.sort((a, b) => {
+            const fa = isFavorite(state, a.seq) ? 0 : 1
+            const fb = isFavorite(state, b.seq) ? 0 : 1
+            if (fa !== fb) return fa - fb
+            return a.seq - b.seq
+          })
+        }
         return { ...sec, stickers, albumIndex, ...metrics }
       })
       .filter((sec) => sec.stickers.length > 0)
@@ -147,14 +159,20 @@ export function AlbumBrowse({
     onChange(bumpCopies(state, seq, delta, allSeqs))
   }
 
+  const handleToggleFavorite = (seq: number) => {
+    onChange(toggleFavorite(state, seq))
+  }
+
   if (!visibleSections.length) {
     return (
       <p className={styles.empty}>
         {filter === 'incoming'
           ? 'No stickers currently expected in the post. Add expected stickers on a postal swap.'
-          : filter === 'needs'
-            ? 'No needs right now — incoming stickers are under Incoming until you own a copy or write them off.'
-            : 'No stickers match your filter.'}
+          : filter === 'favorites'
+            ? 'No priority needs yet — star missing stickers you want soon (Harry Kane before Qatar filler, etc.).'
+            : filter === 'needs'
+              ? 'No needs right now — incoming stickers are under Incoming until you own a copy or write them off.'
+              : 'No stickers match your filter.'}
       </p>
     )
   }
@@ -189,7 +207,12 @@ export function AlbumBrowse({
       {visibleSections.map((sec) => {
         const key = `${sec.code}::${sec.name}`
         const isOpen =
-          openSections.has(key) || !!q || filter === 'incoming' || filter === 'needs' || filter === 'spares'
+          openSections.has(key) ||
+          !!q ||
+          filter === 'incoming' ||
+          filter === 'needs' ||
+          filter === 'favorites' ||
+          filter === 'spares'
         const pct = sec.total ? Math.round((100 * sec.owned) / sec.total) : 0
         return (
           <section key={key} id={sectionDomId(key)} className={styles.section}>
@@ -213,6 +236,7 @@ export function AlbumBrowse({
                     sticker={s}
                     state={state}
                     onBump={handleBump}
+                    onToggleFavorite={handleToggleFavorite}
                     compact
                     incoming={incoming.has(Number(s.seq))}
                     onMarkArrived={

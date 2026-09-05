@@ -16,7 +16,37 @@ type CollectionStoreV1 = {
 }
 
 export function emptyAlbumState(): CollectionAlbumState {
-  return { missing: [], counts: {} }
+  return { missing: [], counts: {}, favorites: [] }
+}
+
+/** Ensure favorites only list currently-missing stickers. */
+export function normalizeAlbumState(state: CollectionAlbumState): CollectionAlbumState {
+  const missing = [...new Set((state.missing || []).map(Number))].sort((a, b) => a - b)
+  const missingSet = new Set(missing)
+  const counts: Record<number, number> = {}
+  for (const [k, qty] of Object.entries(state.counts || {})) {
+    const seq = Number(k)
+    const n = Math.floor(Number(qty))
+    if (Number.isFinite(seq) && n >= 2) counts[seq] = n
+  }
+  const favorites = [...new Set((state.favorites || []).map(Number))]
+    .filter((seq) => missingSet.has(seq))
+    .sort((a, b) => a - b)
+  return { missing, counts, favorites }
+}
+
+export function isFavorite(state: CollectionAlbumState, seq: number): boolean {
+  return (state.favorites || []).some((s) => Number(s) === Number(seq))
+}
+
+export function toggleFavorite(state: CollectionAlbumState, seq: number): CollectionAlbumState {
+  const n = Number(seq)
+  const missing = new Set(state.missing.map(Number))
+  if (!missing.has(n)) return normalizeAlbumState(state)
+  const set = new Set((state.favorites || []).map(Number))
+  if (set.has(n)) set.delete(n)
+  else set.add(n)
+  return normalizeAlbumState({ ...state, favorites: [...set] })
 }
 
 function migrateAlbumV1(old: CollectionAlbumStateV1): CollectionAlbumState {
@@ -26,16 +56,22 @@ function migrateAlbumV1(old: CollectionAlbumStateV1): CollectionAlbumState {
     const q = Math.floor(spareQty)
     if (q > 0) counts[n] = q + 1
   }
-  return {
+  return normalizeAlbumState({
     missing: [...old.needs].sort((a, b) => a - b),
     counts,
-  }
+  })
 }
 
 function migrateStore(raw: unknown): CollectionStore {
   if (!raw || typeof raw !== 'object') return { version: 2, albums: {} }
   const data = raw as CollectionStore | CollectionStoreV1
-  if (data.version === 2 && data.albums) return data as CollectionStore
+  if (data.version === 2 && data.albums) {
+    const albums: Record<string, CollectionAlbumState> = {}
+    for (const [id, state] of Object.entries(data.albums)) {
+      albums[id] = normalizeAlbumState(state as CollectionAlbumState)
+    }
+    return { version: 2, albums }
+  }
 
   if (data.version === 1 && data.albums) {
     const albums: Record<string, CollectionAlbumState> = {}
@@ -75,7 +111,7 @@ export function saveCollection(store: CollectionStore) {
 }
 
 export function getAlbumState(store: CollectionStore, albumId: string): CollectionAlbumState {
-  return store.albums[albumId] ?? emptyAlbumState()
+  return normalizeAlbumState(store.albums[albumId] ?? emptyAlbumState())
 }
 
 export function setAlbumState(
@@ -85,7 +121,7 @@ export function setAlbumState(
 ): CollectionStore {
   return {
     version: 2,
-    albums: { ...store.albums, [albumId]: state },
+    albums: { ...store.albums, [albumId]: normalizeAlbumState(state) },
   }
 }
 
@@ -137,31 +173,36 @@ export function startAlbumIfNeeded(
   state: CollectionAlbumState,
   allSeqs: number[],
 ): CollectionAlbumState {
-  if (isAlbumStarted(state) || allSeqs.length === 0) return state
-  return {
+  if (isAlbumStarted(state) || allSeqs.length === 0) return normalizeAlbumState(state)
+  return normalizeAlbumState({
     missing: [...allSeqs].sort((a, b) => a - b),
     counts: {},
-  }
+    favorites: state.favorites || [],
+  })
 }
 
 export function setCopies(state: CollectionAlbumState, seq: number, total: number): CollectionAlbumState {
   const n = Math.max(0, Math.floor(total))
   const missing = state.missing.filter((s) => Number(s) !== Number(seq))
   const counts = { ...state.counts }
+  let favorites = (state.favorites || []).map(Number)
 
   if (n <= 0) {
     delete counts[seq]
     if (!missing.some((s) => Number(s) === Number(seq))) missing.push(seq)
     missing.sort((a, b) => a - b)
-    return { missing, counts }
+    return normalizeAlbumState({ missing, counts, favorites })
   }
+
+  // Owned again — drop from priority needs
+  favorites = favorites.filter((s) => Number(s) !== Number(seq))
 
   if (n === 1) {
     delete counts[seq]
   } else {
     counts[seq] = n
   }
-  return { missing, counts }
+  return normalizeAlbumState({ missing, counts, favorites })
 }
 
 export function bumpCopies(
@@ -209,7 +250,10 @@ export function applyMissingList(
     const n = Math.floor(Number(qty))
     if (!missingSet.has(seq) && allowed.has(seq) && n >= 2) counts[seq] = n
   }
-  return { missing, counts }
+  const favorites = (previous.favorites || [])
+    .map(Number)
+    .filter((seq) => missingSet.has(seq))
+  return normalizeAlbumState({ missing, counts, favorites })
 }
 
 export function albumProgress(

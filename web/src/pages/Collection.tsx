@@ -77,7 +77,7 @@ export function Collection() {
   const [addInput, setAddInput] = useState('')
   const [addMode, setAddMode] = useState<QuickAddMode>('have')
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'needs' | 'spares' | 'incoming'>('all')
+  const [filter, setFilter] = useState<'all' | 'needs' | 'favorites' | 'spares' | 'incoming'>('all')
   const [sectionSortBy, setSectionSortBy] = useState<SectionSortBy>('album')
   const [sectionSortDir, setSectionSortDir] = useState<SectionSortDir>('asc')
   const [message, setMessage] = useState<string | null>(null)
@@ -438,7 +438,7 @@ export function Collection() {
                     role="group"
                     aria-label="Filter stickers"
                   >
-                    {(['all', 'needs', 'spares', 'incoming'] as const).map((f) => (
+                    {(['all', 'needs', 'favorites', 'spares', 'incoming'] as const).map((f) => (
                       <button
                         key={f}
                         type="button"
@@ -453,9 +453,11 @@ export function Collection() {
                           ? 'All'
                           : f === 'needs'
                             ? 'Needs'
-                            : f === 'spares'
-                              ? 'Spares'
-                              : 'Incoming'}
+                            : f === 'favorites'
+                              ? 'Priority'
+                              : f === 'spares'
+                                ? 'Spares'
+                                : 'Incoming'}
                       </button>
                     ))}
                   </div>

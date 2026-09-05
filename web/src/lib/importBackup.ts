@@ -113,7 +113,7 @@ export function importWcTrackerCollection(data: WcTrackerBackup): CollectionAlbu
   for (const seq of missing) {
     delete counts[seq]
   }
-  return { missing, counts }
+  return { missing, counts, favorites: [] }
 }
 
 export type ImportResult = {

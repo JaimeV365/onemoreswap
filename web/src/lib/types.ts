@@ -42,6 +42,8 @@ export type CollectionAlbumState = {
   missing: number[]
   /** Total copies when ≥ 2. If not missing and absent here → 1 in album. */
   counts: Record<number, number>
+  /** Missing stickers marked as priority / “want soon” (subset of missing). */
+  favorites?: number[]
 }
 
 export type CollectionStore = {

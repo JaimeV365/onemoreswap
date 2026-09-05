@@ -108,11 +108,14 @@ export function buildShareText(
   albumId: string,
   state: CollectionAlbumState,
   tab: ShareTab,
+  options?: { favoritesOnly?: boolean },
 ): string {
   const indexes = getAlbumIndexes(albumId)
   if (!indexes) return '(none)'
 
   const missing = new Set(state.missing.map(Number))
+  const favorites = new Set((state.favorites || []).map(Number))
+  const favoritesOnly = Boolean(options?.favoritesOnly)
   const incoming = pendingIncomingMap(albumId)
   const lines: string[] = []
 
@@ -124,7 +127,9 @@ export function buildShareText(
       // Pending inbound: hide from needs share (still tracked as Incoming / postal pending).
       // Ownership wins: if you have a copy, it is never a need — even while mail is pending.
       if (missing.has(Number(s.seq)) && !incoming.has(Number(s.seq))) {
-        missCards.push(s.cardNum)
+        if (!favoritesOnly || favorites.has(Number(s.seq))) {
+          missCards.push(s.cardNum)
+        }
       }
       if (sparesOf(state, Number(s.seq)) >= 1) dupeCards.push(s.cardNum)
     }
@@ -144,11 +149,21 @@ export function buildShareText(
     if (!state.missing.length && Object.keys(state.counts).length === 0) {
       return '(none)\n\nTip: use Quick add or Start fresh so needs/spares are tracked.'
     }
+    if (tab === 'missing' && favoritesOnly) {
+      return '(none)\n\nNo priority needs starred — tap the star on missing stickers you want soon.'
+    }
     if (tab === 'missing') return '(none)\n\nNo needs marked — everything you have is in the album.'
     if (tab === 'spares') return '(none)\n\nNo spare copies yet — add a sticker twice to create a spare.'
+    if (favoritesOnly && (tab === 'both' || tab === 'missing')) {
+      return '(none)\n\nNo priority needs to share yet — star missing stickers first.'
+    }
     return '(none)'
   }
-  return `${lines.join('\n')}\n\n— via ${SITE_URL}`
+  const header =
+    favoritesOnly && (tab === 'missing' || tab === 'both')
+      ? `Priority needs${tab === 'both' ? ' + spares' : ''}\n`
+      : ''
+  return `${header}${lines.join('\n')}\n\n— via ${SITE_URL}`
 }
 
 export function stickerStatusLabel(state: CollectionAlbumState, seq: number): string {
