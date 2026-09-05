@@ -30,6 +30,7 @@ type ProfileContextValue = {
   storageKey: string
   /** Bumps when cloud data is applied so pages remount with fresh storage */
   dataEpoch: number
+  bumpDataEpoch: () => void
   hydrating: boolean
   setActiveProfileId: (id: string) => void
   refreshProfiles: () => Promise<void>
@@ -70,6 +71,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [dataEpoch, setDataEpoch] = useState(0)
   const [hydrating, setHydrating] = useState(false)
 
+  const bumpDataEpoch = useCallback(() => {
+    setDataEpoch((n) => n + 1)
+  }, [])
+
   const activateProfile = useCallback(async (profileId: string) => {
     setHydrating(true)
     migrateLegacyDeviceDataToProfile(profileId)
@@ -78,11 +83,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setStorageKey(profileId)
     try {
       const pulled = await hydrateFromCloudIfEmpty(profileId)
-      if (pulled) setDataEpoch((n) => n + 1)
+      if (pulled) bumpDataEpoch()
     } finally {
       setHydrating(false)
     }
-  }, [])
+  }, [bumpDataEpoch])
 
   const refreshProfiles = useCallback(async () => {
     if (!user) {
@@ -140,6 +145,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       activeProfile,
       storageKey,
       dataEpoch,
+      bumpDataEpoch,
       hydrating,
       setActiveProfileId,
       refreshProfiles,
@@ -150,6 +156,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       activeProfile,
       storageKey,
       dataEpoch,
+      bumpDataEpoch,
       hydrating,
       setActiveProfileId,
       refreshProfiles,

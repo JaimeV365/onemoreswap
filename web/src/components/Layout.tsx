@@ -23,29 +23,33 @@ export function Layout() {
           className={[
             styles.syncBar,
             status === 'error' ? styles.syncError : '',
-            status === 'saved' ? styles.syncOk : '',
+            status === 'saved' || status === 'updated' ? styles.syncOk : '',
           ]
             .filter(Boolean)
             .join(' ')}
           role="status"
           title={
             savedLabel
-              ? `Last successful cloud backup: ${savedLabel}`
-              : 'Cloud backup for the active collector profile'
+              ? `Last successful sync: ${savedLabel}`
+              : 'Keeps this device in sync with your other devices'
           }
         >
           {hydrating && 'Loading your collection from the cloud…'}
-          {!hydrating && status === 'pending' && 'Cloud backup pending…'}
-          {!hydrating && status === 'saving' && 'Saving to cloud…'}
+          {!hydrating && status === 'pending' && 'Sync pending…'}
+          {!hydrating && status === 'saving' && 'Saving your changes…'}
+          {!hydrating && status === 'syncing' && 'Checking for updates…'}
           {!hydrating &&
             status === 'saved' &&
-            (savedLabel ? `Saved to cloud · ${savedLabel}` : 'Saved to cloud')}
-          {!hydrating && status === 'error' && (error || 'Could not save to cloud')}
+            (savedLabel ? `Synced · ${savedLabel}` : 'Synced')}
+          {!hydrating &&
+            status === 'updated' &&
+            (savedLabel ? `Updated from another device · ${savedLabel}` : 'Updated from another device')}
+          {!hydrating && status === 'error' && (error || 'Could not sync')}
           {!hydrating &&
             status === 'idle' &&
             (savedLabel
-              ? `Last cloud save · ${savedLabel}`
-              : 'Cloud backup on — waiting for your first save')}
+              ? `In sync · ${savedLabel}`
+              : 'Cloud sync on — waiting for your first save')}
         </div>
       )}
       {/* Remount when profile changes or cloud data is applied */}
