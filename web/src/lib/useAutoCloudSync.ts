@@ -50,12 +50,14 @@ function DateParseSafe(iso: string): number | null {
 }
 
 /**
- * Two-way cloud sync for the active collector profile:
- * - Push local edits soon after they happen (~1.5s debounce)
- * - Pull newer cloud revisions on an interval (~45s) and when the tab becomes visible
+ * Cloud-first sync for the active collector profile (same idea as most account apps):
+ * - On login / profile open, ProfileContext loads the latest cloud copy
+ * - Local edits push to the cloud (~1.5s after you change something)
+ * - While the app stays open, it also pulls newer cloud revisions (~45s / on focus)
+ *   so a second device can catch up without signing in again
  *
- * If this device has unsaved local edits and the cloud also moved ahead, local wins
- * on the next push (last writer with pending edits).
+ * Mid-edit on this device: we don't overwrite local unsaved changes with a pull;
+ * those changes push shortly and become the new cloud version.
  */
 export function useAutoCloudSync(): AutoCloudSyncState {
   const { user } = useAuth()

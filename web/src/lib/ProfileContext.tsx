@@ -17,10 +17,7 @@ import {
   readStoredActiveProfileId,
   setActiveProfileKey,
 } from './profileScope'
-import {
-  hasLocalCollectionOrPostal,
-  recordLocalSynced,
-} from './syncStatus'
+import { recordLocalSynced } from './syncStatus'
 
 type ProfileContextValue = {
   profiles: ChildProfile[]
@@ -45,21 +42,25 @@ async function fetchProfiles(): Promise<ChildProfile[]> {
   return body.profiles || []
 }
 
-/** If this device has no collection/postal yet, pull the cloud copy for the profile. */
-async function hydrateFromCloudIfEmpty(profileId: string): Promise<boolean> {
-  migrateLegacyDeviceDataToProfile(profileId)
+/**
+ * Cloud is the source of truth when you sign in or switch collector profile.
+ * If nothing is in the cloud yet, seed from guest/legacy local data so the first push can create it.
+ */
+async function loadProfileFromCloud(profileId: string): Promise<boolean> {
   setActiveProfileKey(profileId)
-  if (hasLocalCollectionOrPostal()) return false
 
   const res = await pullCloudSync(profileId)
-  if (res.error || !res.data?.exists) return false
+  if (!res.error && res.data?.exists) {
+    applyCloudSyncLocally(res.data)
+    recordLocalSynced({
+      updatedAt: res.data.updatedAt,
+      revision: res.data.revision,
+    })
+    return true
+  }
 
-  applyCloudSyncLocally(res.data)
-  recordLocalSynced({
-    updatedAt: res.data.updatedAt,
-    revision: res.data.revision,
-  })
-  return true
+  migrateLegacyDeviceDataToProfile(profileId)
+  return false
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
@@ -77,13 +78,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const activateProfile = useCallback(async (profileId: string) => {
     setHydrating(true)
-    migrateLegacyDeviceDataToProfile(profileId)
     setActiveProfileKey(profileId)
     setActiveId(profileId)
     setStorageKey(profileId)
     try {
-      const pulled = await hydrateFromCloudIfEmpty(profileId)
-      if (pulled) bumpDataEpoch()
+      await loadProfileFromCloud(profileId)
+      // Always remount pages so they read whatever cloud (or local seed) just loaded
+      bumpDataEpoch()
     } finally {
       setHydrating(false)
     }
